@@ -13,6 +13,7 @@
 *archive/
 tmp/
 bak/
+tests/
 *.bak
 doc/
 logs/
@@ -34,3 +35,4 @@ logs/
 *.RDS
 *.rds
 *.csv
+*.xlsx
