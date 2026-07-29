@@ -1,0 +1,36 @@
+# R stuff ——
+*.RData
+*.Rhistory
+*.RDataTmp
+*.Rproj
+*.Rproj.user
+.Rproj.user
+.Rapp.history
+.positai
+.DS_Store
+
+# Excluded dir names ——
+*archive/
+tmp/
+bak/
+*.bak
+doc/
+logs/
+*.log
+
+# Heavy files ——
+*.fa*
+*.fa.gz*
+*.fasta*
+*.fastq*
+*.fastq.gz*
+*.tgz
+
+# FILETYPES ——
+*.png
+*.html
+*.pdf
+*.csv
+*.RDS
+*.rds
+*.csv
