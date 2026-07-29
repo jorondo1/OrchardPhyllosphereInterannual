@@ -1,0 +1,182 @@
+---
+title: "hiermod"
+output: html_document
+date: "2026-07-07"
+---
+
+# Setup 
+with rarefied diversity 
+```{r}
+pacman::p_load(tidyverse, rethinking)
+analysis_shared_path <- '~/USherbrooke/Isabelle Laforest-Lapointe - MICROBIAL_ECOLOGY/INTERANNUAL_22_23_24/ANALYSIS'
+```
+
+
+```{r, eval = FALSE, include=FALSE}
+# Temporary
+ps_ls <- read_rds(file.path(analysis_shared_path, 'R_data/ps_list_ITS.rds'))
+div.ITS <- mgx.tools::rarefy_diversity(ps_ls$raw_its,depth = 4500)
+write_rds(div.ITS, file.path(analysis_shared_path, 'R_data/diversity/ITS_div.rds'))
+```
+
+```{r}
+div.ITS <- read_rds(file.path(analysis_shared_path, 'R_data/diversity/ITS_div.rds'))
+```
+
+## Simple model: effect of Management on diversity
+
+DAG_1 : Management ---> Diversity
+
+### Simulate diversity from management type 
+
+We create a very simple generative model where the mean diversity is determined by management type (conventional or organic)
+
+```{r}
+sim_div_man <- function(man, a){
+  N <- length(man)
+  D <- a[man] + rnorm(N, 0, 5)
+  data.frame(man, D)
+}
+
+# By design for two categories so we can use rbern()
+sim_div_man(man = rbern(100)+1, a = c(5,10)) %>% head()
+
+```
+
+
+$D_i \sim Normal(\mu_i, \sigma)$  
+$\mu_i = \alpha_{M[i]}$  
+
+Priors:  
+$\alpha_j\sim Normal(20,15)$  
+$\sigma \sim Exponential(5)$
+
+### Testing
+Total causal effect of management on diversity?
+Using 100 samples in each type, compute the mean difference in
+
+```{r}
+
+sim_con <- sim_div_man(man = rep(1,100), a = c(5,10))
+sim_org <- sim_div_man(man = rep(2,100), a = c(5,10))
+
+mean(sim_org$D - sim_con$D)
+
+```
+
+We are god, we measured the effect of management on diversity!
+
+### Estimator
+
+Simulate a sample.
+
+```{r}
+# OBSERVE A SAMPLE :
+man <- rbern(100)+1
+dat_sim <- sim_div_man(man, a = c(5,10))
+
+# ESTIMATE THE POSTERIOR:
+model_MD <- quap(
+  alist(
+    D ~ dnorm(mu, sigma),
+    mu <- a[man],
+    a[man] ~ dnorm(20,15),
+    sigma ~ dexp(5)
+  ), data = dat_sim)
+
+precis(model_MD, depth = 2)
+
+```
+difference is about 5, which makes sense because that's what we made it to be.
+
+
+### Analyze the real sample
+If the assumptions about the DAG and the data generation process, 
+
+
+```{r}
+
+dat_real <- list(
+  D = div.ITS$alpha$Hill_1,
+  man = ifelse( div.ITS$alpha$Management == 'CONV', 1, 2))
+
+model_MD_real <- quap(
+  alist(
+    D ~ dnorm(mu, sigma),
+    mu <- a[man],
+    a[man] ~ dnorm(20, 15),
+    sigma ~ dexp(5)
+  ), data = dat_real)
+
+precis(model_MD_real, depth = 2)
+
+```
+
+
+### Compare posterior distributions
+
+The difference in mean diversity is not *in* the posterior; it needs to be computed by contrasting draws from the posterior. 
+
+```{r}
+post <- extract.samples(model_MD_real)
+
+# POSTERIOR MEAN DIVERSITY
+dens (post$a[,1], lwd = 3, col = 2, 
+      xlim = c(floor(min(post$a)),ceiling(max(post$a))),
+      xlab = "Posterior mean diversity (species)")
+dens (post$a[,2], lwd=3, col = 4, add = TRUE)
+
+# POSTERIOR DIVERSITY DISTRIBUTIONS
+D1 <- rnorm(1000, post$a[,1], post$sigma)
+D2 <- rnorm(1000, post$a[,2], post$sigma)
+
+dens( D1, xlim = c(floor(min(c(D1,D2))), ceiling(max(c(D1,D2)))),
+      lwd=3, col=2) # red = conventional
+dens( D2, lwd=3, col = 4, add = TRUE)
+```
+
+
+We still have to compute the *contrasts*, because the overlap is not indicative of the difference. We are looking for the posterior distribution of the DIFFERENCES between our categories.
+
+* It is never legitimate to compare overlap in parameter distributions! *
+
+### Compute contrasts 
+
+_Differences in posterior distributions._ 
+
+```{r}
+
+str(post)
+```
+
+Compute the contrast using the difference in the two variables in the posterior distributions.
+```{r}
+# Contrast in MEANS
+mu_contrast <- post$a[,2] - post$a[,1]
+
+dens( mu_contrast, lwd = 3, col = 1, 
+      xlab = "Posterior mean diversity contrast (effective number of species)")
+
+```
+
+What about the contrast in samples? What is the contrast between those distributions
+
+```{r}
+# Contrast in SAMPLE DIVERSITY
+D_contrast <- D2 - D1
+dens(D_contrast, lwd = 3, col = 1, 
+     xlab = 'Posterior diversity contrast')
+abline(v=0, col=2, lwd = 3)
+
+# Proportion above/below zero:
+ # proportion of organic samples expected to be more diverse than conventional?
+sum (D_contrast>0)/1000
+
+# or opposite:
+sum (D_contrast<0)/1000
+
+```
+
+Interpretation: if you randomly select an organic and a conventional sample from the population, 62% of the time organic will have higher diversity (according to this flawed model).
+
+

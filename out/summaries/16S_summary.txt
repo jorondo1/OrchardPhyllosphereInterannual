@@ -1,0 +1,22 @@
+== 16S: DADA2 -> phyloseq summary ==
+
+--- Step 3: ASV filtering ---
+Total reads (bacteria only): 4234051
+ASV read count (bacteria only)                mean=220.1  median=8.0  sd=4617.7
+ASVs per sample                               mean=691.7  median=478.0  sd=602.0
+Samples per ASV                               mean=9.2  median=2.0  sd=20.5
+ASVs present in negative control: 2
+GTAGTCCACACCCTAAACGATGTACGTTGGATGACGGTCGGATGCGATCGTTGTCGAAGTTAACGCGATAAACGTACCGCCTGGGAAGTACGGCCGCAAGGTTGAAACTCAAAGGAATTGACGGGGGCCCGCACAAGCGGTGGAGCATGTGGTTTAATTCGAAGCAACGCGAAGAACCTTACCAGGTCTTGACATCTACAGAACCTTTCAGAGATGAGAGGGTGCCTTTCGGGGAACTGTAAGACAGGTGCTGCATGGCTGTCGTCAGCTCGTGTCGTGAGATGTTGGGTTAAGTCCCG 
+                                                                                                                                                                                                                                                                                                     414885 
+GTAGTCCACACCCTAAACGATGTACGTTGGATGACGGTCGGATGCGATCGTTGTCGAAGTTAACGCGATAAACGTACCGCCTGGGAAGTACGGCCGCAAGGTTGAAACTCAAAGGAATTGACGGGGGCCCGCACAAGCGGTGGAGCATGTGGTTTAATTCGAAGCAACGCGAAGAACCTTACCAGGTCTTGACATCTACAGAACCTTTTGGAGACAAGAGGGTGCCTTTCGGGGAACTGTAAGACAGGTGCTGCATGGCTGTCGTCAGCTCGTGTCGTGAGATGTTGGGTTAAGTCCCG 
+                                                                                                                                                                                                                                                                                                      79717 
+Kept 8855 / 19239 ASVs with >= 10 reads
+
+--- Step 5: sequencing depth ---
+Sequencing depth (pre sample-filter)          mean=16299.1  median=15521.0  sd=7146.2
+Kept 242 / 257 samples with >= 7000 reads
+
+--- Step 6: filtered phyloseq object ---
+Sequencing depth (final)                      mean=17220.4  median=15781.5  sd=6275.7
+Samples per ASV (final)                       mean=17.9  median=9.0  sd=27.3
+Final table: 242 samples x 8848 ASVs

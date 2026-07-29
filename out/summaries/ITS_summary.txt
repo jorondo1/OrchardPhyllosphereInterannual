@@ -1,0 +1,19 @@
+== ITS: DADA2 -> phyloseq summary ==
+
+--- Step 3: ASV length distribution (pre-filter) ---
+
+--- Step 3: ASV filtering ---
+Total reads: 4244083
+ASV read count (pre-filter)                   mean=1813.7  median=13.0  sd=30903.6
+ASVs per sample (pre-filter)                  mean=131.6  median=124.0  sd=74.2
+Samples per ASV (pre-filter)                  mean=14.4  median=1.0  sd=29.2
+Kept 1023 / 2340 ASVs (Fungi, >= 10 reads)
+
+--- Step 5: sequencing depth ---
+Sequencing depth (pre sample-filter)          mean=15568.5  median=14162.5  sd=9505.7
+Kept 248 / 256 samples with >= 3000 reads
+
+--- Step 6: filtered phyloseq object ---
+Sequencing depth (final)                      mean=16021.6  median=14433.0  sd=9308.1
+Samples per ASV (final)                       mean=27.3  median=14.0  sd=37.2
+Final table: 248 samples x 1016 ASVs

@@ -1,0 +1,243 @@
+---
+title: "hiermod"
+output: html_document
+date: "2026-07-07"
+---
+
+# Setup 
+with rarefied diversity 
+```{r}
+pacman::p_load(tidyverse, rethinking)
+analysis_shared_path <- '~/USherbrooke/Isabelle Laforest-Lapointe - MICROBIAL_ECOLOGY/INTERANNUAL_22_23_24/ANALYSIS'
+```
+
+```{r}
+div.ITS <- read_rds(file.path(analysis_shared_path, 'R_data/diversity/ITS_div.rds'))
+```
+
+DAG_1 : Management ---> Diversity
+
+## Which distribution would be appropriate?
+
+```{r}
+div.ITS$alpha %>% 
+  pull(Hill_1) %>% sort() %>% 
+  hist(breaks = 30)
+
+```
+Simulate a log-normal for 240 samples, find parameters that fit the scale
+```{r}
+rlnorm(240, meanlog = log(10), sdlog = 0.5) %>% 
+  hist(breaks = 30) 
+```
+
+
+### Simulate diversity from management type 
+
+We create a less simple generative model where the mean diversity is determined by management type (conventional or organic). 
+
+For this, we use a shifted lognormal to lower-bound values at 1, because Hill numbers can't go below this. 
+
+**Warning!** Shifting will require transforming the outcome log(D - 1) as the modeled variable, then back-transforming) or writing a custom likelihood, when fitting real D values.
+
+```{r}
+# ---- Lognormal, shifted to support >= 1, per-category mean + CV ----
+sim_div_man_lnorm <- function(management, mean_, cv_){
+  N      <- length(management)
+  m      <- mean_[management] - 1  # wew want E[D] = mean_ and D = 1 + ...
+  cv     <- cv_[management]
+  sigma2 <- log(1 + cv^2)          # variance on log-scale; cv is scale-free
+  mu     <- log(m) - sigma2/2
+  D      <- 1 + rlnorm(
+    N, meanlog = mu, 
+    sdlog = sqrt(sigma2)) # because rnorm needs a sd
+  data.frame(management, D)
+}
+
+# Test it 
+sim_div_man_lnorm(management = rbern(100)+1, mean_ = c(5,10), cv_ = c(0.5, 0.3))
+
+```
+
+But the mean and cv values are arbitrary; we want to see what happens over a large variation set for those two parameters, so we do SBC.
+
+### Simulated parameter recovery check
+
+```{r}
+management <- rbern(100) + 1
+sim <- sim_div_man_lnorm(management, mean_ = c(5, 10), cv_ = c(0.3, 0.3))
+sim$Dshift <- sim$D - 1   # shift back off, since quap needs the lognormal's own support
+
+model_MD_lnorm <- quap(
+  alist(
+    Dshift ~ dlnorm(mu, sigma),
+    mu <- loga[management],
+    loga[management] ~ dnorm(1.5, 1),   # prior on LOG scale now, not raw scale
+    sigma ~ dexp(1)
+  ),
+  data = sim
+)
+
+precis(model_MD_lnorm, depth = 2)
+```
+
+#### Rescale the contrasts
+Since loga is on the log scale, a[1] and a[2] from precis() aren't on D's scale. Back-transform through the lognormal mean formula (E[X] = exp(mu + sigma^2/2)), then add the shift back:
+
+```{r}
+post <- extract.samples(model_MD_lnorm)
+mean1 <- 1 + exp(post$loga[,1] + post$sigma^2 / 2)
+mean2 <- 1 + exp(post$loga[,2] + post$sigma^2 / 2)
+contrast <- mean2 - mean1
+mean(contrast); PI(contrast); hist(contrast)
+```
+
+
+
+### Simulation-based calibration (SBC)
+
+```{r}
+n_sbc <- 500
+N_per_group <- 120  
+
+results <- vector("list", n_sbc)
+
+for (i in seq_len(n_sbc)) {
+  
+  # 1. Our priors:
+  mean1 <- rlnorm(1, meanlog = log(5), sdlog = 0.4)   # tune to your domain
+  mean2 <- rlnorm(1, meanlog = log(5), sdlog = 0.4)
+  cv1   <- runif(1, 0.1, 0.5)
+  cv2   <- runif(1, 0.1, 0.5)
+  
+  # 2. simulate data under those true params
+  man <- c(rep(1, N_per_group), rep(2, N_per_group))
+  sim <- sim_div_man_lnorm(man, mean_ = c(mean1, mean2), cv_ = c(cv1, cv2))
+  
+  # 3. fit your Bayesian model to sim (placeholder)
+  # fit <- brm(D ~ 0 + factor(man), family = ..., data = sim)
+  
+  # 4. store true contrast + posterior draws of contrast for later rank checks
+  true_contrast <- mean2 - mean1
+  post_contrast <- as_draws_df(fit)$b_man2 - as_draws_df(fit)$b_man1
+  results[[i]] <- list(
+    true = true_contrast, rank = sum(post_contrast < true_contrast))
+}
+
+results
+```
+
+
+### Estimator
+
+Simulate a sample.
+
+```{r}
+# OBSERVE A SAMPLE :
+management <- rbern(100)+1
+dat_sim <- sim_div_man(management, a = c(5,10))
+
+# ESTIMATE THE POSTERIOR:
+model_MD <- quap(
+  alist(
+    D ~ dnorm(mu, sigma),
+    mu <- a[management],
+    a[management] ~ dnorm(20,15),
+    sigma ~ dexp(5)
+  ), data = dat_sim)
+
+precis(model_MD, depth = 2)
+
+```
+difference is about 5, which makes sense because that's what we made it to be.
+
+
+### Analyze the real sample
+If the assumptions about the DAG and the data generation process, 
+
+
+```{r}
+
+dat_real <- list(
+  D = div.ITS$alpha$Hill_1,
+  management = ifelse( div.ITS$alpha$Management == 'CONV', 1, 2))
+
+model_MD_real <- quap(
+  alist(
+    D ~ dnorm(mu, sigma),
+    mu <- a[management],
+    a[management] ~ dnorm(20, 15),
+    sigma ~ dexp(5)
+  ), data = dat_real)
+
+precis(model_MD_real, depth = 2)
+
+```
+
+
+### Compare posterior distributions
+
+The difference in mean diversity is not *in* the posterior; it needs to be computed by contrasting draws from the posterior. 
+
+```{r}
+post <- extract.samples(model_MD_real)
+
+# POSTERIOR MEAN DIVERSITY
+dens (post$a[,1], lwd = 3, col = 2, 
+      xlim = c(floor(min(post$a)),ceiling(max(post$a))),
+      xlab = "Posterior mean diversity (species)")
+dens (post$a[,2], lwd=3, col = 4, add = TRUE)
+
+# POSTERIOR DIVERSITY DISTRIBUTIONS
+D1 <- rnorm(1000, post$a[,1], post$sigma)
+D2 <- rnorm(1000, post$a[,2], post$sigma)
+
+dens( D1, xlim = c(floor(min(c(D1,D2))), ceiling(max(c(D1,D2)))),
+      lwd=3, col=2) # red = conventional
+dens( D2, lwd=3, col = 4, add = TRUE)
+```
+
+
+We still have to compute the *contrasts*, because the overlap is not indicative of the difference. We are looking for the posterior distribution of the DIFFERENCES between our categories.
+
+* It is never legitimate to compare overlap in parameter distributions! *
+
+### Compute contrasts 
+
+_Differences in posterior distributions._ 
+
+```{r}
+
+str(post)
+```
+
+Compute the contrast using the difference in the two variables in the posterior distributions.
+```{r}
+# Contrast in MEANS
+mu_contrast <- post$a[,2] - post$a[,1]
+
+dens( mu_contrast, lwd = 3, col = 1, 
+      xlab = "Posterior mean diversity contrast (effective number of species)")
+
+```
+
+What about the contrast in samples? What is the contrast between those distributions
+
+```{r}
+# Contrast in SAMPLE DIVERSITY
+D_contrast <- D2 - D1
+dens(D_contrast, lwd = 3, col = 1, 
+     xlab = 'Posterior diversity contrast')
+
+# Proportion above/below zero:
+# proportion of organic samples expected to be more diverse than conventional?
+sum (D_contrast>0)/1000
+
+# or opposite:
+sum (D_contrast<0)/1000
+
+```
+
+Interpretation: if you randomly select an organic and a conventional sample from the population, 62% of the time organic will have higher diversity (according to this flawed model).
+
+
