@@ -11,7 +11,7 @@ pacman::p_load(tidyverse, phyloseq, magrittr, vegan)
 # Paths -----------------------------------------------------------------
 
 path_in  <- "data/dada2_out"
-path_out <- "data/phyloseq"
+path_out <- "data"
 path_summary <- "out/summaries"
 dir.create(path_summary, recursive = TRUE, showWarnings = FALSE)
 

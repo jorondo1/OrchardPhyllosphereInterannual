@@ -1,31 +1,37 @@
 pacman::p_load(phyloseq, tidyverse, mgx.tools, update = FALSE) # pak::pkg_install("jorondo1/mgx.tools?reinstall", upgrade = TRUE); 
 
-ps.16S.ls <- read_rds('data/phyloseq/ps_filt_16S.rds')
-ps.ITS.ls <- read_rds('data/phyloseq/ps_filt_ITS.rds')
+ps.ls <- read_rds('data/ps_objects_full.rds')
 
 # Diversity data, 
 ## species cluster aggolmeration
-ps.list.out$Bacteria_sp_clust <-  tax_glom2(ps.list.out$Bacteria, taxrank = 'Species_cluster') 
-ps.list.out$Fungi_sp_clust <-  tax_glom2(ps.list.out$Fungi, taxrank = 'Species_cluster') 
+ps_clust.ls <- map(ps.ls, tax_glom2, taxrank = 'Species_cluster') 
+
+ps_bact <- mgx.tools::rarefy_diversity(
+  ps.ls$Bacteria, depth = 7000,
+  n_iter=100, mc.cores = 7, vst = TRUE)
+
+ps_fung <- mgx.tools::rarefy_diversity(
+  ps.ls$Fungi, depth = 3000, 
+  n_iter=100, mc.cores = 7, vst = TRUE)
+
+ps_bact_clust <- mgx.tools::rarefy_diversity(
+  ps_clust.ls$Bacteria, depth = 7000, 
+  n_iter=100, mc.cores = 7, vst = TRUE)
+
+ps_fung_clust <- mgx.tools::rarefy_diversity(
+  ps_clust.ls$Fungi, depth = 3000, 
+  n_iter=100, mc.cores = 7, vst = TRUE)
 
 div.out <- list(
-  Bacteria = mgx.tools::rarefy_diversity(
-    ps.list.out$Bacteria, depth = 7000,
-    n_iter=100, mc.cores = 8, vst = TRUE),
+  Bacteria = ps_bact,
   
-  Fungi =  mgx.tools::rarefy_diversity(
-    ps.list.out$Fungi, depth = 3000, 
-    n_iter=100, mc.cores = 8, vst = TRUE),
+  Fungi =  ps_fung,
   
-  Bacteria_sp_clust = mgx.tools::rarefy_diversity(
-    ps.list.out$Bacteria_sp_clust, depth = 7000, 
-    n_iter=100, mc.cores = 8, vst = TRUE),
+  Bacteria_sp_clust = ps_bact_clust,
   
-  Fungi_sp_clust = mgx.tools::rarefy_diversity(
-    ps.list.out$Fungi_sp_clust, depth = 3000, 
-    n_iter=100, mc.cores = 8, vst = TRUE)
+  Fungi_sp_clust = ps_fung_clust
 )
 
 write_rds(div.out,
-          file.path(analysis_shared_path,'R_data/reorganize/diversity_data.rds'), 
+          'data/diversity_data.rds', 
           compress = 'xz')
