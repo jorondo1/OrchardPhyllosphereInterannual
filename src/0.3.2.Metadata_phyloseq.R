@@ -46,7 +46,7 @@ meta_out <- meta_formatted %>%
   rename(Sample = Unique)
 
 #  subsets by barcode
-ps.ls.in <- read_rds('data/phyloseq/ps_objects_preproc.rds')
+ps.ls.in <- read_rds('data/ps_objects_preproc.rds')
 ps_bact <- ps.ls.in$Bacteria$filt
 ps_fung <- ps.ls.in$Fungi$filt
 
@@ -73,7 +73,7 @@ ps.ls.out <- list(
 
 write_rds(
   ps.ls.out, 
-  'data/phyloseq/ps_objects_full.rds', 
+  'data/ps_objects_full.rds', 
   compress = 'xz')
 
 
