@@ -12,7 +12,7 @@ meta_formatted <- meta_raw %>%
     time = factor(time, levels = c('May', 'July')),
     year = factor(year, levels = c(2022, 2023, 2024)),
     #!!!  orchard = factor(orchard, levels = ...),
-    
+    TREE_ID = paste(year, site, cultivar, replicate, sep = "-"),
     # Reorder cultivar levels
     cultivar = factor(cultivar, levels = c("Cortland"  , "Honeycrisp" ,"Liberty" , "Spartan", "Paulared")),
     site = ifelse(site == "PMP", "PMB", site),
