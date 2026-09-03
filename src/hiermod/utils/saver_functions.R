@@ -26,12 +26,16 @@ save_fit <- function(name, step, fit, dir = hiermod_out_dir){
   message("Saved to ", path)
 }
 
-# For ggplot objects:
+# For ggplot objects. type = "png" for point-heavy plots (e.g.
+# bayesplot::mcmc_pairs() on tens of thousands of draws) -- a vector PDF
+# stores every point as its own object and can balloon to tens of MB; a
+# rasterized PNG is a flat pixel grid regardless of point count, typically
+# orders of magnitude smaller for the same plot. dpi only matters for png.
 save_gg <- function(name, step, plot = ggplot2::last_plot(), width = 10, height = 8,
-                    dir = hiermod_out_dir){
+                    dir = hiermod_out_dir, type = "pdf", dpi = 150){
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
-  path <- file.path(dir, paste0(name, "_", step, ".pdf"))
-  ggsave(path, plot = plot, width = width, height = height)
+  path <- file.path(dir, paste0(name, "_", step, ".", type))
+  ggsave(path, plot = plot, width = width, height = height, dpi = dpi)
   invisible(path)
   message("Saved to ", path)
 }

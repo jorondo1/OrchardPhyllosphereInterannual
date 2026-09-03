@@ -149,6 +149,29 @@ changelog, not a full writeup -- the reasoning lives in the code/commits.
 
 ## Model 6 (MDLSY) -- done
 
+- [x] **`scale_dexp_rate()`** (hiermod_core.R): holds `E[total_var]` (the
+      sum of independent `dexp`-distributed variance components feeding
+      `exp(mu+total_var/2)`) roughly fixed as more components get summed
+      in, instead of each new one inflating the prior-predictive mean/SD
+      further. Tried as a "Variance budget calibration" section in
+      `5.2`/`5b.2` first, but `K=3` (`sigma[cell]+sigma_loc+sigma_tr`) is
+      unchanged from Model 4, so it was a confirmed no-op there -- removed
+      from both (was cluttering the script for nothing; Model 5's real
+      divergence pattern is a likelihood-side identifiability issue between
+      `sigma_loc`/`sigma_tr`/`sigma[cell]`, not a prior-total-inflation one,
+      so this tool was never going to touch it anyway). Kept in `6.2` only,
+      where `K` actually grows to 4 (+`sigma_yr`) and the scaling changes
+      the rates (~x1.15) for a real reason. Revisit adding it back to 5.2/
+      5b.2 specifically if their real fits show bad rhats or SBC red flags
+      -- at that point it'd need to be an empirical (hand-chosen) tightening
+      decision, not this K-based one, since K genuinely doesn't change there.
+      R2D2M2-style variance-decomposition-prior idea (Aguilar & Burkner
+      2023, EJS, arXiv:2208.07132 -- brms::R2D2(); generalizes Zhang/
+      Naughton/Bondell/Reich 2020's R2-D2 and Yanchenko/Bondell/Reich's
+      GLMM extension, arXiv:2111.10718); Gelman (2006, Bayesian Analysis)
+      for hierarchical variance-parameter priors more generally -- this
+      implementation is the 2-line version, not the full Dirichlet-
+      decomposition machinery those papers formalize.
 - [x] Fixed `idx$Cv` (`0_SETUP.R`): was `make_index(div$Cultivar, levels =
       c("", "", "", ""))` -- 4 blank placeholders vs. Cultivar's real 5
       levels, silently making every `to_index()` call return `NA`.

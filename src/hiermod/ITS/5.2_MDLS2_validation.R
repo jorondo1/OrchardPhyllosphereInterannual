@@ -21,26 +21,25 @@ hiermod_out_dir <- "out/hiermod/ITS_5_lognormal_MDLS2"
 
 ## Parameter recovery -----------------------------------------------------------
 
-# Same baseline diversity/gap values as MODEL 4, for comparability:
-# May Conventional:   4
-# May Organic:        7
-# July Conventional:  4*exp(0.35) = 5.6
-# July Organic:       7*exp(0.55) = 12.1
-#   May gap   = 3
-#   July gap  = 6.5
-#   Gap shift = 3.5 (July - May)
 #
 # sigma now 4 values (cell order: conv_May, conv_July, org_May, org_July).
 # Deliberately picked to differ a lot: conv_July tighter than conv_May,
 # so here we test whether 4 distinguishable cells come back
 # distinguishable, not just plausible.
 
+# Same baseline diversity/gap values as MODEL 4:
 may_conv <- 4          # hill scale
 may_org <- 7           # hill scale
 july_conv_shift <- 0.35 # log scale
 july_org_shift <- 0.2  # log scale
 
 true_sigma <- cv_to_sigma(c(0.6, 0.25, 0.8, 0.8)) # conv_May, conv_July, org_May, org_July
+
+# Pinned so re-runs are comparable -- without it, every run draws a fresh
+# dat_sim (new Lo x Yr grid, new loc/tree offsets), and diagnostics
+# (divergences/treedepth/E-BFMI) can vary a lot run to run just from that,
+# not from anything about the model itself.
+set.seed(20260905)
 
 dat_sim <- sim_div_MDLS2(
   N_samples = 240,
@@ -55,9 +54,7 @@ dat_sim <- sim_div_MDLS2(
 
 # View design unbalance
 dat_sim %>%
-  count(Lo, Yr, Mo, Mg) %>% print(n=100)
-
-hist(dat_sim$Dv)
+  count(Lo, Yr, Mo, Mg) %>% print(n=100); hist(dat_sim$Dv)
 
 fit_sim <- ulam(
   model,
@@ -68,9 +65,47 @@ fit_sim <- ulam(
 
 precis(fit_sim, depth = 2)
 
-### Fixed effects recovery -------------
-
 post_sim <- extract.samples(fit_sim)
+
+### Divergences check ------- 
+
+# Divergences (red points)/max-treedepth/E-BFMI showed up together here,
+# and got worse (not better) at higher iter -- that combination points to
+# real posterior geometry (sigma_loc/sigma_tr/sigma[cell] fighting for the
+# same variance, flagged as a known Model 5 weakness in MODEL_HISTORY.md),
+# not an under-sampling problem. This pairs() plot is how to tell which
+# parameters are actually implicated:
+#  - divergent (red) points clustered in a specific corner -- e.g. small
+#    sigma_loc or sigma_tr with the other parameter free to roam -- is the
+#    classic funnel signature, meaning even the non-centered form isn't
+#    fully escaping it here.
+#  - a tight diagonal ridge between any two of these (not just clumped
+#    points, an actual correlated *shape*) means those two are only weakly
+#    separately identified by the data -- the sampler has to explore a
+#    narrow degenerate slice, which is exactly what produces low E-BFMI.
+#  - watch sigma[2] (conv_July) specifically -- it's the deliberately
+#    tightest true cell (cv=0.25) with the fewest effective obs (~60), the
+#    most likely one to be hard to pull apart from sigma_loc/sigma_tr.
+#  - a skewed/heavy marginal density on the diagonal for any one parameter
+#    can drive divergences on its own, independent of any pairwise
+#    correlation with another.
+
+# cs$draws() (not extract.samples(), which flattens chains together) keeps
+# the iteration x chain x variable structure bayesplot wants -- feeding it
+# a flattened data.frame is what triggered the "only one chain" warning.
+# thin_for_pairs() (hiermod_core.R) caps the actual point count at 5000
+# (keeping every divergent draw) instead of asking ggplot to render all
+# ~45,000 -- that's what produced a 40MB PDF; points overlap heavily well
+# before 5000 anyway, so nothing is visually lost. png on top of that is
+# belt-and-suspenders, not the fix itself.
+
+pairs_vars <- c("sigma_loc","sigma_tr","sigma[1]","sigma[2]","sigma[3]","sigma[4]")
+cs <- attr(fit_sim, "cstanfit")
+thinned <- thin_for_pairs(cs, pairs_vars)
+p_pairs <- bayesplot::mcmc_pairs(thinned$draws, np = thinned$np)
+save_gg("fit_pairs", "MDLS2_sim_variance", p_pairs, width = 14, height = 14, type = "png")
+
+### Fixed effects recovery -------------
 
 fixed_recovery <- check_recovery(
   true = c(loga1 = log(may_conv),
@@ -82,7 +117,7 @@ fixed_recovery <- check_recovery(
     loga2 = post_sim$loga[,2],
     s_conv = post_sim$s_conv,
     gap_shift = post_sim$gap_shift)
-); fixed_recovery # yay
+); fixed_recovery # s_conv doesn't 
 
 ### Sigma recovery -------------
 # The actual new thing this model tests: are the 4 cells identifiable at
@@ -95,7 +130,7 @@ sigma_recovery <- check_recovery(
                     sigma3 = post_sim$sigma[,3], sigma4 = post_sim$sigma[,4])
 ); sigma_recovery
 
-# Seems ok but again sigma1 is really on the margin of the 89%
+# Seems ok but again sigma2 is really on the margin of the 89%
 
 ### Contrast recovery ------------------------------
 
@@ -155,11 +190,6 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", "MDLS2", p_prior_pc)
 
 ## Simulation-based calibration (SBC) --------------------------------------------
-
-# contrast_may_gap_MDLS2() (5.1_MDLS2_model.R) -- same reasoning as
-# model 4's: run_sbc()'s default contrast_fn assumes a 2-column `mean`.
-
-# Heads up on cost: same 129 Tree-level parameters as model 4.
 
 sbc_MDLS2 <- run_sbc(
   model_fit   = fit_sim,

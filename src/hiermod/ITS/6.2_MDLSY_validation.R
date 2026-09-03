@@ -155,6 +155,83 @@ p_prior_pc <- prior_predictive_spaghetti(
 
 save_gg("sim_prior_PC", "MDLSY", p_prior_pc)
 
+## Variance budget calibration ---------------------------------------------------
+
+# K genuinely grows here: total_var in means_MDLSY() sums sigma[cell]+
+# sigma_loc+sigma_tr+sigma_yr = K=4, up from Model 5's K=3 -- this is where
+# scale_dexp_rate() (hiermod_core.R; R2D2M2-style variance-decomposition
+# priors, full reasoning + references there) actually changes something,
+# not just confirms no-op like 5.2/5b.2 did. K_ref=3 rates are those two
+# scripts' own already-prior-predictive-checked ones (sigma[cell]~dexp(3),
+# sigma_loc/sigma_tr~dexp(2)); sigma_yr is new here, given no unscaled
+# rate of its own to inherit from, so it starts from the same base rate as
+# its structural peers (sigma_loc/sigma_tr, both non-centered population-
+# level SDs: 2) before the same scaling is applied.
+#
+# NOT targeting dexp(1) -- that was the original, admittedly-too-loose
+# default from Model 2's own early exploration (see 2.2_MDL_validation.R),
+# already superseded by dexp(2)/dexp(3) once tightened via a real prior-
+# predictive check. This anchors to THAT already-validated K=3 reference,
+# not back to the original loose one.
+
+K_ref <- 3
+K_new <- 4
+
+rate_sigma     <- scale_dexp_rate(3, K_ref, K_new)  # sigma[cell]
+rate_sigma_loc <- scale_dexp_rate(2, K_ref, K_new)  # sigma_loc
+rate_sigma_tr  <- scale_dexp_rate(2, K_ref, K_new)  # sigma_tr
+rate_sigma_yr  <- scale_dexp_rate(2, K_ref, K_new)  # sigma_yr -- new, inherits sigma_loc/sigma_tr's base rate
+c(sigma = rate_sigma, sigma_loc = rate_sigma_loc, sigma_tr = rate_sigma_tr, sigma_yr = rate_sigma_yr)
+# (~3.46, ~2.31, ~2.31, ~2.31) -- every rate goes up by sqrt(4/3) =~ 1.15,
+# holding the expected total variance close to what Model 5 already
+# validated instead of letting the 4th summed term inflate it further.
+
+# Own object, not a mutation of `model` -- same convention as MDLb's
+# model_ppc1 (2.2_MDL_validation.R): keeps the original and the calibrated
+# version both inspectable, and makes explicit which one the real fit below
+# actually uses (model_vbc, not model).
+model_vbc <- model
+model_vbc$pr_sigma     <- bquote(sigma[cell] ~ dexp(.(rate_sigma)))
+model_vbc$pr_sigma_loc <- bquote(sigma_loc   ~ dexp(.(rate_sigma_loc)))
+model_vbc$pr_sigma_tr  <- bquote(sigma_tr    ~ dexp(.(rate_sigma_tr)))
+model_vbc$pr_sigma_yr  <- bquote(sigma_yr    ~ dexp(.(rate_sigma_yr)))
+
+# Overfitting guard: scale_dexp_rate() never looks at any simulated or real
+# data -- it's a closed-form recalculation from K and the already
+# prior-predictive-validated K=3 rates, so no data-dependent tuning risk in
+# that step itself. What actually guards against over-tightening is
+# downstream: SBC's rank-uniformity test below (now pointed at fit_cal) and
+# the recovery re-check right after fit_cal (a real red flag would be
+# covered=FALSE showing up here that wasn't there for the Parameter
+# recovery section above).
+#
+# Refit with the calibrated priors -- run_sbc() pulls its model spec from
+# model_fit@formula directly, not the live `model_vbc` variable, so SBC/the
+# real fit below only see this patch if they're pointed at a fit made
+# *after* it.
+fit_cal <- ulam(
+  model_vbc,
+  data = as.list(dat_sim),
+  chains = 6, cores = 6, iter = 10000,
+  control = list(adapt_delta = 0.99)
+)
+precis(fit_cal, depth = 2)
+# Re-run the prior predictive check against fit_cal here if the tail still
+# looks implausible -- same pattern as 2.2_MDL_validation.R's model_ppc1
+# iteration, not repeated automatically since "how much is enough" is a
+# judgment call, not something to auto-loop.
+
+# Recovery re-check -- the overfitting guard itself.
+post_cal <- extract.samples(fit_cal)
+sigma_recovery_cal <- check_recovery(
+  true = list(sigma1 = true_sigma[1], sigma2 = true_sigma[2],
+              sigma3 = true_sigma[3], sigma4 = true_sigma[4],
+              sigma_yr = true_sigma_yr),
+  post_draws = list(sigma1 = post_cal$sigma[,1], sigma2 = post_cal$sigma[,2],
+                    sigma3 = post_cal$sigma[,3], sigma4 = post_cal$sigma[,4],
+                    sigma_yr = post_cal$sigma_yr)
+); sigma_recovery_cal
+
 ## Simulation-based calibration (SBC) --------------------------------------------
 
 # contrast_may_gap_MDLSY() (6.1_MDLSY_model.R) -- same reasoning as models
@@ -165,7 +242,7 @@ save_gg("sim_prior_PC", "MDLSY", p_prior_pc)
 # collinearity note above and TODO.md).
 
 sbc_MDLSY <- run_sbc(
-  model_fit   = fit_sim,
+  model_fit   = fit_cal,
   means_fn    = means_MDLSY,
   contrast_fn = contrast_may_gap_MDLSY,
   simulate_fn = simulate_from_priors,
@@ -192,7 +269,7 @@ dat <- list(
 dat$cell <- (dat$Mg - 1) * 2 + dat$Mo
 
 fit_MDLSY <- ulam(
-  model,
+  model_vbc,
   data = dat,
   chains = 6, cores = 6, iter = 20000,
   control = list(adapt_delta = 0.99)

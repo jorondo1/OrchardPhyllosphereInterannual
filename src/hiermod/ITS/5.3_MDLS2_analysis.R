@@ -22,7 +22,11 @@ pc_estimands_means <- estimand_panels(
   group_levels = c("Conventional", "Organic")
 )
 
-save_report("fit_summary", "MDLS2", fit_MDLS2, pc_estimands_means, model, model_name = "The Splitter")
+# fit_MDLS2@formula (not the freshly-sourced `model`) -- the real fit was
+# built from model_vbc (5.2_MDLS2_validation.R's variance-budget-calibrated
+# priors), which this script never sees; the fit's own compiled formula is
+# the only copy guaranteed to match what was actually fit.
+save_report("fit_summary", "MDLS2", fit_MDLS2, pc_estimands_means, fit_MDLS2@formula, model_name = "The Splitter")
 
 p_contrast_mean <- contrast_plot_panels(
   pc_estimands_means, quant = c(0.005, 0.995), scales = 'free_y',

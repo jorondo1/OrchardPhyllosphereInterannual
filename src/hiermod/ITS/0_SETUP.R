@@ -1,6 +1,6 @@
 # Shared preamble for every hiermod ITS script
 
-pacman::p_load(rethinking, tidyverse, bayesm, bayesplot, ggridges, magrittr, patchwork, rlang, scales)
+pacman::p_load(rethinking, tidyverse, bayesm, bayesplot, ggridges, magrittr, patchwork, rlang, scales, posterior)
 source('~/Repos/orchardPhyllosphere2/src/hiermod/utils/hiermod_core.R')
 source('~/Repos/orchardPhyllosphere2/src/hiermod/utils/saver_functions.R')
 source('~/Repos/orchardPhyllosphere2/src/hiermod/utils/postcontrast_helpers.R')

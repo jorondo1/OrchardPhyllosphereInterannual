@@ -14,10 +14,10 @@ source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/4.1_MDLS_model.R')
 # must exist and be named in the base alist for this to actually replace
 # rather than silently append -- true here (4.1_MDLS_model.R names every
 # element), but worth remembering if either model's alist changes shape.
+
 model$likelihood <- quote(Dv ~ dlnorm(mu, sigma[cell]))   # was sigma[Mg]
 model$pr_sigma   <- quote(sigma[cell] ~ dexp(3))           # was sigma[Mg] ~ dexp(3);
-# rate kept as-is, revisit via
-# prior-predictive check like model 4
+# TODO: revisit via prior-predictive check like model 4
 
 # Backtransforming function --------------------------------------------------
 
