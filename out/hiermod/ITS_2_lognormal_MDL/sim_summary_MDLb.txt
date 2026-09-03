@@ -1,0 +1,42 @@
+==== model: model_ppc1 ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$linear_model
+mu <- loga[Mg] + b[Lo] * sigma_loc
+
+$prior_loga
+loga[Mg] ~ dnorm(2, 2)
+
+$prior_b
+b[Lo] ~ dnorm(0, 1)
+
+$prior_sigma
+sigma[Mg] ~ dexp(3)
+
+$prior_sigma_loc
+sigma_loc ~ dexp(2)
+
+
+
+==== precis: fitb_sim ====
+
+            mean    sd   5.5% 94.5%  rhat ess_bulk
+loga[1]    1.709 0.150  1.486 1.923 1.001 1673.580
+loga[2]    1.829 0.158  1.591 2.060 1.001 1793.861
+b[1]      -0.589 0.642 -1.666 0.401 1.001 2224.540
+b[2]      -0.301 0.604 -1.287 0.668 1.000 2315.865
+b[3]      -0.223 0.613 -1.206 0.745 1.000 2314.527
+b[4]       1.156 0.701  0.088 2.324 1.000 2457.630
+sigma[1]   0.509 0.034  0.459 0.566 1.000 5078.584
+sigma[2]   0.733 0.047  0.664 0.812 1.000 5262.585
+sigma_loc  0.250 0.161  0.093 0.538 1.001 1761.991
+
+
+==== posterior contrast ====
+mean:   1.996851 
+median: 1.922202 
+89% PI:
+       5%       94% 
+0.8331309 3.3547081 

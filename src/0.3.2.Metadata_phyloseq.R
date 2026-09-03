@@ -2,7 +2,7 @@
 
 # Author: Jonathan Rondeau-Leclaire
 
-pacman::p_load(readxl, tidyverse, phyloseq)
+pacman::p_load(readxl, tidyverse, phyloseq, mgx.tools)
 meta_raw <- read_xlsx("data/Meta_interannual.xlsx", sheet = "Combined")
 
 # fix metadata naming and typos ------------------------------------------
@@ -80,8 +80,8 @@ write_rds(
 # Visualise sample count per metadata combinations:
 
 dat <- rbind(
-  samdat_as_tibble(ps.ls$Fungi) %>% mutate(Barcode = 'Fungi'),
-  samdat_as_tibble(ps.ls$Bacteria) %>% mutate(Barcode = 'Bacteria')
+  samdat_as_tibble(ps.ls.out$Fungi) %>% mutate(Barcode = 'Fungi'),
+  samdat_as_tibble(ps.ls.out$Bacteria) %>% mutate(Barcode = 'Bacteria')
 ) 
 
 

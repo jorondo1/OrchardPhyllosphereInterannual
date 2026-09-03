@@ -35,3 +35,20 @@ div.out <- list(
 write_rds(div.out,
           'data/diversity_data.rds', 
           compress = 'xz')
+
+# update metadata if need be
+# div.out <- read_rds('data/diversity_data.rds')
+# bact_samdat <- mgx.tools::samdat_as_tibble(ps.ls.out$Bacteria)
+# fung_samdat <- mgx.tools::samdat_as_tibble(ps.ls.out$Fungi)
+# 
+# div.out$Fungi_sp_clust$alpha[, names(fung_samdat)] <- fung_samdat[, names(fung_samdat)]
+# div.out$Fungi$alpha[, names(fung_samdat)]          <- fung_samdat[, names(fung_samdat)]
+# 
+# div.out$Bacteria_sp_clust$alpha[, names(bact_samdat)] <- bact_samdat[, names(bact_samdat)]
+# div.out$Bacteria$alpha[, names(bact_samdat)]          <- bact_samdat[, names(bact_samdat)]
+# 
+
+
+write_rds(div.out,
+          'data/diversity_data.rds', 
+          compress = 'xz')

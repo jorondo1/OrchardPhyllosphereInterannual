@@ -1,0 +1,360 @@
+# Model 6 (Year as random effect + weather covariates + Cultivar) + repo reorg
+
+## Context
+
+Model 5 (both variants) is fit and its plots reorganized. The user now wants:
+1. **Model 6**: pool `yr[Yr]` (currently fixed/unpooled) into a proper partially
+   pooled random effect (`yr[Yr]*sigma_yr`, non-centered) for better per-year
+   posterior estimates despite weak regularization from only 3 levels; add two
+   continuous fixed-effect covariates, `deg_h` (degree-hours the day before)
+   and `precip_72h` (precipitation 3 days before); add `Cultivar` (5 levels)
+   as a simple (unpooled) fixed effect, expected to show ~no effect but wanted
+   explicitly in the posterior for the record.
+2. **Repo reorg**: move everything into `hiermod/ITS/`, drop the redundant
+   "lognormal"/"ITS" strings from filenames now that they live in an ITS/
+   folder, and split each model into exactly 3 files: `X.1_MD_model.R`,
+   `X.2_MD_model_<checks>.R` (recovery/prior-PC/SBC), `X.3_MD_model_analysis.R`
+   (posterior contrasts/plots against the real fit).
+3. **Plot trimming**: drop the forest and interaction plots going forward (not
+   convincing enough) in favour of density-only views; keep contrast density
+   panels (no `true_vals`) and variance-component panels; add a combined
+   Bayesian-R2/variance-partition-coefficient (VPC) view -- design TBD.
+4. **Palette infrastructure**: add Location (4) and Cultivar (5) colour
+   palettes in setup, and fold palette lookup into `idx` itself (e.g.
+   `idx$Lo$palette`) so scripts stop hand-building `scales::hue_pal()` palettes
+   inline every time (as the Location/Year/Tree panel currently does).
+
+## Findings from repo survey
+
+- `div` (`data/diversity_data.rds$Fungi$alpha`) **already has** `mean_temp`,
+  `deg_h`, `precip_72h` columns -- pre-merged from
+  `data/meteo/processed/Meteo_indexes.csv`. No data-merge work needed for
+  Model 6's two continuous covariates.
+- **`idx$Cv` is currently broken**: `0_ITS_lognormal_SETUP.R` builds it as
+  `make_index(div$Cultivar, levels = c("", "", "", ""))` -- four empty-string
+  placeholder levels, one short of Cultivar's real 5 levels (`Cortland`,
+  `Honeycrisp`, `Liberty`, `Spartan`, `Paulared`). Every row's `to_index()`
+  currently returns `NA`. Must be fixed (`levels = c("Cortland", "Honeycrisp",
+  "Liberty", "Paulared", "Spartan")` or similar, matching the `sort(unique())`
+  default) before Model 6 can use Cultivar as a grouping factor.
+- Existing file inventory confirmed: numbered scripts 0-5(+shifted) at
+  `src/hiermod/` top level, `models/model_1_MD.R` .. `model_5_MDLS2.R`
+  (definitions), `utils/*.R` (shared helpers, model-agnostic), `archive/`
+  (retired/superseded scripts, includes an old `3_ITS_lognormal_MDC.R` that
+  explored Cultivar-vs-Location pooling -- background precedent, not directly
+  reused). Only Model 5 (both variants) currently has a separate `_plots.R`
+  file; Models 1-4 don't yet have the fit/plots split applied.
+- Codebase conventions already established (all still apply): non-centered
+  parameterization for every partially-pooled term (`x[i]*sigma_x`, `x ~
+  dnorm(0,1)`); combined-index trick for anything `ulam()` can't
+  double-index (used for `sigma[cell]` in Model 5); `save_fit()`
+  (`utils/saver_functions.R`) forces cmdstanr's lazy accessors before
+  `saveRDS()` so a fit survives a session exit -- confirmed working this
+  session; `contrast_plot_panels()`/`compute_contrasts()`
+  (`utils/postcontrast_helpers.R`) already handle >2-category panels (no
+  fabricated Contrast row) and scalar "Population" panels correctly after
+  this session's bugfixes.
+
+## File-split boundary (clarified by user directly, not via multiple choice)
+
+The 3 files are sequential, each sourcing/loading the previous one's output --
+this maps directly onto the architecture already built last session, just
+relocated/renamed:
+
+- **X.1 (`_model.R`)** -- model definition only: `alist()`, `means_fn()`,
+  `sim_div_fn()`, `simulate_from_priors()`, any `contrast_fn`. No heavy
+  compute. Direct rename target for today's `models/model_X.R`.
+- **X.2 (`_model_<checks>.R`)** -- sources X.1. Parameter recovery (via
+  simulation), prior-predictive check, SBC -- then, at the end, **the real
+  ulam() fit on real data + `save_fit()`**. Direct rename target for today's
+  numbered script (e.g. `5_ITS_lognormal_MDLS2.R`).
+- **X.3 (`_model_analysis.R`)** -- sources X.1 (for `means_fn`), loads the
+  fit X.2 saved via `readRDS()`. No refit. Direct rename target for today's
+  `_plots.R` file (e.g. `5_ITS_lognormal_MDLS2_plots.R`).
+
+No guard-flag/fit-if-missing complexity needed -- X.3 never sources X.2, it
+only reads its saved `.rds`, and X.2 sourcing X.1 is cheap since X.1 has no
+heavy compute. This resolves cleanly with zero new mechanics.
+
+## Decisions (answered directly by user, not via multiple choice)
+
+- **Migration scope**: retrofit everything now -- Models 1-5 (+shifted) all
+  get split into the new `.1_model` / `.2_validation` / `.3_analysis`
+  structure in this same pass, not just Model 6 onward.
+- **X.2 suffix**: **`validation`** (not "checks"). And a real re-scoping this
+  surfaced: PPC (posterior predictive check) belongs in X.2 (`validation`),
+  not X.3 (`analysis`) -- "it makes sense to look at the actual estimates of
+  interest afterwards (in script 3)." So X.2 = parameter recovery + prior-
+  predictive check + SBC + **the real fit** + **PPC against that real fit**;
+  X.3 = posterior contrasts / variance components / R2-VPC only, no PPC.
+  This means every model's PPC code (currently only exists in Model 5's
+  `_plots.R` files) moves into the `.2_validation` file going forward.
+- **R2/VPC plot design**: still open, follow-up question pending.
+
+## Model 6 alist design (from Plan sub-agent, condensed)
+
+**Approach**: patch `model_5_MDLS2.R` the same way Model 5 patched Model 4
+(source it, then overwrite/add named `alist()` elements) -- `main_model`
+changes shape, 4 new named elements added (`pr_sigma_yr`, `prior_cv`,
+`prior_deg`, `prior_precip`); everything else (`gamma_def`, `prior_loga`,
+`prior_b`, `prior_s`, `prior_gs`, `prior_tr`, `pr_sigma`, `pr_sigma_loc`,
+`pr_sigma_tr`) stays untouched. New file: `models/model_6_MDLS3.R`.
+
+**Prerequisite fix** (`0_ITS_lognormal_SETUP.R`): `idx$Cv` is currently
+broken -- `make_index(div$Cultivar, levels = c("","","",""))`, 4 blank
+placeholders vs. Cultivar's real 5 levels (Cortland/Honeycrisp/Liberty/
+Paulared/Spartan, confirmed no NAs). Fix: drop the `levels=` override entirely
+(`Cv = make_index(div$Cultivar)`), matching `Lo`/`Tr`'s existing convention.
+
+**Standardize weather covariates once, centrally**, in `0_ITS_lognormal_SETUP.R`
+right after the `idx` block (not per-script, not inside the model -- same
+"can't drift between scripts" reasoning as `idx` itself):
+```r
+deg_h_mean      <- mean(div$deg_h);      deg_h_sd      <- sd(div$deg_h)
+precip_72h_mean <- mean(div$precip_72h); precip_72h_sd <- sd(div$precip_72h)
+div$deg_h_z      <- (div$deg_h      - deg_h_mean)      / deg_h_sd
+div$precip_72h_z <- (div$precip_72h - precip_72h_mean) / precip_72h_sd
+```
+**Real, confirmed collinearity to document, not fix**: `deg_h` correlates
+-0.73 with Season (Time) and varies sharply by Year (940->1060->1559,
+2022-2024); `precip_72h` correlates -0.55 with Season, also varies by Year.
+`b_deg`/`b_precip` will be entangled with `s_conv`/`gap_shift`/`yr[Yr]*sigma_yr`
+in the posterior -- expected, note it plainly wherever those coefficients are
+reported, don't architect around it.
+
+**`alist()` patch**:
+```r
+model$main_model <- quote(
+  mu <- loga[Mg] + gamma*(Mo-1) + b[Lo]*sigma_loc + yr[Yr]*sigma_yr +
+    tr[Tr]*sigma_tr + cv[Cv] + b_deg*deg_h_z + b_precip*precip_72h_z
+)
+# prior_yr (yr[Yr] ~ dnorm(0,1)) unchanged in form -- now the non-centered
+# z-score multiplied by sigma_yr above, same idiom as b[Lo]/tr[Tr].
+model$pr_sigma_yr <- quote(sigma_yr ~ dexp(2))   # matches sigma_loc/sigma_tr's rate
+model$prior_cv    <- quote(cv[Cv] ~ dnorm(0,1))  # fixed/unpooled, same as loga[Mg]
+model$prior_deg    <- quote(b_deg    ~ dnorm(0,1))
+model$prior_precip <- quote(b_precip ~ dnorm(0,1))
+```
+All 4 new priors flagged "revisit via prior-predictive check" like every
+other prior in this codebase -- starting points, not final numbers.
+
+**Feasibility check results** (from sub-agent, cross-referencing
+MODEL_HISTORY.md's documented `ulam()` gotchas): `yr[Yr]*sigma_yr` is
+structurally identical to the already-working `b[Lo]*sigma_loc` (single-
+indexed non-centered term) -- **not** the double-indexed-`dexp` failure mode
+that forced Model 5's `cell` workaround. `cv[Cv]` mirrors `loga[Mg]`. The one
+genuinely new idiom for this codebase: `b_deg*deg_h_z` (scalar x raw
+continuous data column, no index brackets) -- standard `ulam()`/Stan pattern
+but unprecedented here, **smoke-test this specifically** (small
+`ulam(iter=200,chains=1)` on simulated data) before investing in the full
+recovery/SBC pipeline.
+
+**`means_MDLS3()`**: `total_var` gains `+ sigma_yr^2` (Year is now a proper
+marginalized-over population, same logic already in MODEL_HISTORY.md for
+Location/Tree). `deg_h_z`/`precip_72h_z` default to 0 (reference = this
+sample's own mean weather) as optional args threaded through like `shift`.
+**`cv[Cv]` deliberately left OUT of the headline Mg x Mo estimand** (no
+`sigma_cv` to marginalize over, same precedent `yr[Yr]` set pre-Model-6) --
+reported instead via its own posterior panel in `_analysis.R`, same slot
+`yr[Yr]`'s raw-additive panel used to occupy. Full function body in the
+sub-agent's report (condensed here for space) -- straightforward extension
+of `means_MDLS2()`'s existing pattern.
+
+**`sim_div_MDLS3()`**: `year_offset` switches from a caller-supplied fixed
+vector (Model 4/5's `c(0, 0.3, -0.2)`) to internally-drawn
+`rnorm(n_yr, 0, sigma_yr)`, same treatment `loc_offset`/`tree_offset` already
+get -- required for SBC to test what it's supposed to (recovering
+`sigma_yr`, not an arbitrary fixed vector). `cv` stays a direct true-value
+lookup by index (unpooled, like `loga`). `deg_h_z`/`precip_72h_z` simulated
+as direct `rnorm(0,1)` draws for the primary recovery/SBC pass (matches this
+codebase's existing "don't replicate the real design's exact imbalance"
+style); resampling from real `div` to preserve the Season/Year correlation
+is a documented follow-up robustness variant, not required for a first
+working Model 6.
+
+**Companion fix in `6_..._analysis.R`**: the Year panel (currently plots raw
+`pf$yr` in `5_..._plots.R`) must become `as.matrix(pf$yr) * pf$sigma_yr[[1]]`
+-- same fix already applied to the Location panel last session. `cv[Cv]`
+takes over the "raw, directly-additive, own panel" slot, no multiplication
+needed (`dnorm(0,1)`, stays plainly additive).
+
+Full alist/means_fn/sim_div_fn/contrast_fn code and the `dat` list for the
+real fit are in the sub-agent's report; will be written out in full at
+implementation time following the patterns above exactly.
+
+## R2/VPC plot design (resolved)
+
+Both R2 and every VPC share are full posteriors (computed fresh per draw from
+sigma_loc/sigma_tr/sigma_yr/sigma[cell] and the fixed-effect contribution to
+mu) -- so a combined view showing both the summary and the shape is
+warranted, not redundant. Two-panel `patchwork` stack, x-axis `[0,1]` shared
+and aligned across both:
+
+- **Bottom**: one horizontal 100%-stacked bar of posterior **medians** --
+  Explained (fixed effects) | Location | Tree | Year | Residual.
+- **Top**: `ggridges::geom_density_ridges()` -- one ridge per component
+  (same order/categories as the bar), posterior draws, x-axis pinned to the
+  same `[0,1]` range as the bar below it.
+
+Both `patchwork` and `ggridges` are already loaded in `0_ITS_lognormal_SETUP.R`
+-- no new dependency.
+
+**New computation needed** (this is the one genuinely new piece, not just a
+reuse of `post_full()`/`compute_contrasts()`): a per-model helper, parallel
+to `means_fn`, e.g. `variance_partition_MDLS3(post, dat)`:
+- **Explained (fixed effects)**: for each posterior draw, `var()` across the
+  *actual observations* of the fixed-effect part of `mu` (Management +
+  Season + Cultivar + weather, evaluated at each row's real `Mg`/`Mo`/`Cv`/
+  `deg_h_z`/`precip_72h_z`) -- kept as ONE lumped slice, not sub-divided by
+  individual fixed effect (Management vs Season vs Cultivar vs weather):
+  sub-decomposing further runs into the same deg_h/precip_72h collinearity
+  problem noted above and isn't what was asked for.
+- **Location/Tree/Year**: `sigma_loc^2`/`sigma_tr^2`/`sigma_yr^2` directly,
+  already in `post`.
+- **Residual**: `sigma[cell]^2`, weighted by actual per-cell N (not a simple
+  4-way mean) -- reflects the real, unbalanced dataset rather than a
+  hypothetical balanced design.
+- **Total** (per draw) = sum of all 5 above. Each slice / Total = that
+  component's share -- all 5 sum to 1 per draw, a genuine composition.
+- Returns a tibble/list shaped for the same `compute_contrasts()`-style long
+  format (`statistic`/`group`/`value`) the rest of this codebase already
+  uses, so the ridge panel can reuse existing plumbing; the stacked bar is a
+  new geom (`geom_col()` + `position = "fill"` or similar) but consumes the
+  same long-format summary via `report_contrasts_full()`-style medians.
+
+Lives in `6.3_MD_model_analysis.R` (needs both `post` and the real `dat`,
+which only X.3 has -- X.1/X.2 don't need it).
+
+## Directory / file reorganization
+
+**New layout**: `src/hiermod/utils/` stays put (generic, model-agnostic --
+`hiermod_core.R`, `postcontrast_helpers.R`, `predictive_checks.R`,
+`saver_functions.R`, `sbc_helpers.R` don't reference anything ITS-specific,
+and staying at the `hiermod/` level keeps them reusable for a future
+non-ITS, e.g. 16S, analysis). Everything else -- the numbered scripts, the
+`models/` definitions, `archive/`, `TODO.md`/`MODEL_HISTORY.md`/
+`CODE_REVIEW.md` -- moves into a new `src/hiermod/ITS/` directory. The
+`models/` subdirectory concept disappears: each model's definition becomes
+its own flat `X.1_..._model.R` file directly in `ITS/`, matching the user's
+literal example (`1.1_MD_model.R`, not `models/1_MD_model.R`).
+
+**Per-model retrofit pattern** (applied to every existing model 1-5, plus
+Model 6 built fresh in this shape from the start) -- describing the pattern
+once, not file-by-file:
+- `models/model_N_XXX.R` -> `N.1_XXX_model.R` (rename only, content
+  unchanged: `alist()`, `means_fn()`, `sim_div_fn()`, `simulate_from_priors()`,
+  any `contrast_fn`).
+- The numbered script's Parameter-recovery / Prior-predictive-check / SBC
+  sections, plus the real `ulam()` fit + `save_fit()` call ->
+  `N.2_XXX_model_validation.R`. **New**: the PPC section (currently only
+  exists in Model 5's `_plots.R` files) also lives here, run right after the
+  real fit -- for Models 1-4, this means *adding* a PPC section that didn't
+  exist before, following Model 5's existing `plot_ppc_overlay()`/
+  `plot_ppc_season_contrast_stats()` pattern (skip the contrast-stat version
+  for models with no May/July structure, e.g. Model 1/2).
+- Everything from "Posterior contrast" onward (contrast density panels,
+  variance-component panels) -> `N.3_XXX_model_analysis.R`, loading the fit
+  via `readRDS()`, no refit. Forest and interaction plots are **not**
+  carried forward here (see Plot trimming below) -- for Models 1-4, which
+  never had a separate plots file, this section is assembled fresh by
+  pulling the existing inline posterior-contrast code out of their current
+  single numbered script.
+- Filename short-codes: `MD`(1) / `MDL`(2) / `MDLv`(3) / `MDLS`(4) /
+  `MDLS2`(5) / `MDLS3`(6, new) -- continuing the existing ladder.
+- Model 5 shifted (no separate `models/` file today -- it patches
+  `model_5_MDLS2.R`'s data prep only, not its `alist()`) doesn't need its own
+  `.1`: propose `5b.2_MDLS2_shifted_validation.R` / `5b.3_..._analysis.R`,
+  sourcing `5.1_MDLS2_model.R` directly. Flagging this as a naming judgment
+  call, not explicitly specified -- easy to rename at implementation time if
+  a different convention is preferred.
+- `0_ITS_lognormal_SETUP.R` -> `ITS/0_SETUP.R` (drop "ITS_lognormal_").
+- Each `.2`/`.3` file's `source()` calls and `hiermod_out_dir` updated to the
+  new paths; `hiermod_out_dir` itself (the `out/hiermod/...` value) left
+  unchanged -- purely a source-code reorg, not an output-location change.
+
+**Retrofit risk, explicitly**: this touches every already-completed,
+previously-verified model (1-5). Mitigation: pure moves/renames wherever
+possible (Models 1-4's content doesn't change, just which file it's in);
+where content actually moves across a new file boundary (PPC into `.2`,
+forest/interaction dropped from `.3`), re-parse-check and, for Model 5 (the
+only one with a real saved fit worth re-testing), re-run the retrofitted
+`.3_analysis.R` against the existing fit to confirm identical output to
+today's `_plots.R`.
+
+## Palette infrastructure, folded into `idx`
+
+Extend `make_index()` (`utils/hiermod_core.R`) with a `palette` field and a
+`palette=` argument:
+
+```r
+make_index <- function(x, levels = sort(unique(as.character(x))), palette = NULL){
+  counts   <- as.integer(table(factor(x, levels = levels)))
+  labels_n <- paste0(levels, " (n=", counts, ")")
+  if (is.null(palette)) palette <- setNames(scales::hue_pal()(length(levels)), levels)
+  if (is.null(names(palette))) palette <- setNames(palette, levels)
+  list(
+    levels = levels, counts = counts, palette = palette,
+    to_index   = function(x) match(as.character(x), levels),
+    to_label   = function(i) factor(levels[i], levels = levels),
+    to_label_n = function(i) factor(labels_n[i], levels = labels_n),
+    palette_n  = function() setNames(palette, labels_n)  # re-keyed to the
+                                                           # n-annotated form,
+                                                           # matching what
+                                                           # to_label_n()-based
+                                                           # panels use as `group`
+  )
+}
+```
+
+In `0_SETUP.R`: `Lo`/`Cv` get auto-generated palettes (no `palette=` passed,
+`hue_pal()` default) -- the two explicitly requested. **Also folding in
+Management**, since the mechanism directly serves the user's stated goal
+("part of idx and used through that"), zero risk: `Mg = make_index(...,
+palette = c(Conventional = "#F28E2B", Organic = "#499894"))` (same hex
+values already in use), then `Management_palette <- c(idx$Mg$palette,
+Contrast = "#98494d", Population = "#895a92")` built *from* `idx$Mg$palette`
+right after -- every existing `group_pal = Management_palette` call site
+keeps working unchanged. `idx$Cv`'s broken `levels=` gets fixed as part of
+this same edit (see Model 6 section above).
+
+Every future variance-component-style panel (the Location/Year/Tree one
+already built, Model 6's Cultivar panel, etc.) replaces its hand-built
+`scales::hue_pal()` block with `idx$Lo$palette_n()` / `idx$Yr$palette_n()`.
+
+## Plot trimming
+
+Forest and interaction plots are dropped from every `_analysis.R` going
+forward (currently only exist in Model 5's `_plots.R` files -- nowhere else
+to remove them from). `contrast_plot_panels()` calls keep the `true_vals`
+omission already in place from last session. Each `.3_analysis.R` ends up
+containing, at most: contrast density panels (mean + median, no
+forest/interaction), the variance-component panel (Location/Tree/Year,
+extended per-model as new random effects are added), and -- Model 6 onward
+-- the R2/VPC stacked-bar-plus-ridge plot. Nothing added that isn't already
+listed here.
+
+## Verification
+
+- Parse-check (`Rscript -e "parse(...)"`) every moved/renamed/split file
+  before considering the reorg done.
+- Model 6's one genuinely new `ulam()` idiom (`b_deg*deg_h_z`, scalar times a
+  raw continuous data column) gets an isolated smoke test first (small
+  simulated dataset, `iter=200, chains=1`) before running the full
+  Parameter-recovery/Prior-PC/SBC pipeline on it.
+- Run Model 6's Parameter-recovery check at reduced scale (fewer iterations)
+  to confirm all 8 new parameters (`sigma_yr`, `cv[1..5]`, `b_deg`,
+  `b_precip`) actually appear in `precis()` and recover their true values in
+  the right ballpark, per this codebase's existing `check_recovery()`
+  pattern.
+- For the Model 1-5 retrofit: since Model 5 already has a real saved fit,
+  re-run the retrofitted `5.3_MDLS2_model_analysis.R` against it and confirm
+  the contrast/variance-component plots match today's `5_ITS_lognormal_MDLS2_plots.R`
+  output (same numbers, same panels minus forest/interaction). Models 1-4
+  have no real saved fits yet (per `TODO.md`) -- their retrofit is verified
+  via a fast low-iteration real-data smoke fit + full pipeline run, same
+  practice used throughout this session, not a byte-for-byte comparison.
+- New `variance_partition_MDLS3()` helper and the stacked-bar+ridge plot:
+  verify the 5 components' medians actually sum to ~1 across posterior
+  draws (sanity check on the composition arithmetic) before trusting the
+  plot.
+- Clean up all scratch files after verification.
