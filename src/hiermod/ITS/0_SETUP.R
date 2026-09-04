@@ -1,13 +1,13 @@
 # Shared preamble for every hiermod ITS script
 
 pacman::p_load(rethinking, tidyverse, bayesm, bayesplot, ggridges, magrittr, patchwork, rlang, scales, posterior)
-source('~/Repos/orchardPhyllosphere2/src/hiermod/utils/hiermod_core.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/utils/saver_functions.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/utils/postcontrast_helpers.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/utils/predictive_checks.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/utils/sbc_helpers.R')
+source('src/hiermod/utils/hiermod_core.R')
+source('src/hiermod/utils/saver_functions.R')
+source('src/hiermod/utils/postcontrast_helpers.R')
+source('src/hiermod/utils/predictive_checks.R')
+source('src/hiermod/utils/sbc_helpers.R')
 
-div.ITS <- read_rds('~/Repos/orchardPhyllosphere2/data/diversity_data.rds')
+div.ITS <- read_rds('data/diversity_data.rds')
 div <- div.ITS$Fungi$alpha
 
 message("Make sure to define hiermod_out_dir <- out/hiermod/<...>")

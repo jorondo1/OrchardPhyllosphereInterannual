@@ -2,8 +2,8 @@
 # components, run against the fit saved by 5.2_MDLS2_validation.R -- no
 # refit needed.
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/0_SETUP.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/5.1_MDLS2_model.R') # model, means_MDLS2()
+source('src/hiermod/ITS/0_SETUP.R')
+source('src/hiermod/ITS/5.1_MDLS2_model.R') # model, means_MDLS2()
 hiermod_out_dir <- "out/hiermod/ITS_5_lognormal_MDLS2"
 
 fit_MDLS2 <- readRDS(file.path(hiermod_out_dir, "fit_MDLS2.rds"))

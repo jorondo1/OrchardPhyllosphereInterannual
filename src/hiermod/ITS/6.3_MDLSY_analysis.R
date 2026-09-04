@@ -2,8 +2,8 @@
 # components, and the Bayesian R2 / variance-partition (VPC) view, run
 # against the fit saved by 6.2_MDLSY_validation.R -- no refit needed.
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/0_SETUP.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/6.1_MDLSY_model.R') # model, means_MDLSY(), variance_partition_MDLSY()
+source('src/hiermod/ITS/0_SETUP.R')
+source('src/hiermod/ITS/6.1_MDLSY_model.R') # model, means_MDLSY(), variance_partition_MDLSY()
 hiermod_out_dir <- "out/hiermod/ITS_6_lognormal_MDLSY"
 
 fit_MDLSY <- readRDS(file.path(hiermod_out_dir, "fit_MDLSY.rds"))
@@ -154,7 +154,7 @@ p_vp_bar <- vp_medians %>%
 
 p_vp_ridge <- vp %>%
   ggplot(aes(x = value, y = group, fill = group)) +
-  ggridges::geom_density_ridges(alpha = 0.7, colour = "white", scale = 1.5) +
+  ggridges::geom_density_ridges(alpha = 0.7, colour = "white") +
   scale_fill_manual(values = vp_pal) +
   scale_x_continuous(limits = c(0, 1), expand = c(0, 0)) +
   guides(fill = "none") +
@@ -165,6 +165,3 @@ p_variance_partition <- p_vp_ridge / p_vp_bar +
   patchwork::plot_layout(heights = c(4, 1)); p_variance_partition
 
 save_gg("fit_variance_partition", "MDLSY", p_variance_partition, width = 8, height = 8)
-
-## Posterior predictive check --------------------------------------------------
-# Lives in 6.2_MDLSY_validation.R, alongside the real fit.

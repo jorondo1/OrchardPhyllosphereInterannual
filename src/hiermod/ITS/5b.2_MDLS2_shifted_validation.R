@@ -5,8 +5,8 @@
 # sim_div_MDLS2()'s own shift= argument), so this sources 5.1_MDLS2_model.R
 # directly.
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/0_SETUP.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/5.1_MDLS2_model.R') # model, means_MDLS2(), sim_div_MDLS2(), contrast_may_gap_MDLS2(), simulate_from_priors()
+source('src/hiermod/ITS/0_SETUP.R')
+source('src/hiermod/ITS/5.1_MDLS2_model.R') # model, means_MDLS2(), sim_div_MDLS2(), contrast_may_gap_MDLS2(), simulate_from_priors()
 hiermod_out_dir <- "out/hiermod/ITS_5_lognormal_MDLS2_shifted"
 
 ## Model specification ---------------------------------------------------------

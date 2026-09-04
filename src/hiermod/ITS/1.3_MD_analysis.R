@@ -1,8 +1,8 @@
 # 1.3_MD_analysis.R -- MODEL 1 (MD) + MODEL 2 (MDv): posterior contrast,
 # run against the fits saved by 1.2_MD_validation.R -- no refit needed.
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/0_SETUP.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/1.1_MD_model.R') # model_MD/model_MDv, means_MD/means_MDv, postcounts_Model1/2()
+source('src/hiermod/ITS/0_SETUP.R')
+source('src/hiermod/ITS/1.1_MD_model.R') # model_MD/model_MDv, means_MD/means_MDv, postcounts_Model1/2()
 hiermod_out_dir <- "out/hiermod/ITS_1_lognormal_MD"
 
 fit_MD  <- readRDS(file.path(hiermod_out_dir, "fit_MD.rds"))

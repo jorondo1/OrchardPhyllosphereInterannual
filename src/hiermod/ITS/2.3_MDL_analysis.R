@@ -1,8 +1,8 @@
 # 2.3_MDL_analysis.R -- MODEL 2B (MDLb): posterior contrast, run against the
 # fit saved by 2.2_MDL_validation.R -- no refit needed.
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/0_SETUP.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/2.1_MDL_model.R') # model, means_MDL()
+source('src/hiermod/ITS/0_SETUP.R')
+source('src/hiermod/ITS/2.1_MDL_model.R') # model, means_MDL()
 hiermod_out_dir <- "out/hiermod/ITS_2_lognormal_MDL"
 
 fitb <- readRDS(file.path(hiermod_out_dir, "fit_MDLb.rds"))

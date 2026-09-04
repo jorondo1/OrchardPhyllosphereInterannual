@@ -1,0 +1,9 @@
+
+	Exact one-sample Kolmogorov-Smirnov test
+
+data:  ranks
+D = 0.12507, p-value = 0.6898
+alternative hypothesis: two-sided
+
+
+total divergences: 9376 

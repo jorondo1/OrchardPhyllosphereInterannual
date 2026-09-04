@@ -91,7 +91,7 @@ check_recovery <- function(true, post_draws){
 # ensemble, even though any single observation's own total_var still only
 # sums the same number of terms -- that one is still best caught by the
 # ordinary prior predictive check, not this formula.
-scale_dexp_rate <- function(rate_ref, k_ref, k_new) rate_ref * sqrt(k_new / k_ref)
+scale_dexp_rate <- function(rate_ref, k_ref, k_new) round(rate_ref * sqrt(k_new / k_ref), 2)
 
 # Caps an mcmc_pairs() plot's draw count instead of asking ggplot to render
 # tens of thousands of point objects (a vector PDF of all of them can hit

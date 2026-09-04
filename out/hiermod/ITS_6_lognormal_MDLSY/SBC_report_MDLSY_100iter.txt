@@ -1,0 +1,9 @@
+
+	Asymptotic one-sample Kolmogorov-Smirnov test
+
+data:  ranks
+D = 0.08195, p-value = 0.5128
+alternative hypothesis: two-sided
+
+
+total divergences: 31834 

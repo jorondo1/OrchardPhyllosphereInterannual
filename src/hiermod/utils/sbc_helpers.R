@@ -145,7 +145,18 @@ save_sbc_report <- function(sbc_out, step, dir = hiermod_out_dir){
   invisible(path)
   message("Saved to ", path)
 
-  save_pdf("SBC_rank_hist", step, function()
-    hist(sbc_out$ranks, main = paste("SBC rank histogram --", step), xlab = "rank"),
+  save_pdf("SBC_rank_hist", step, function(){
+      hist(sbc_out$ranks, main = paste("SBC rank histogram --", step), xlab = "rank")
+      # n derived from the data itself, not from `step` -- doesn't go stale
+      # the way a hand-typed "_Nsbc_iter" label in `step` can if n_sbc later
+      # changes but the string passed in doesn't.
+      legend("topright", bty = "o", bg = "white", box.col = "grey40", cex = 0.8,
+             legend = c(
+               paste0("n = ", length(sbc_out$ranks), " replicates"),
+               paste0("KS D = ", round(unname(sbc_out$ks_test$statistic), 3)),
+               paste0("KS p = ", round(sbc_out$ks_test$p.value, 3)),
+               paste0("divergences: ", format(sbc_out$n_divergent, big.mark = ","))
+             ))
+    },
     dir = dir)
 }

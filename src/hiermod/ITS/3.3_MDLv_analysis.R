@@ -1,8 +1,8 @@
 # 3.3_MDLv_analysis.R -- MODEL 3 (MDLv): posterior contrast, run against the
 # fit saved by 3.2_MDLv_validation.R -- no refit needed.
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/0_SETUP.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/3.1_MDLv_model.R') # model, means_MDLv(), mdlv_labels
+source('src/hiermod/ITS/0_SETUP.R')
+source('src/hiermod/ITS/3.1_MDLv_model.R') # model, means_MDLv(), mdlv_labels
 hiermod_out_dir <- "out/hiermod/ITS_3_lognormal_MDLv"
 
 fitb <- readRDS(file.path(hiermod_out_dir, "fit_MDLv.rds"))

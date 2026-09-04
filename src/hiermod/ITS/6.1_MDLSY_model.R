@@ -1,15 +1,13 @@
-# 6.1_MDLSY_model.R -- MODEL 6 (MDLSY): pools yr[Yr] into a proper
-# partially-pooled non-centered random effect (yr[Yr]*sigma_yr, "Y" in the
-# short-code), adds two standardized weather covariates (deg_h_z,
-# precip_72h_z) as additive fixed slopes, and adds Cultivar (cv[Cv]) as a
-# fixed/unpooled effect, same treatment as Management/old-Year. Patches
-# 5.1_MDLS2_model.R's alist directly -- see MODEL_HISTORY.md's "Why each
-# variable is modeled the way it is" for why Year moves to partial pooling
-# here and Cultivar does not.
+# 6.1_MDLSY_model.R 
+
+# - partial pools yr[Yr] into non-centered random effect 
+# - adds two standardized weather covariates (deg_h_z, precip_72h_z) 
+#   as additive fixed slopes, and 
+# - adds Cultivar (cv[Cv]) as a fixed effect, same treatment as Management/old-Year. 
 
 ## Model definition -------------------------------------------------
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/5.1_MDLS2_model.R')
+source('src/hiermod/ITS/5.1_MDLS2_model.R')
 
 model$main_model <- quote(
   mu <- loga[Mg] + gamma*(Mo-1) + b[Lo]*sigma_loc + yr[Yr]*sigma_yr +

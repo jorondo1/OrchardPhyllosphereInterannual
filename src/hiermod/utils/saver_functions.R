@@ -21,7 +21,7 @@ save_fit <- function(name, step, fit, dir = hiermod_out_dir){
     try(invisible(cs$profiles()), silent = TRUE)
   }
   path <- file.path(dir, paste0(name, "_", step, ".rds"))
-  saveRDS(fit, path)
+  saveRDS(fit, path, compress = 'xz')
   invisible(path)
   message("Saved to ", path)
 }

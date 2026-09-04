@@ -83,9 +83,15 @@ prior_predictive_spaghetti <- function(
       labs(caption = "Black line: density of the actual simulated dataset (observed=).")
   }
 
-  if (!is.null(model)) {  #trimws removes large spaces created by breaks
-    model_text <- paste(sapply(model, function(x) paste(trimws(deparse(x, width.cutoff = 40)), collapse = " ")), collapse = "\n", " ")
-    p <- p + annotate("text", x = Inf, y = 0, hjust = 1, vjust = -0.9, size = 3,
+  if (!is.null(model)) {
+    # width.cutoff wraps a long expression into multiple deparse() lines --
+    # collapsing THOSE with " " (the old code) undid the wrap by joining
+    # them back into one line; collapse = "\n" here keeps it. trimws()
+    # removes the leading indentation deparse() adds to continuation lines.
+    model_text <- paste(
+      sapply(model, function(x) paste(trimws(deparse(x, width.cutoff = 80)), collapse = "\n")),
+      collapse = "\n")
+    p <- p + annotate("text", x = Inf, y = 0, hjust = 1, vjust = -0.2, size = 3,
                        family = "mono", colour = "grey20", label = model_text)
   }
 

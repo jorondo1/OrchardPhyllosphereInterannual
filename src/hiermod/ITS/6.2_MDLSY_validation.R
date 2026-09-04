@@ -1,32 +1,25 @@
 # 6.2_MDLSY_validation.R -- MODEL 6 (MDLSY): parameter recovery,
 # prior-predictive check, SBC, the real fit, and PPC.
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/0_SETUP.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/6.1_MDLSY_model.R') # model, means_MDLSY(), variance_partition_MDLSY(), sim_div_MDLSY(), contrast_may_gap_MDLSY(), simulate_from_priors()
+source('src/hiermod/ITS/0_SETUP.R')
+source('src/hiermod/ITS/6.1_MDLSY_model.R') # model, means_MDLSY(), variance_partition_MDLSY(), sim_div_MDLSY(), contrast_may_gap_MDLSY(), simulate_from_priors()
 hiermod_out_dir <- "out/hiermod/ITS_6_lognormal_MDLSY"
 
 ## Model specification ---------------------------------------------------------
-# Same structure as MODEL 5, plus: yr[Yr] pooled (yr[Yr]*sigma_yr, was a
-# fixed dnorm(0,1) effect); Cultivar (cv[Cv]) as a simple fixed/unpooled
-# effect, expected near-zero but shown explicitly rather than omitted;
-# deg_h_z/precip_72h_z (degree-hours the day before / precipitation 3 days
-# before, both standardized in 0_SETUP.R) as fixed-effect slopes -- these
-# are meant to CONTROL for weather, not describe its effect for its own
-# sake, so the headline estimand (May/July gap, seasonal change) is reported
-# net of weather (deg_h_z=precip_72h_z=0, i.e. this sample's own average
-# weather) -- see means_MDLSY() in 6.1_MDLSY_model.R.
-#
-# Real, confirmed collinearity, not fixed by this model: deg_h correlates
-# -0.73 with Season and varies sharply by Year (940->1060->1559 across
-# 2022-2024); precip_72h correlates -0.55 with Season, also varies by Year.
+# Same structure as MODEL 5, plus: 
+# - yr[Yr] pooled (yr[Yr]*sigma_yr, was a fixed dnorm(0,1) effect); 
+# - Cultivar (cv[Cv]) as a simple fixed/unpooled effect;
+# - deg_h_z/precip_72h_z (degree-hours the day before / precipitation 3 days
+#   before, both standardized in 0_SETUP.R) as fixed-effect slopes;
+#   CONTROL for weather, so the headline estimand is reported
+#   net of weather 
+
+# Deg_h and precip_72h likely correlate with Season and vary  by Year; 
 # b_deg/b_precip will be entangled with s_conv/gap_shift/yr[Yr]*sigma_yr in
-# the real-data posterior -- expected, not a bug (see the collinearity
-# assessment in TODO.md's Discussion notes for the full reasoning: this
-# widens uncertainty and correlates parameter estimates, it does not bias
-# them, and the SBC below deliberately does NOT reproduce this correlation
-# in synthetic data -- it validates that the model CAN recover these
-# parameters in principle, not how identifiable they are under the real
-# design's collinearity specifically).
+# the real-data posterior. Widens uncertainty and correlates parameter 
+# estimates (doesn't bias them?) ; SBC does NOT reproduce this correlation
+# in synthetic data, only validates that model can recover parameters 
+# not how identifiable they are under the real collinearity . [LIMITATION]
 
 ## Parameter recovery -----------------------------------------------------------
 
@@ -61,6 +54,7 @@ dat_sim <- sim_div_MDLSY(
 ); head(dat_sim)
 
 hist(dat_sim$Dv)
+summary(dat_sim[,c("deg_h_z", "precip_72h_z")])
 
 fit_sim <- ulam(
   model,
@@ -89,7 +83,7 @@ fixed_recovery <- check_recovery(
     gap_shift = post_sim$gap_shift,
     b_deg = post_sim$b_deg,
     b_precip = post_sim$b_precip)
-); fixed_recovery
+); fixed_recovery # All cgood
 
 ### Sigma / Year / Cultivar recovery -------------
 
@@ -105,7 +99,7 @@ sigma_recovery <- check_recovery(
 cv_recovery <- check_recovery(
   true = as.list(setNames(true_cv, paste0("cv", 1:5))),
   post_draws = setNames(lapply(1:5, function(i) post_sim$cv[,i]), paste0("cv", 1:5))
-); cv_recovery
+); cv_recovery  #All good
 
 ### Contrast recovery ------------------------------
 
@@ -131,7 +125,7 @@ true_estimands <- tribble(
 p_sim_contrast <- contrast_plot_panels(
   pc_estimands_sim, quant = c(0, 0.995), scales = 'free_y',
   group_pal = Management_palette,
-  true_vals = true_estimands); p_sim_contrast
+  true_vals = true_estimands); p_sim_contrast # pretty good
 
 save_report("sim_summary", "MDLSY", fit_sim, pc_estimands_sim, model,
             recovery = bind_rows(fixed_recovery, sigma_recovery, cv_recovery),
@@ -157,16 +151,11 @@ save_gg("sim_prior_PC", "MDLSY", p_prior_pc)
 
 ## Variance budget calibration ---------------------------------------------------
 
-# K genuinely grows here: total_var in means_MDLSY() sums sigma[cell]+
-# sigma_loc+sigma_tr+sigma_yr = K=4, up from Model 5's K=3 -- this is where
-# scale_dexp_rate() (hiermod_core.R; R2D2M2-style variance-decomposition
-# priors, full reasoning + references there) actually changes something,
-# not just confirms no-op like 5.2/5b.2 did. K_ref=3 rates are those two
-# scripts' own already-prior-predictive-checked ones (sigma[cell]~dexp(3),
-# sigma_loc/sigma_tr~dexp(2)); sigma_yr is new here, given no unscaled
-# rate of its own to inherit from, so it starts from the same base rate as
-# its structural peers (sigma_loc/sigma_tr, both non-centered population-
-# level SDs: 2) before the same scaling is applied.
+# total_var in means_MDLSY() sums sigma[cell]+ sigma_loc+sigma_tr+sigma_yr = 
+# so K=4, up from Model 5's K=3. Implementing R2D2M2-style variance-decomposition
+# priors. sigma_yr is new here, given no unscaled rate of its own to inherit from, 
+# so it starts from the same base rate as its structural peers (sigma_loc/sigma_tr,
+# both non-centered population-level SDs.
 #
 # NOT targeting dexp(1) -- that was the original, admittedly-too-loose
 # default from Model 2's own early exploration (see 2.2_MDL_validation.R),
@@ -186,7 +175,6 @@ c(sigma = rate_sigma, sigma_loc = rate_sigma_loc, sigma_tr = rate_sigma_tr, sigm
 # holding the expected total variance close to what Model 5 already
 # validated instead of letting the 4th summed term inflate it further.
 
-# Own object, not a mutation of `model` -- same convention as MDLb's
 # model_ppc1 (2.2_MDL_validation.R): keeps the original and the calibrated
 # version both inspectable, and makes explicit which one the real fit below
 # actually uses (model_vbc, not model).
@@ -221,6 +209,29 @@ precis(fit_cal, depth = 2)
 # iteration, not repeated automatically since "how much is enough" is a
 # judgment call, not something to auto-loop.
 
+
+## 2nd Prior predictive check -------------------------------------------------------
+extracted_prior_cal <- extract.prior(fit_cal, n = n_prior)
+
+prior_pred_cal <- map_dfr(seq_len(n_prior), function(i){
+  simulate_from_priors(draw_true(extracted_prior_cal, i))
+}, .id = "draw")
+
+summary(prior_pred_cal$Dv)
+
+p_prior_pc_cal <- prior_predictive_spaghetti(
+  prior_pred_cal, upper_q = 0.99, model = model_vbc,
+  title = "Prior predictive check", observed = dat_sim$Dv) ; p_prior_pc_cal
+
+save_gg("sim_prior_PC", "MDLSY_VBCal", p_prior_pc_cal)
+
+# If "extremeness" was spread evenly across replicates (~250 obs each), 
+# expect roughly 1-(1-0.01)^250= 92% of replicates to touch it just from a 
+# trivial 1% per-point tail. At 36%, we nowhere near: tail still coming from 
+# a minority of "unlucky" prior draws, not a universal property of the prior. 
+# It's worse than Model 5's 19.7%, but still plenty ok. Both mean and sd 
+# decreased a lot, that's what vbc does. 
+
 # Recovery re-check -- the overfitting guard itself.
 post_cal <- extract.samples(fit_cal)
 sigma_recovery_cal <- check_recovery(
@@ -241,16 +252,19 @@ sigma_recovery_cal <- check_recovery(
 # under the real deg_h/precip_72h ~ Season/Year correlation (see the
 # collinearity note above and TODO.md).
 
+ncores <- 24
+nchains <- 2
+n_sbc = 100
 sbc_MDLSY <- run_sbc(
   model_fit   = fit_cal,
   means_fn    = means_MDLSY,
   contrast_fn = contrast_may_gap_MDLSY,
   simulate_fn = simulate_from_priors,
-  n_sbc = 30, iter = 15000, n_parallel = 4, chains = 2, cores = 2,
+  n_sbc = n_sbc, iter = 20000, n_parallel = ncores/nchains, chains = nchains, cores = nchains,
   control = list(adapt_delta = 0.99))
 
 (sbc_out_MDLSY <- summarize_sbc(sbc_MDLSY))
-save_sbc_report(sbc_out_MDLSY, "MDLSY_30sbc_iter")
+save_sbc_report(sbc_out_MDLSY, paste0("MDLSY_",n_sbc,"iter"))
 hist(sbc_out_MDLSY$ranks, breaks = 30)
 
 ## Model fit ----------------------------------------------------------------

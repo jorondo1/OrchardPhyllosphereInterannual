@@ -6,7 +6,7 @@
 
 ## Model definition -------------------------------------------------
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/4.1_MDLS_model.R')
+source('src/hiermod/ITS/4.1_MDLS_model.R')
 
 # Only the likelihood's scale index and its prior change; sourcing model 4's
 # alist and patching these two named elements directly avoids re-declaring

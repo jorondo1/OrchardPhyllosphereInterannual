@@ -2,8 +2,8 @@
 # untightened priors) -- MODEL 2B (tightened priors, actually fit to real data).
 # Parameter recovery, prior-predictive check, SBC, the real fit, and PPC.
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/0_SETUP.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/2.1_MDL_model.R') # model, means_MDL(), sim_div_ML(), simulate_from_priors()
+source('src/hiermod/ITS/0_SETUP.R')
+source('src/hiermod/ITS/2.1_MDL_model.R') # model, means_MDL(), sim_div_ML(), simulate_from_priors()
 hiermod_out_dir <- "out/hiermod/ITS_2_lognormal_MDL"
 
 # MODEL 2 -- Partial pooling across Location (non-centered) =================

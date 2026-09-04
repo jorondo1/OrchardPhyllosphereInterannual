@@ -3,8 +3,8 @@
 # enough (no pooling, no hierarchical structure) that a full calibration
 # check wasn't judged necessary (see MODEL_HISTORY.md).
 
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/0_SETUP.R')
-source('~/Repos/orchardPhyllosphere2/src/hiermod/ITS/1.1_MD_model.R') # model_MD/model_MDv, means_MD/means_MDv, sim_div_M(), postcounts_Model1/2()
+source('src/hiermod/ITS/0_SETUP.R')
+source('src/hiermod/ITS/1.1_MD_model.R') # model_MD/model_MDv, means_MD/means_MDv, sim_div_M(), postcounts_Model1/2()
 
 hiermod_out_dir <- "out/hiermod/ITS_1_lognormal_MD"
 
