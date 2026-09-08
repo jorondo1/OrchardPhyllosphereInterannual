@@ -156,8 +156,7 @@ sbc_MDLS2_shifted <- run_sbc(
   n_sbc = 30, iter = 15000, n_parallel = 4, chains = 2, cores = 2,
   control = list(adapt_delta = 0.99))
 
-(sbc_out_MDLS2_shifted <- summarize_sbc(sbc_MDLS2_shifted))
-save_sbc_report(sbc_out_MDLS2_shifted, "MDLS2_shifted_30sbc_iter")
+sbc_out_MDLS2_shifted <- save_sbc_report(sbc_MDLS2_shifted, "MDLS2_shifted_30sbc_iter")
 hist(sbc_out_MDLS2_shifted$ranks, breaks = 30)
 
 ## Model fit ----------------------------------------------------------------

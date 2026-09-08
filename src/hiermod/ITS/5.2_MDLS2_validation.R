@@ -199,8 +199,7 @@ sbc_MDLS2 <- run_sbc(
   n_sbc = 30, iter = 15000, n_parallel = 4, chains = 2, cores = 2,
   control = list(adapt_delta = 0.99))
 
-(sbc_out_MDLS2 <- summarize_sbc(sbc_MDLS2))
-save_sbc_report(sbc_out_MDLS2, "MDLS2_30sbc_iter")
+sbc_out_MDLS2 <- save_sbc_report(sbc_MDLS2, "MDLS2_30sbc_iter")
 hist(sbc_out_MDLS2$ranks, breaks = 30)
 
 ## Model fit ----------------------------------------------------------------

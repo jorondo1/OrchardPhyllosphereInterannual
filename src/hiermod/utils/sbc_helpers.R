@@ -47,8 +47,9 @@ draw_true <- function(priors, i){
 #                 replicate. cat()'s per-replicate progress line will arrive
 #                 out of numeric order once n_parallel > 1 (forked stdout).
 #
-# Returns a list of per-iteration results (rank, Ns, true_contrast, n_divergent)
-# -- pass to summarize_sbc() for a pass/fail read.
+# Returns a list of per-iteration results (rank, Ns, true_contrast,
+# n_divergent, n_transitions) -- pass to save_sbc_report() for a pass/fail
+# read plus the rank-histogram plot.
 
 run_sbc <- function(model_fit, simulate_fn, means_fn, contrast_fn = contrast_from_means,
                     n_sbc = 8, iter = 1000, chains = 2, cores = chains, refresh = 0,
@@ -81,12 +82,16 @@ run_sbc <- function(model_fit, simulate_fn, means_fn, contrast_fn = contrast_fro
 
     # 4. Rank = how many posterior draws fall below the true value. Across
     # n_sbc replicates this rank should be uniformly distributed if the model
-    # is calibrated -- that's what summarize_sbc()'s ks.test checks.
+    # is calibrated -- that's what save_sbc_report()'s ks.test checks.
     res <- list(
       rank          = sum(cres$post_contrast < cres$true_contrast),
       Ns            = length(cres$post_contrast),
       true_contrast = cres$true_contrast,
-      n_divergent   = ndiv
+      n_divergent   = ndiv,
+      # Divergences only happen during sampling, not warmup, and this
+      # harness always uses the default 50/50 iter split (no warmup=
+      # override anywhere) -- so sampling transitions/chain = iter/2.
+      n_transitions = (iter %/% 2) * chains
     )
     cat(i, "done, divergences:", ndiv, "\n")
     res
@@ -117,46 +122,37 @@ run_sbc <- function(model_fit, simulate_fn, means_fn, contrast_fn = contrast_fro
   }
 }
 
-# Quick numeric read on a run_sbc() result: rank uniformity (should be
-# roughly uniform -> high p-value) and total divergences (should be ~0). Fast
-# smoke test with n_sbc in the 8-15 range, not a substitute for a full
-# ~20-100-replicate check on a model you're about to commit to.
-summarize_sbc <- function(sbc_out){
-  ranks <- sapply(sbc_out, function(x) x$rank / x$Ns)
-  list(
-    ks_test     = ks.test(ranks, "punif"),
-    n_divergent = sum(sapply(sbc_out, function(x) x$n_divergent)),
-    ranks       = ranks
-  )
-}
+# Summarizes a run_sbc() result (rank uniformity via KS test, divergence
+# rate) and plots the rank histogram 
+#
+# Divergence rate is expressed as a % of actual sampling transitions
+# (n_transitions, from run_sbc()'s (iter/2)*chains per replicate)
 
-# Saves a summarize_sbc() result the same way save_report()/save_gg() do for
-# a regular fit (see hiermod_utils_savers.R) -- a text report (KS test +
-# total divergences) plus the rank histogram as a PDF, so an SBC run leaves
-# an archived record instead of only living in console scrollback.
 save_sbc_report <- function(sbc_out, step, dir = hiermod_out_dir){
-  dir.create(dir, recursive = TRUE, showWarnings = FALSE)
-  path <- file.path(dir, paste0("SBC_report_", step, ".txt"))
-  con <- file(path, open = "wt")
-  sink(con)
-  on.exit({ sink(); close(con) })
-  print(sbc_out$ks_test)
-  cat("\ntotal divergences:", sbc_out$n_divergent, "\n")
-  invisible(path)
-  message("Saved to ", path)
+  ranks         <- sapply(sbc_out, function(x) x$rank / x$Ns)
+  ks_test       <- ks.test(ranks, "punif")
+  n_divergent   <- sum(sapply(sbc_out, function(x) x$n_divergent))
+  n_transitions <- sum(sapply(sbc_out, function(x) x$n_transitions))
+  div_rate      <- 100 * n_divergent / n_transitions
+  expected_per_bin <- length(ranks) / 10
 
-  save_pdf("SBC_rank_hist", step, function(){
-      hist(sbc_out$ranks, main = paste("SBC rank histogram --", step), xlab = "rank")
-      # n derived from the data itself, not from `step` -- doesn't go stale
-      # the way a hand-typed "_Nsbc_iter" label in `step` can if n_sbc later
-      # changes but the string passed in doesn't.
-      legend("topright", bty = "o", bg = "white", box.col = "grey40", cex = 0.8,
-             legend = c(
-               paste0("n = ", length(sbc_out$ranks), " replicates"),
-               paste0("KS D = ", round(unname(sbc_out$ks_test$statistic), 3)),
-               paste0("KS p = ", round(sbc_out$ks_test$p.value, 3)),
-               paste0("divergences: ", format(sbc_out$n_divergent, big.mark = ","))
-             ))
-    },
-    dir = dir)
+  label_text <- paste0(
+    "n = ", length(ranks), " replicates \n",
+    "KS D = ", round(unname(ks_test$statistic), 3), ",  p = ", round(ks_test$p.value, 3), " \n",
+    "divergences: ", format(n_divergent, big.mark = ","), " / ",
+    format(n_transitions, big.mark = ","), "  (", round(div_rate, 2), "%)"
+  )
+
+  p <- ggplot(tibble(rank = ranks), aes(x = rank)) +
+    geom_histogram(bins = 10, boundary = 0, fill = "#4E79A7", colour = "white", linewidth = 0.3) +
+    geom_hline(yintercept = expected_per_bin, linetype = "dashed", colour = "grey40") +
+    annotate("label", x = Inf, y = Inf, hjust = 1.05, vjust = 1.3, label = label_text,
+             family = "mono", size = 3, fill = "white", label.size = 0.3, colour = "grey20") +
+    labs(title = paste("Simulation-based calibration rank histogram", step),
+         caption = "Dashed line: count expected under perfect calibration",
+         x = "rank", y = "count")
+
+  save_gg("SBC_rank_hist", step, p, width = 7, height = 5, dir = dir)
+  invisible(list(ks_test = ks_test, n_divergent = n_divergent,
+                 n_transitions = n_transitions, ranks = ranks))
 }

@@ -203,9 +203,7 @@ sbcb <- run_sbc(
   n_sbc = 100, iter = 10000, chains = 4,
   control = list(adapt_delta = 0.99))
 
-sbc_out <- summarize_sbc(sbcb)
-
-save_sbc_report(sbc_out, "MDLb")
+sbc_out <- save_sbc_report(sbcb, "MDLb")
 par(mfrow= c(1,1))
 hist(sbc_out$ranks)
 

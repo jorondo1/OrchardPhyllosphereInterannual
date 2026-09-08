@@ -177,9 +177,8 @@ sbc_MDLS <- run_sbc(
   n_sbc = 100, iter = 5000, n_parallel=4, chains=2, cores=2,
   control = list(adapt_delta = 0.99))
 
-(sbc_out_MDLS <- summarize_sbc(sbc_MDLS))
-save_sbc_report(sbc_out_MDLS, "MDLS_100sbc_iter")
-  hist(sbc_out_MDLS$ranks, breaks = 30)
+sbc_out_MDLS <- save_sbc_report(sbc_MDLS, "MDLS_100sbc_iter")
+hist(sbc_out_MDLS$ranks, breaks = 30)
 
 # More concentrated in the middle (~60% in th emiddle 30% range).
 # U-shapes mean posterior is too narrow / overconfident, missing the true

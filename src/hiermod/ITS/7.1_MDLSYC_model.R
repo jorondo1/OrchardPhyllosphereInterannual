@@ -1,43 +1,38 @@
-# 6.1_MDLSY_model.R
+# 7.1_MDLSYC_model.R
 
-# - partial pools yr[Yr] into non-centered random effect
-# - adds Cultivar (cv[Cv]) as a fixed effect, same treatment as Management/old-Year.
-# Weather/sequencing-depth controls live in Model 7 (7.1_MDLSYC_model.R), not here.
+# Adds three continuous control covariates on top of Model 6: deg_h_z,
+# precip_72h_z (weather, moved here from Model 6), and seq_depth_z
+# (sequencing depth, new -- see MODEL_HISTORY.md Model 7 section for why).
 
 ## Model definition -------------------------------------------------
 
-source('src/hiermod/ITS/5.1_MDLS2_model.R')
+source('src/hiermod/ITS/6.1_MDLSY_model.R')
 
 model$main_model <- quote(
   mu <- loga[Mg] + gamma*(Mo-1) + b[Lo]*sigma_loc + yr[Yr]*sigma_yr +
-    tr[Tr]*sigma_tr + cv[Cv]
+    tr[Tr]*sigma_tr + cv[Cv] + b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z
 )
-# prior_yr (yr[Yr] ~ dnorm(0,1), inherited unchanged from model_4/5) is now
-# the non-centered z-score multiplied by sigma_yr above -- same idiom as
-# b[Lo]/tr[Tr], not a new element.
-model$pr_sigma_yr  <- quote(sigma_yr  ~ dexp(2))   # matches sigma_loc/sigma_tr's rate
-model$prior_cv     <- quote(cv[Cv]    ~ dnorm(0,1)) # fixed/unpooled, same as loga[Mg]
-# Starting points, revisit via prior-predictive check like every other prior
-# in this codebase.
+model$prior_deg    <- quote(b_deg    ~ dnorm(0,1)) # standardized-scale slope
+model$prior_precip <- quote(b_precip ~ dnorm(0,1)) # standardized-scale slope
+model$prior_seq    <- quote(b_seq    ~ dnorm(0,1)) # standardized-scale slope
 
 # Backtransforming function --------------------------------------------------
 
-# means_MDLSY(): total_var gains sigma_yr^2 -- Year is now a proper
-# marginalized-over population (same logic as Location/Tree, see
-# MODEL_HISTORY.md). cv[Cv] deliberately left OUT of mu here -- no sigma_cv
-# to marginalize over (unpooled fixed effect), same precedent yr[Yr] set
-# pre-Model-6 -- reported instead via its own posterior panel in
-# 6.3_MDLSY_analysis.R.
-means_MDLSY <- function(post, shift = 0){
+# means_MDLSYC(): same as means_MDLSY(), plus a covariate_offset term
+# (deg_h_z/precip_72h_z/seq_depth_z all default to 0, i.e. this sample's own
+# average weather and sequencing depth).
+means_MDLSYC <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
   total_var <- post$sigma^2 + as.vector(post$sigma_loc)^2 +
     as.vector(post$sigma_tr)^2 + as.vector(post$sigma_yr)^2
 
   s_conv    <- as.vector(post$s_conv)
   gap_shift <- as.vector(post$gap_shift)
+  covariate_offset <- as.vector(post$b_deg)*deg_h_z + as.vector(post$b_precip)*precip_72h_z +
+    as.vector(post$b_seq)*seq_depth_z
 
-  mu_conv_May  <- post$loga[,1]
+  mu_conv_May  <- post$loga[,1] + covariate_offset
   mu_conv_July <- mu_conv_May + s_conv
-  mu_org_May   <- post$loga[,2]
+  mu_org_May   <- post$loga[,2] + covariate_offset
   mu_org_July  <- mu_org_May + s_conv + gap_shift
 
   list(
@@ -58,22 +53,24 @@ means_MDLSY <- function(post, shift = 0){
 
 # Variance partition / Bayesian R2 -----------------------------------------
 
-# For each posterior draw: var() across the *actual observations* of the
-# fixed-effect part of mu (Management+Season+Cultivar, at each row's real
-# covariate values) vs. each random effect's population variance vs. the
-# (cell-membership-weighted) residual variance -- five components, all
-# sharing one total, so each is a genuine share of it (sums to 1 per draw).
-# "Explained" here is exactly Bayesian R2 (var(fixed)/var(total)); the other
-# four are the variance-partition coefficients (VPC) for what's left.
-variance_partition_MDLSY <- function(post, dat){
+# Same decomposition as variance_partition_MDLSY(), with the three control
+# covariates folded into "Explained" alongside Management/Season/Cultivar --
+# kept as one lumped slice rather than split out per covariate, same
+# reasoning as 6.1_MDLSY_model.R (their real collinearity with Season/Year
+# makes attributing shares to any one of them a murkier problem than what's
+# needed here).
+variance_partition_MDLSYC <- function(post, dat){
   N <- length(dat$Mg)
 
   loga_obs <- post$loga[, dat$Mg]                                   # n_draws x N
   gamma    <- as.vector(post$s_conv) + outer(as.vector(post$gap_shift), dat$Mg - 1)
   gamma_term <- sweep(gamma, 2, dat$Mo - 1, "*")
   cv_obs   <- post$cv[, dat$Cv]                                     # n_draws x N
+  covariates <- outer(as.vector(post$b_deg), dat$deg_h_z) +
+    outer(as.vector(post$b_precip), dat$precip_72h_z) +
+    outer(as.vector(post$b_seq), dat$seq_depth_z)
 
-  fixed_mu  <- loga_obs + gamma_term + cv_obs
+  fixed_mu  <- loga_obs + gamma_term + cv_obs + covariates
   explained <- apply(fixed_mu, 1, var)                              # length n_draws
 
   cell_n <- as.integer(table(factor(dat$cell, levels = 1:4)))
@@ -95,20 +92,18 @@ variance_partition_MDLSY <- function(post, dat){
 }
 
 ## Data-generating function ---------------------------------------------------
-# Same skeleton as sim_div_MDLS2() (5.1_MDLS2_model.R), plus: year_offset is
-# now drawn internally from sigma_yr (like loc_offset/tree_offset), not a
-# caller-supplied fixed vector -- required for SBC to test what it's
-# actually supposed to (recovering sigma_yr, not an arbitrary fixed vector).
-# Cultivar (Cv) assigned per Tree, cv[] used as a direct true-value lookup
-# (unpooled, like loga).
-sim_div_MDLSY <- function(
-    N_samples, loga, s_conv, gap_shift, sigma, cv,
+# Same skeleton as sim_div_MDLSY() (6.1_MDLSY_model.R), plus deg_h_z/
+# precip_72h_z/seq_depth_z, each simulated as independent rnorm(0,1) draws --
+# deliberately NOT reproducing the real deg_h/precip_72h ~ Season/Year
+# correlation (see 7.2_MDLSYC_validation.R); this tests whether b_deg/
+# b_precip/b_seq are recoverable in principle, not how identifiable they are
+# under the real design's collinearity.
+sim_div_MDLSYC <- function(
+    N_samples, loga, s_conv, gap_shift, sigma, b_deg, b_precip, b_seq, cv,
     sigma_loc = 0.5, sigma_tr = 0.3, sigma_yr = 0.3,
     n_loc, p_dropout = 0, shift = NULL){
   n_tree <- N_samples %/% 2
-  n_yr   <- 3   # fixed at the real design's Year count, not a free arg --
-                # pooling is only meaningfully tested against the real number
-                # of Year levels (weak regularizing power by design).
+  n_yr   <- 3
 
   loc_yr_grid <- expand.grid(Lo = seq_len(n_loc), Yr = seq_len(n_yr)) %>%
     filter(runif(n()) > p_dropout)
@@ -126,23 +121,31 @@ sim_div_MDLSY <- function(
   dat <- trees %>% crossing(Mo = 1:2) %>% arrange(Tr)
   dat$cell <- (dat$Mg - 1) * 2 + dat$Mo
 
+  dat$deg_h_z      <- rnorm(nrow(dat))
+  dat$precip_72h_z <- rnorm(nrow(dat))
+  dat$seq_depth_z  <- rnorm(nrow(dat))
+
   loc_offset  <- rnorm(n_loc,  0, sigma_loc)
   tree_offset <- rnorm(n_tree, 0, sigma_tr)
   year_offset <- rnorm(n_yr,   0, sigma_yr)
 
   gamma <- s_conv + gap_shift*(dat$Mg - 1)
   mu <- loga[dat$Mg] + gamma*(dat$Mo - 1) +
-    loc_offset[dat$Lo] + year_offset[dat$Yr] + tree_offset[dat$Tr] + cv[dat$Cv]
+    loc_offset[dat$Lo] + year_offset[dat$Yr] + tree_offset[dat$Tr] +
+    cv[dat$Cv] + b_deg*dat$deg_h_z + b_precip*dat$precip_72h_z + b_seq*dat$seq_depth_z
 
   dat$Dv <- rlnorm(nrow(dat), meanlog = mu, sdlog = sigma[dat$cell])
   if (!is.null(shift)) dat$Dv_shifted <- shift + dat$Dv
   dat
 }
 
-# SBC contrast_fn -- same shape as contrast_may_gap_MDLS2() (5.1_MDLS2_model.R).
-# cv doesn't need to enter here: Cv is assigned independently of Mg in the
-# simulator, so it cancels in the org-conv contrast specifically.
-contrast_may_gap_MDLSY <- function(post, true_params, means_fn){
+# SBC contrast_fn -- same shape as contrast_may_gap_MDLSY() (6.1_MDLSY_model.R).
+# b_deg/b_precip/b_seq/cv don't need to enter here: covariate_offset in
+# means_MDLSYC() is identical for mean_1/mean_3 (both use the default
+# deg_h_z=precip_72h_z=seq_depth_z=0 reference), and Cv is assigned
+# independently of Mg in the simulator, so all cancel in the org-conv
+# contrast specifically.
+contrast_may_gap_MDLSYC <- function(post, true_params, means_fn){
   m <- means_fn(post)$mean
   post_contrast <- m[,3] - m[,1]
 
@@ -159,12 +162,15 @@ contrast_may_gap_MDLSY <- function(post, true_params, means_fn){
 # Prior simulator (SBC/prior-predictive glue).
 simulate_from_priors <- function(true_params, N_samples = 250,
                                  n_loc = 4, p_dropout = 0.1, shift = NULL){
-  sim_div_MDLSY(
+  sim_div_MDLSYC(
     N_samples = N_samples,
     loga = true_params$loga,
     s_conv = true_params$s_conv,
     gap_shift = true_params$gap_shift,
     sigma = true_params$sigma,
+    b_deg = true_params$b_deg,
+    b_precip = true_params$b_precip,
+    b_seq = true_params$b_seq,
     cv = true_params$cv,
     sigma_loc = true_params$sigma_loc,
     sigma_tr = true_params$sigma_tr,

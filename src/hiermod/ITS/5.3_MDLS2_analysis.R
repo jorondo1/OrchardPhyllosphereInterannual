@@ -103,6 +103,7 @@ pc_random_effects <- bind_rows(compute_contrasts(pf_re, keep = names(pf_re)), si
   mutate(statistic = factor(statistic, levels = stat_levels))
 
 p_random_effects <- variance_component_panels(
-  pc_random_effects, quant = c(0.005, 0.995), palette = re_pal); p_random_effects
+  pc_random_effects, quant = c(0.005, 0.995), palette = re_pal,
+  sd_stats = stat_levels[2]); p_random_effects
 
 save_gg("fit_location_year_effects", "MDLS2", p_random_effects, width = 8, height = 10)

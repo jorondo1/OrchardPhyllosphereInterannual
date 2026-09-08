@@ -355,7 +355,7 @@ contrast_plot_panels <- function(
 # palette: ONE combined named vector covering every group across every
 # statistic (e.g. c(idx$Lo$palette_n(), idx$Yr$palette_n(), sigma_loc = ...));
 # each panel looks up only the subset of names it actually uses.
-variance_component_panels <- function(pc_full, quant, palette){
+variance_component_panels <- function(pc_full, quant, palette, sd_stats = character(0)){
   if (length(quant) != 2) stop("quant is not a two-value numeric vector.")
   if (sum(quant <= 1) != 2 | sum(quant >= 0) != 2) {
     stop("quant values must be in [0,1]; lower and upper desired quantiles, e.g. c(0.005, 0.995)")
@@ -373,7 +373,7 @@ variance_component_panels <- function(pc_full, quant, palette){
     purrr::map(function(df){
       stat_name <- as.character(df$statistic[[1]])
       pal_here  <- palette[intersect(names(palette), unique(df$group))]
-      df %>%
+      p <- df %>%
         ggplot(aes(x = value, fill = group, colour = group)) +
         geom_density(alpha = 0.5, linewidth = 0.2) +
         geom_vline(xintercept = 0, colour = "grey50") +
@@ -381,6 +381,23 @@ variance_component_panels <- function(pc_full, quant, palette){
         scale_colour_manual(values = pal_here) +
         theme(legend.position = "right") +
         labs(x = NULL, y = NULL, title = stat_name, fill = NULL, colour = NULL)
+
+      # Non-SD panels here are mostly non-centered products (e.g. b[Lo]*
+      # sigma_loc, yr[Yr]*sigma_yr): a symmetric z-score times a positive,
+      # right-skewed sigma posterior yields a skewed *derived* posterior
+      # whose peak (mode) sits off-center from its mean -- a thin dashed
+      # mean line per group makes that distinction visible instead of
+      # leaving the reader to read central tendency off the peak, which
+      # understates whichever direction the skew leans. Not added for SD
+      # panels (sigma_loc/sigma_tr/sigma_yr etc.) -- those are direct
+      # positive-scale parameters, not group-varying derived effects, so
+      # there's no group-specific mean to distinguish from the peak.
+      if (!stat_name %in% sd_stats) {
+        means_here <- df %>% group_by(group) %>% summarise(m = mean(value), .groups = "drop")
+        p <- p + geom_vline(data = means_here, aes(xintercept = m, colour = group),
+                             linetype = "dashed", linewidth = 0.5, show.legend = FALSE)
+      }
+      p
     })
 
   patchwork::wrap_plots(panels, ncol = 1) +

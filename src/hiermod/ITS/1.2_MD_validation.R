@@ -167,7 +167,7 @@ save_gg("sim_contrast_density", "MDv", p_MDv_sim_contrast, width = 8, height = 4
 # TODO: not yet done for this model. Same pattern as MDLb (prior_predictive_spaghetti(), predictive_checks.R).
 
 ### Simulation-based calibration (SBC) --------------------------------------------
-# TODO: not yet done for this model. See MDLb (2.2_MDL_validation.R) for the run_sbc()/summarize_sbc() pattern.
+# TODO: not yet done for this model. See MDLb (2.2_MDL_validation.R) for the run_sbc()/save_sbc_report() pattern.
 
 ### Model fit ----------------------------------------------------------------
 

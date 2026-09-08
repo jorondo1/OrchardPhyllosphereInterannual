@@ -1,0 +1,170 @@
+Model 6 (MDLSY, "The Weatherman") -- formal specification
+============================================================
+
+Paste each $$...$$ block below into a Word equation box (Insert >
+Equation > switch input to "LaTeX" via the Conversions dropdown, or
+Alt+= then type directly if your Word build supports linear LaTeX
+input).
+
+Convention: a proper interaction, McElreath-style (and standard HLM
+cross-level-interaction notation more generally -- see e.g. the
+level-1/level-2 formulation in multilevel-modelling texts): one linear
+model for $\mu_i$, and inside it, the slope on Season is *itself* a
+second linear model of Management, not a single number. This is
+literally the `gamma <- s_conv + gap_shift*(Mg-1)` line already in
+`6.1_MDLSY_model.R`, given its own equation instead of being folded in.
+
+Naming convention: single plain letters, a through j (skipping i,
+reserved for the observation index), one per fitted coefficient. sigma
+is paired to its matching random-effect letter by subscript.
+
+  a  = Management intercept (May baseline, index-variable form, 2 levels)
+  b  = Season slope at Conventional (shared May->July shift)
+  c  = Organic's EXTRA Season slope -- the interaction term itself
+  d  = Location effect (random, pooled)
+  e  = Tree effect (random, pooled)
+  f  = Year effect (random, pooled)
+  g  = Cultivar effect (fixed, unpooled -- indexed like a, not like d/e/f:
+       no population SD, no shrinkage, just an independent prior per level)
+  h  = degree-hours slope
+  j  = precipitation slope
+
+
+1. Notation
+-----------
+For observation i = 1, ..., N (each row is one Tree x Season measurement):
+
+  - H_i          raw Hill_1 diversity index
+  - D_i = H_i - 1   shifted diversity, support (0, inf) -- Hill numbers
+                     floor at 1, so the floor is subtracted before fitting
+                     a plain (0, inf)-support LogNormal, and added back
+                     only when back-transforming to a reported mean/median.
+  - Mg[i] in {1, 2}     Management: 1 = Conventional, 2 = Organic
+  - S_i = Mo[i]-1 in {0, 1}   Season dummy: 0 = May, 1 = July
+  - Lo[i] in {1,...,4}  Location (orchard)
+  - Tr[i] in {1,...,n_Tr}  Tree (study unit, nested in Location)
+  - Yr[i] in {1,2,3}    Year
+  - Cv[i] in {1,...,5}  Cultivar
+  - X^deg_i, X^precip_i   standardized degree-hours (day before) /
+                           precipitation (3 days before)
+
+k[i], the residual-scale index -- a plain 4-level categorical variable,
+used only so $\sigma$ can differ by Management x Season cell:
+
+  k[i] = 2*(Mg[i]-1) + Mo[i]      (Mg,Mo)=(1,1)->1, (1,2)->2, (2,1)->3, (2,2)->4
+
+
+2. Likelihood
+-------------
+$$
+D_i \sim \mathrm{LogNormal}\!\left(\mu_i,\ \sigma_{k[i]}\right)
+$$
+
+
+3. Linear model for $\mu$
+----------------------------
+$$
+\mu_i = a_{\mathrm{Mg}[i]} + \gamma_{\mathrm{Mg}[i]}\, S_i
++ d_{\mathrm{Lo}[i]} + e_{\mathrm{Tr}[i]} + f_{\mathrm{Yr}[i]} + g_{\mathrm{Cv}[i]}
++ h\,X^{deg}_i + j\,X^{precip}_i
+$$
+
+The Season slope is itself a linear model of Management, not a single
+shared number:
+
+$$
+\gamma_{\mathrm{Mg}} = b + c\,(\mathrm{Mg}-1)
+$$
+
+$b$ is the May $\to$ July slope at Conventional ($\mathrm{Mg}=1$); $c$
+is how much steeper (or shallower) that slope is at Organic
+($\mathrm{Mg}=2$) -- the Management $\times$ Season interaction, i.e.
+the seasonal-change estimand, now a real coefficient rather than
+something read off a derived contrast. ($a$ uses the index-variable
+convention already used for Location/Tree/Year elsewhere in this
+codebase -- a separate intercept per level rather than a baseline +
+dummy offset; the two are algebraically interchangeable, index form is
+just what the rest of the model already uses.)
+
+
+4. Random effects
+------------------
+$$
+d_{\mathrm{Lo}} \sim \mathrm{Normal}(0,\ \sigma_d^2), \qquad \mathrm{Lo}=1,\dots,4
+$$
+$$
+e_{\mathrm{Tr}} \sim \mathrm{Normal}(0,\ \sigma_e^2), \qquad \mathrm{Tr}=1,\dots,n_{Tr}
+$$
+$$
+f_{\mathrm{Yr}} \sim \mathrm{Normal}(0,\ \sigma_f^2), \qquad \mathrm{Yr}=1,2,3
+$$
+
+(Sampled via a non-centered reparameterization -- a standard-normal
+auxiliary draw scaled by $\sigma$ -- purely for HMC sampling efficiency;
+distributionally identical to the statement above, not a separate
+modeling choice.)
+
+
+5. Fixed-effect priors
+-------------------------
+$$
+\begin{aligned}
+a_{\mathrm{Mg}} &\sim \mathrm{Normal}(2,2), & \mathrm{Mg}&=1,2\\
+b &\sim \mathrm{Normal}(0,1)\\
+c &\sim \mathrm{Normal}(0,1)\\
+g_{\mathrm{Cv}} &\sim \mathrm{Normal}(0,1), & \mathrm{Cv}&=1,\dots,5\\
+h &\sim \mathrm{Normal}(0,1)\\
+j &\sim \mathrm{Normal}(0,1)
+\end{aligned}
+$$
+
+
+6. Variance-component priors
+-------------------------------
+$$
+\begin{aligned}
+\sigma_{k} &\sim \mathrm{Exponential}(3.46), \qquad k=1,2,3,4\\
+\sigma_d &\sim \mathrm{Exponential}(2.31)\\
+\sigma_e &\sim \mathrm{Exponential}(2.31)\\
+\sigma_f &\sim \mathrm{Exponential}(2.31)
+\end{aligned}
+$$
+
+These rates are variance-budget-calibrated (R2D2M2-style): $D_i$'s
+total marginal variance sums 4 components (residual + Location + Tree +
+Year). Each rate is scaled by $\sqrt{4/3} \approx 1.15$ relative to the
+already prior-predictive-validated Model 5 rates ($\mathrm{Exponential}(3)$
+for $\sigma_k$, $\mathrm{Exponential}(2)$ for $\sigma_d/\sigma_e$), so
+adding $\sigma_f$ (Year) doesn't inflate the total implied variance
+beyond what was already validated.
+
+
+7. Derived estimands
+-----------------------
+Population-level mean at Management $m$, Season $s\in\{0,1\}$
+(marginalized over Location/Tree/Year; reference weather
+$X^{deg}=X^{precip}=0$), floor added back:
+
+$$
+\mathrm{E}[H \mid m,s] = 1 + \exp\!\left(a_m + \gamma_m s + \tfrac{1}{2}V_{k(m,s)}\right),
+\qquad V_k = \sigma_k^2 + \sigma_d^2 + \sigma_e^2 + \sigma_f^2
+$$
+
+Headline contrasts (the "+1" floor cancels in every difference below):
+
+$$
+\begin{aligned}
+\text{May gap} &= \mathrm{E}[H\mid 2,0] - \mathrm{E}[H\mid 1,0]\\
+\text{July gap} &= \mathrm{E}[H\mid 2,1] - \mathrm{E}[H\mid 1,1]\\
+\text{Seasonal change} &= \text{July gap} - \text{May gap}
+\end{aligned}
+$$
+
+The seasonal-change estimand is where $c$ actually shows up: at
+$s=0$ both gaps depend only on $a_1,a_2$ (May, no slope yet); at $s=1$
+the July gap picks up $b$ (shared) and $c$ (Organic-only) on top of that
+-- so "seasonal change" isolates $c$ up to the nonlinearity introduced
+by $\exp(\cdot)$ and the $\tfrac{1}{2}V$ term. This is why $c$
+(`gap_shift`) is the interaction estimand even though it's never quoted
+as a raw posterior on its own -- every reported contrast is a
+transformation of it.

@@ -47,7 +47,17 @@ write_rds(div.out,
 # div.out$Bacteria_sp_clust$alpha[, names(bact_samdat)] <- bact_samdat[, names(bact_samdat)]
 # div.out$Bacteria$alpha[, names(bact_samdat)]          <- bact_samdat[, names(bact_samdat)]
 # 
-
+# div.out$Bacteria_sp_clust$alpha %<>% 
+#   left_join(bact_samdat %>% select(Sample, Seq_depth), 
+#           by = 'Sample')
+# 
+# div.out$Bacteria$alpha %<>% 
+#   left_join(bact_samdat %>% select(Sample, Seq_depth), 
+#             by = 'Sample')
+# 
+# div.out$Fungi_sp_clust$alpha %<>% 
+#   left_join(fung_samdat %>% select(Sample, Seq_depth), 
+#             by = 'Sample')
 
 write_rds(div.out,
           'data/diversity_data.rds', 

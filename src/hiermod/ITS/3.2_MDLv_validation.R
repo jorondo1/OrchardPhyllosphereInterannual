@@ -88,8 +88,7 @@ sbc_MDLv <- run_sbc(
   simulate_fn = simulate_from_priors,
   n_sbc = 100, iter = 4000, chains = 4, control = list(adapt_delta = 0.99))
 
-sbc_out_MDLv <- summarize_sbc(sbc_MDLv)
-save_sbc_report(sbc_out_MDLv, "MDLv")
+sbc_out_MDLv <- save_sbc_report(sbc_MDLv, "MDLv")
 hist(sbc_out_MDLv$ranks)
 
 ## Model fit ----------------------------------------------------------------

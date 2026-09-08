@@ -43,15 +43,22 @@ idx <- list(
 # levels, so they're layered on top rather than folded into idx$Mg itself.
 Management_palette <- c(idx$Mg$palette, Contrast = "#98494d", Population = "#895a92")
 
-# ---- Standardized weather covariates (Model 6 (MDLSY) onward) ----
+# ---- Standardized control covariates (Model 7 (MDLSYC) onward) ----
 # Keep the raw mean/sd as named scalars (not just baked into `div`) so any
-# script that needs to report/predict on the raw deg_h/precip_72h scale can
-# invert the z-score consistently, rather than re-deriving mean/sd locally.
+# script that needs to report/predict on the raw scale can invert the
+# z-score consistently, rather than re-deriving mean/sd locally.
 deg_h_mean      <- mean(div$deg_h);      deg_h_sd      <- sd(div$deg_h)
 precip_72h_mean <- mean(div$precip_72h); precip_72h_sd <- sd(div$precip_72h)
 
 div$deg_h_z      <- (div$deg_h      - deg_h_mean)      / deg_h_sd
 div$precip_72h_z <- (div$precip_72h - precip_72h_mean) / precip_72h_sd
+
+# Seq_depth (raw pre-rarefaction read count) is right-skewed and spans
+# ~20x (see MODEL_HISTORY.md Model 7) -- logged first so a linear slope
+# matches a saturating detection-effort effect, then standardized like the
+# weather covariates above.
+log_seq_depth   <- log(div$Seq_depth)
+div$seq_depth_z <- (log_seq_depth - mean(log_seq_depth)) / sd(log_seq_depth)
 
 # themes
 ggplot2::theme_set(
