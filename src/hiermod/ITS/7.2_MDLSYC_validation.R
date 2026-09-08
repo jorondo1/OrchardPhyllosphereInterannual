@@ -1,5 +1,4 @@
-# 7.2_MDLSYC_validation.R -- MODEL 7 (MDLSYC): parameter recovery,
-# prior-predictive check, SBC, the real fit, and PPC.
+# Model validation 
 
 source('src/hiermod/ITS/0_SETUP.R')
 source('src/hiermod/ITS/7.1_MDLSYC_model.R') # model, means_MDLSYC(), variance_partition_MDLSYC(), sim_div_MDLSYC(), contrast_may_gap_MDLSYC(), simulate_from_priors()
@@ -8,13 +7,10 @@ hiermod_out_dir <- "out/hiermod/ITS_7_lognormal_MDLSYC"
 ## Model specification ---------------------------------------------------------
 # Same structure as MODEL 6, plus three standardized control covariates:
 # deg_h_z/precip_72h_z (degree-hours the day before / precipitation 3 days
-# before) and seq_depth_z (log sequencing depth, see MODEL_HISTORY.md for
-# why). All three are likely correlated with Season and/or Year in the real
-# data, so their coefficients will be entangled with s_conv/gap_shift/
-# yr[Yr]*sigma_yr in the real-data posterior: wider, correlated estimates,
-# not biased ones. SBC below tests recoverability against synthetic data
-# where the three are independent, not identifiability under the real
-# correlation structure -- see the Discussion notes in TODO.md.
+# before) and seq_depth_z (log sequencing depth). Their coefficients could be 
+# entangled with s_conv/gap_shift/yr[Yr]*sigma_yr in the real-data posterior:
+# Bad for confidence, but will not bias. SBC below tests recoverability 
+# against synthetic data where the three are independent.
 
 ## Parameter recovery -----------------------------------------------------------
 
@@ -27,23 +23,23 @@ true_sigma    <- cv_to_sigma(c(0.6, 0.25, 0.8, 0.8)) # conv_May, conv_July, org_
 true_sigma_yr <- 0.3
 true_b_deg    <- 0.15
 true_b_precip <- -0.15
-true_b_seq    <- 0.1
+true_b_seq    <- -0.4
 true_cv       <- c(0.05, -0.05, 0.1, -0.1, 0)
 
 dat_sim <- sim_div_MDLSYC(
   N_samples = 240,
-  n_loc = 4,
-  loga = log(c(may_conv, may_org)),
-  s_conv = july_conv_shift,
+  n_loc     = 4,
+  loga      = log(c(may_conv, may_org)),
+  s_conv    = july_conv_shift,
   gap_shift = july_org_shift,
-  sigma = true_sigma,
-  sigma_yr = true_sigma_yr,
-  b_deg = true_b_deg,
-  b_precip = true_b_precip,
-  b_seq = true_b_seq,
-  cv = true_cv,
+  sigma     = true_sigma,
+  sigma_yr  = true_sigma_yr,
+  b_deg     = true_b_deg,
+  b_precip  = true_b_precip,
+  b_seq     = true_b_seq,
+  cv        = true_cv,
   p_dropout = 0.1,
-  shift = 1
+  shift     = 1
 ); head(dat_sim)
 
 hist(dat_sim$Dv_shifted)
@@ -95,36 +91,24 @@ cv_recovery <- check_recovery(
   post_draws = setNames(lapply(1:5, function(i) post_sim$cv[,i]), paste0("cv", 1:5))
 ); cv_recovery
 
+# all good
+
 ### Contrast recovery ------------------------------
 
-pf_sim <- post_full(fit_sim, means_MDLSYC, shift = 1)
-m_sim  <- pf_sim$median
-
-pc_estimands_sim <- estimand_rows(list(
-  "Median May gap (Organic - Conventional)"  = m_sim$median_3 - m_sim$median_1,
-  "Median July gap (Organic - Conventional)" = m_sim$median_4 - m_sim$median_2,
-  "Seasonal change in median gap (July - May)"= (m_sim$median_4 - m_sim$median_2) - (m_sim$median_3 - m_sim$median_1)
-))
-
-may_gap <- may_org-may_conv
-july_gap <- may_org*exp(july_conv_shift+july_org_shift)-may_conv*exp(july_conv_shift)
-
-true_estimands <- tribble(
-  ~statistic,                                   ~value,
-  "Median May gap (Organic - Conventional)",    may_gap,
-  "Median July gap (Organic - Conventional)",   july_gap,
-  "Seasonal change in median gap (July - May)", july_gap-may_gap,
-)
+cr <- contrast_recovery(fit_sim, means_MDLSYC, may_conv, may_org,
+                         july_conv_shift, july_org_shift, shift = 1)
 
 p_sim_contrast <- contrast_plot_panels(
-  pc_estimands_sim, quant = c(0, 0.995), scales = 'free_y',
+  cr$estimands, quant = c(0, 0.995), scales = 'free_y',
   group_pal = Management_palette,
-  true_vals = true_estimands); p_sim_contrast
+  true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", "MDLSYC", fit_sim, pc_estimands_sim, model,
+save_report("sim_summary", "MDLSYC", fit_sim, cr$estimands, model,
             recovery = bind_rows(fixed_recovery, sigma_recovery, cv_recovery),
             model_name = "The Weatherman")
 save_gg("sim_contrast_density", "MDLSYC", p_sim_contrast)
+
+# Extremely good recovery !
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -143,71 +127,19 @@ p_prior_pc <- prior_predictive_spaghetti(
 
 save_gg("sim_prior_PC", "MDLSYC", p_prior_pc)
 
-## Variance budget calibration ---------------------------------------------------
-
-# K stays at 4 here: b_deg/b_precip/b_seq are additive mu-level fixed
-# effects, the same category cv[Cv] already was in Model 6, not new *summed*
-# variance terms. scale_dexp_rate() has nothing new to do, so this carries
-# Model 6's already-calibrated rates forward rather than recomputing them.
-
-K_ref <- 3
-K_new <- 4
-
-rate_sigma     <- scale_dexp_rate(3, K_ref, K_new)
-rate_sigma_loc <- scale_dexp_rate(2, K_ref, K_new)
-rate_sigma_tr  <- scale_dexp_rate(2, K_ref, K_new)
-rate_sigma_yr  <- scale_dexp_rate(2, K_ref, K_new)
-c(sigma = rate_sigma, sigma_loc = rate_sigma_loc, sigma_tr = rate_sigma_tr, sigma_yr = rate_sigma_yr)
-
-model_vbc <- model
-model_vbc$pr_sigma     <- bquote(sigma[cell] ~ dexp(.(rate_sigma)))
-model_vbc$pr_sigma_loc <- bquote(sigma_loc   ~ dexp(.(rate_sigma_loc)))
-model_vbc$pr_sigma_tr  <- bquote(sigma_tr    ~ dexp(.(rate_sigma_tr)))
-model_vbc$pr_sigma_yr  <- bquote(sigma_yr    ~ dexp(.(rate_sigma_yr)))
-
-fit_cal <- ulam(
-  model_vbc,
-  data = as.list(dat_sim),
-  chains = 6, cores = 6, iter = 10000,
-  control = list(adapt_delta = 0.99)
-)
-precis(fit_cal, depth = 2)
-
-## 2nd Prior predictive check -------------------------------------------------------
-extracted_prior_cal <- extract.prior(fit_cal, n = n_prior)
-
-prior_pred_cal <- map_dfr(seq_len(n_prior), function(i){
-  simulate_from_priors(draw_true(extracted_prior_cal, i), shift = 1)
-}, .id = "draw")
-
-summary(prior_pred_cal$Dv_shifted)
-
-p_prior_pc_cal <- prior_predictive_spaghetti(
-  prior_pred_cal, value_col = "Dv_shifted", upper_q = 0.99, model = model_vbc,
-  title = "Prior predictive check", observed = dat_sim$Dv_shifted) ; p_prior_pc_cal
-
-save_gg("sim_prior_PC", "MDLSYC_VBCal", p_prior_pc_cal)
-
-# Recovery re-check -- the overfitting guard itself.
-post_cal <- extract.samples(fit_cal)
-sigma_recovery_cal <- check_recovery(
-  true = list(sigma1 = true_sigma[1], sigma2 = true_sigma[2],
-              sigma3 = true_sigma[3], sigma4 = true_sigma[4],
-              sigma_yr = true_sigma_yr),
-  post_draws = list(sigma1 = post_cal$sigma[,1], sigma2 = post_cal$sigma[,2],
-                    sigma3 = post_cal$sigma[,3], sigma4 = post_cal$sigma[,4],
-                    sigma_yr = post_cal$sigma_yr)
-); sigma_recovery_cal
-
 ## Simulation-based calibration (SBC) --------------------------------------------
+# No separate variance-budget-calibration pass here: `model`'s sigma priors
+# are already Model 6's calibrated rates (hardcoded in 7.1_MDLSYC_model.R),
+# since K stays at 4 (b_deg/b_precip/b_seq are additive mu-level fixed
+# effects, not new summed variance terms).
 
-ncores <- 24
+ncores <- 18
 nchains <- 2
 n_sbc = 100
 n_iter = 20000
 
 sbc_MDLSYC <- run_sbc(
-  model_fit   = fit_cal,
+  model_fit   = fit_sim,
   means_fn    = means_MDLSYC,
   contrast_fn = contrast_may_gap_MDLSYC,
   simulate_fn = function(true_params) simulate_from_priors(true_params, shift = 1),
@@ -235,7 +167,7 @@ dat <- list(
 dat$cell <- (dat$Mg - 1) * 2 + dat$Mo
 
 fit_MDLSYC <- ulam(
-  model_vbc,
+  model,
   data = dat,
   chains = 6, cores = 6, iter = 20000,
   control = list(adapt_delta = 0.99)

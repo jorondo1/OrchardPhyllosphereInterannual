@@ -1,24 +1,37 @@
 # 7.1_MDLSYC_model.R
 
-# Adds three continuous control covariates on top of Model 6: deg_h_z,
-# precip_72h_z (weather, moved here from Model 6), and seq_depth_z
-# (sequencing depth, new -- see MODEL_HISTORY.md Model 7 section for why).
+# Adds three control variables on top of Model 6: 
+# deg_h_z, precip_72h_z and seq_depth_z
 
-## Model definition -------------------------------------------------
+## Model definition ---------------------------------------------------
 
 source('src/hiermod/ITS/6.1_MDLSY_model.R')
 
 model$main_model <- quote(
   mu <- loga[Mg] + gamma*(Mo-1) + b[Lo]*sigma_loc + yr[Yr]*sigma_yr +
-    tr[Tr]*sigma_tr + cv[Cv] + b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z
+    tr[Tr]*sigma_tr + cv[Cv] + 
+    # Here:
+    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z
 )
-model$prior_deg    <- quote(b_deg    ~ dnorm(0,1)) # standardized-scale slope
-model$prior_precip <- quote(b_precip ~ dnorm(0,1)) # standardized-scale slope
-model$prior_seq    <- quote(b_seq    ~ dnorm(0,1)) # standardized-scale slope
+# #all with standardized-scale slopes:
+model$prior_deg    <- quote(b_deg    ~ dnorm(0,1))
+model$prior_precip <- quote(b_precip ~ dnorm(0,1))
+model$prior_seq    <- quote(b_seq    ~ dnorm(0,1))
+
+# Sigma priors: Model 6's variance-budget-calibrated rates (scale_dexp_rate(3|2, 3, 4)
+# in 6.2_MDLSY_validation.R), hardcoded here since K stays at 4 (no new summed
+# variance term) and the calibrated model there only exists as a local
+# `model_vbc` variable, not something to source from a validation script.
+#     sigma  sigma_loc   sigma_tr   sigma_yr
+#      3.46       2.31       2.31       2.31
+model$pr_sigma     <- quote(sigma[cell] ~ dexp(3.46))
+model$pr_sigma_loc <- quote(sigma_loc   ~ dexp(2.31))
+model$pr_sigma_tr  <- quote(sigma_tr    ~ dexp(2.31))
+model$pr_sigma_yr  <- quote(sigma_yr    ~ dexp(2.31))
 
 # Backtransforming function --------------------------------------------------
 
-# means_MDLSYC(): same as means_MDLSY(), plus a covariate_offset term
+# means_MDLSYC(): add covariate_offset term
 # (deg_h_z/precip_72h_z/seq_depth_z all default to 0, i.e. this sample's own
 # average weather and sequencing depth).
 means_MDLSYC <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
@@ -53,25 +66,23 @@ means_MDLSYC <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_dep
 
 # Variance partition / Bayesian R2 -----------------------------------------
 
-# Same decomposition as variance_partition_MDLSY(), with the three control
-# covariates folded into "Explained" alongside Management/Season/Cultivar --
-# kept as one lumped slice rather than split out per covariate, same
-# reasoning as 6.1_MDLSY_model.R (their real collinearity with Season/Year
-# makes attributing shares to any one of them a murkier problem than what's
-# needed here).
+# Add three covariates into "Explained" alongside Management/Season/Cultivar.
+# kept as one lumped amount rather than split out per covariate, same
+# reasoning as 6.1_MDLSY_model.R 
+
 variance_partition_MDLSYC <- function(post, dat){
   N <- length(dat$Mg)
 
-  loga_obs <- post$loga[, dat$Mg]                                   # n_draws x N
+  loga_obs <- post$loga[, dat$Mg] # n_draws x N
   gamma    <- as.vector(post$s_conv) + outer(as.vector(post$gap_shift), dat$Mg - 1)
   gamma_term <- sweep(gamma, 2, dat$Mo - 1, "*")
-  cv_obs   <- post$cv[, dat$Cv]                                     # n_draws x N
+  cv_obs   <- post$cv[, dat$Cv] # n_draws x N
   covariates <- outer(as.vector(post$b_deg), dat$deg_h_z) +
     outer(as.vector(post$b_precip), dat$precip_72h_z) +
     outer(as.vector(post$b_seq), dat$seq_depth_z)
 
   fixed_mu  <- loga_obs + gamma_term + cv_obs + covariates
-  explained <- apply(fixed_mu, 1, var)                              # length n_draws
+  explained <- apply(fixed_mu, 1, var) # length n_draws
 
   cell_n <- as.integer(table(factor(dat$cell, levels = 1:4)))
   residual_var <- as.vector((post$sigma^2) %*% (cell_n / sum(cell_n)))
@@ -91,10 +102,10 @@ variance_partition_MDLSYC <- function(post, dat){
   )
 }
 
-## Data-generating function ---------------------------------------------------
-# Same skeleton as sim_div_MDLSY() (6.1_MDLSY_model.R), plus deg_h_z/
-# precip_72h_z/seq_depth_z, each simulated as independent rnorm(0,1) draws --
-# deliberately NOT reproducing the real deg_h/precip_72h ~ Season/Year
+## Data-generating function --------------------------------------------
+
+# Add deg_h_z/precip_72h_z/seq_depth_z, each  independent rnorm(0,1) draws.
+#  NOT reproducing the real deg_h/precip_72h ~ Season/Year
 # correlation (see 7.2_MDLSYC_validation.R); this tests whether b_deg/
 # b_precip/b_seq are recoverable in principle, not how identifiable they are
 # under the real design's collinearity.

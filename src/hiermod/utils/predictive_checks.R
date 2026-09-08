@@ -1,30 +1,16 @@
-# predictive_checks.R 
-
-# - prior predictive (spaghetti) and posterior predictive (overlay density, 
-# contrast test-statistic) plotting helpers.
-
-# Building the long-format prior_pred data frame itself (draw_true_X()/
-# simulate_X(), looped with map_dfr(..., .id = "draw")) done per-model.
+# predictive_checks.R -- prior predictive (spaghetti) and posterior
+# predictive (density overlay, contrast test-statistic) plotting helpers.
+# Building the long-format prior_pred data frame itself (simulate_from_priors()
+# looped with map_dfr(..., .id = "draw")) is done per-model.
 
 # ---- Prior predictive check -------------------------------------------------
 
-# Many prior draws -> many simulated datasets -> one density line per
-# replicate, overlaid. 
-# 
-# NOT for posterior predictive checks: those use bayesplot instead (below).
-#
-# model (optional): pass the alist() itself to print it on the plot, to
-# document which priors produced it. Also prints mean/median/sd computed on ALL
-# replicates (n_prior), not just the n_sample plotted.
-#
-# observed (optional): a numeric vector -- e.g. dat_sim$Dv, the one actual
-# simulated dataset a Parameter recovery fit was trained on -- overlaid as
-# its own density line, so the prior predictive envelope can be eyeballed
-# against the one draw that's actually in play, not just the ensemble.
-#
-#   prior_pred_MDL <- map_dfr(seq_len(n_prior), function(i) simulate_MDL(draw_true_MDL(i)), .id = "draw")
-#   prior_predictive_spaghetti(prior_pred_MDL, model = model_MDL, title = "Prior predictive check -- model_MDL")
-
+# Overlays many prior-predictive-simulated densities (one per prior draw),
+# to check whether the priors imply plausible data before ever fitting to
+# anything real. Not for posterior predictive checks (those use bayesplot,
+# below). model (optional): prints the alist() on the plot, to document
+# which priors produced it. observed (optional): overlays one real/simulated
+# dataset's own density for comparison against the prior ensemble.
 prior_predictive_spaghetti <- function(
     prior_pred, model = NULL, value_col = "Dv", draw_col = "draw",
     group_col = NULL, n_sample = 100, upper_q = 0.99,
@@ -35,10 +21,9 @@ prior_predictive_spaghetti <- function(
   xlim_upper <- quantile(prior_pred[[value_col]], upper_q, na.rm = TRUE)
   all_draw_ids <- unique(prior_pred[[draw_col]])
 
-  # % of REPLICATES (not raw points) with >=1 value beyond the cutoff --
-  # asks how concentrated the tail is (a handful of replicates going way out
-  # vs. everyone contributing a little), not the ~constant raw-point fraction
-  # (1 - upper_q) that a quantile trivially guarantees.
+  # % of replicates (not raw points) with >=1 value beyond the cutoff --
+  # shows whether the tail is a few extreme replicates or spread thin
+  # across everyone.
   prop_extreme <- prior_pred %>%
     group_by(.data[[draw_col]]) %>%
     summarise(extreme = any(.data[[value_col]] > xlim_upper), .groups = "drop") %>%
@@ -71,10 +56,7 @@ prior_predictive_spaghetti <- function(
              colour = "grey30", label = stat_label, family = "mono")
 
   if (!is.null(observed)) {
-    # same xlim_upper trim as the spaghetti ensemble (bulk) -- keeps the two
-    # densities' bandwidth/shape comparable, one outlier shouldn't distort it.
-    # inherit.aes = FALSE: the base plot's group = draw_col aes doesn't apply
-    # here, this is one single vector, not per-replicate draws.
+    # same xlim_upper trim as the ensemble, so bandwidth/shape stay comparable
     observed_bulk <- observed[observed <= xlim_upper]
     p <- p + geom_density(
       data = tibble(!!value_col := observed_bulk),
@@ -84,10 +66,6 @@ prior_predictive_spaghetti <- function(
   }
 
   if (!is.null(model)) {
-    # width.cutoff wraps a long expression into multiple deparse() lines --
-    # collapsing THOSE with " " (the old code) undid the wrap by joining
-    # them back into one line; collapse = "\n" here keeps it. trimws()
-    # removes the leading indentation deparse() adds to continuation lines.
     model_text <- paste(
       sapply(model, function(x) paste(trimws(deparse(x, width.cutoff = 80)), collapse = "\n")),
       collapse = "\n")
@@ -101,7 +79,7 @@ prior_predictive_spaghetti <- function(
 
 # ---- Posterior predictive checks (bayesplot) -------------------------------
 
-# convert sim() matrix output to a long tibble
+# Reshapes sim()'s wide draws-by-observation matrix into a long tibble.
 postpred_as_long_tibble <- function(post_pred) {
   post_pred %>%
     as_tibble(.name_repair = "minimal") %>%
@@ -111,10 +89,9 @@ postpred_as_long_tibble <- function(post_pred) {
     mutate(obs = as.integer(obs))
 }
 
-# Density overlay split by a grouping factor -- thin wrapper around
-# bayesplot::ppc_dens_overlay_grouped() since the sim()+group-label step is
-# identical everywhere it's used (models 1-3). group: a label factor/vector
-# for dat$Dv's rows, e.g. idx$Mg$to_label(dat$Mg).
+# Posterior predictive density overlay, split by group. Thin wrapper
+# around bayesplot::ppc_dens_overlay_grouped() since the sim()+labeling
+# step repeats identically across models 1-3.
 plot_ppc_overlay <- function(fit, dat, group, n = 50, xlim = NULL){
   yrep <- sim(fit, dat, n = n)
   p <- bayesplot::ppc_dens_overlay_grouped(dat$Dv, yrep, group = group)
@@ -122,28 +99,24 @@ plot_ppc_overlay <- function(fit, dat, group, n = 50, xlim = NULL){
   p
 }
 
-# Factory for a two-group contrast test statistic, for bayesplot::ppc_stat().
-# group must be coded 1/2 (e.g. dat$Mg): returns FUN(group==2) - FUN(group==1).
-# Only fits a clean binary split -- once a model's groups aren't a single 1/2
-# index (model 4's Mg x Mo cells), write the per-cell/per-contrast stat
-# function directly in that script instead.
+# Builds a two-group contrast statistic for ppc_stat() (FUN on group==2
+# minus FUN on group==1). Only fits a clean 1/2 split; a model with more
+# groups (e.g. Mg x Mo cells) needs its own stat function written directly.
 contrast_stat <- function(FUN, group){
   force(FUN); force(group)
   function(y) FUN(y[group == 2]) - FUN(y[group == 1])
 }
 
-# sim() + ppc_stat() + title, for a contrast_stat(). group_labels: the two
-# group names in 1/2 order (e.g. idx$Mg$levels), for the title.
+# sim() + ppc_stat() + a title, for one contrast_stat().
 plot_ppc_contrast_stat <- function(fit, dat, group, FUN, stat_name, group_labels, n = 1000){
   yrep <- sim(fit, dat, n = n)
   bayesplot::ppc_stat(dat$Dv, yrep, stat = contrast_stat(FUN, group)) +
     labs(title = paste0("PPC: ", stat_name, " contrast (", group_labels[2], " - ", group_labels[1], ")"))
 }
 
-# Same idea as plot_ppc_contrast_stat(), but for the Mg x Mo (May/July gap +
-# seasonal change) design used from Model 4 onward -- 3 stacked ppc_stat()
-# panels via patchwork. dat needs $Dv/$Mg/$Mo (Mg,Mo coded 1/2 as everywhere
-# else); Mg==2 assumed to be the "treatment" side (Organic).
+# The May gap / July gap / seasonal-change PPC used from Model 4 onward, as
+# three stacked ppc_stat() panels. dat needs $Dv/$Mg/$Mo (1/2-coded);
+# Mg==2 is assumed to be the "treatment" side (Organic).
 plot_ppc_season_contrast_stats <- function(fit, dat, n = 1000){
   yrep <- sim(fit, dat, n = n)
 
@@ -158,5 +131,5 @@ plot_ppc_season_contrast_stats <- function(fit, dat, n = 1000){
   p_change <- bayesplot::ppc_stat(dat$Dv, yrep, stat = change_stat) +
     labs(title = "PPC: Seasonal change in gap")
 
-  p_may / p_july / p_change   # patchwork stack
+  p_may / p_july / p_change
 }

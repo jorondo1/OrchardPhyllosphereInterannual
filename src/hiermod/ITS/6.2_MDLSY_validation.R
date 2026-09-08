@@ -9,8 +9,6 @@ hiermod_out_dir <- "out/hiermod/ITS_6_lognormal_MDLSY"
 # Same structure as MODEL 5, plus:
 # - yr[Yr] pooled (yr[Yr]*sigma_yr, was a fixed dnorm(0,1) effect);
 # - Cultivar (cv[Cv]) as a simple fixed/unpooled effect.
-# Weather and sequencing-depth controls are Model 7's addition
-# (7.1_MDLSYC_model.R), not this one.
 
 ## Parameter recovery -----------------------------------------------------------
 
@@ -89,31 +87,14 @@ cv_recovery <- check_recovery(
 
 ### Contrast recovery ------------------------------
 
-pf_sim <- post_full(fit_sim, means_MDLSY, shift = 1)
-m_sim  <- pf_sim$median
-
-pc_estimands_sim <- estimand_rows(list(
-  "Median May gap (Organic - Conventional)"  = m_sim$median_3 - m_sim$median_1,
-  "Median July gap (Organic - Conventional)" = m_sim$median_4 - m_sim$median_2,
-  "Seasonal change in median gap (July - May)"= (m_sim$median_4 - m_sim$median_2) - (m_sim$median_3 - m_sim$median_1)
-))
-
-may_gap <- may_org-may_conv
-july_gap <- may_org*exp(july_conv_shift+july_org_shift)-may_conv*exp(july_conv_shift)
-
-true_estimands <- tribble(
-  ~statistic,                                   ~value,
-  "Median May gap (Organic - Conventional)",    may_gap,
-  "Median July gap (Organic - Conventional)",   july_gap,
-  "Seasonal change in median gap (July - May)", july_gap-may_gap,
-)
+cr <- contrast_recovery(fit_sim, means_MDLSY, may_conv, may_org, july_conv_shift, july_org_shift, shift = 1)
 
 p_sim_contrast <- contrast_plot_panels(
-  pc_estimands_sim, quant = c(0, 0.995), scales = 'free_y',
+  cr$estimands, quant = c(0, 0.995), scales = 'free_y',
   group_pal = Management_palette,
-  true_vals = true_estimands); p_sim_contrast # pretty good
+  true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", "MDLSY", fit_sim, pc_estimands_sim, model,
+save_report("sim_summary", "MDLSY", fit_sim, cr$estimands, model,
             recovery = bind_rows(fixed_recovery, sigma_recovery, cv_recovery),
             model_name = "The Varietal")
 save_gg("sim_contrast_density", "MDLSY", p_sim_contrast)
@@ -195,7 +176,6 @@ precis(fit_cal, depth = 2)
 # iteration, not repeated automatically since "how much is enough" is a
 # judgment call, not something to auto-loop.
 
-
 ## 2nd Prior predictive check -------------------------------------------------------
 extracted_prior_cal <- extract.prior(fit_cal, n = n_prior)
 
@@ -207,7 +187,7 @@ summary(prior_pred_cal$Dv_shifted)
 
 p_prior_pc_cal <- prior_predictive_spaghetti(
   prior_pred_cal, value_col = "Dv_shifted", upper_q = 0.99, model = model_vbc,
-  title = "Prior predictive check", observed = dat_sim$Dv_shifted) ; p_prior_pc_cal
+  title = "Prior predictive check", observed = dat_sim$Dv_shifted)
 
 save_gg("sim_prior_PC", "MDLSY_VBCal", p_prior_pc_cal)
 
@@ -218,7 +198,7 @@ save_gg("sim_prior_PC", "MDLSY_VBCal", p_prior_pc_cal)
 # It's worse than Model 5's 19.7%, but still plenty ok. Both mean and sd 
 # decreased a lot, that's what vbc does. 
 
-# Recovery re-check -- the overfitting guard itself.
+# Recovery re-check :
 post_cal <- extract.samples(fit_cal)
 sigma_recovery_cal <- check_recovery(
   true = list(sigma1 = true_sigma[1], sigma2 = true_sigma[2],
@@ -237,10 +217,10 @@ sigma_recovery_cal <- check_recovery(
 # (org_May - conv_May), and the shift cancels, same as
 # 5b.2_MDLS2_shifted_validation.R.
 
-ncores <- 24
+ncores <- 18
 nchains <- 2
 n_sbc = 100
-n_iter = 20000
+n_iter = 10000
 
 sbc_MDLSY <- run_sbc(
   model_fit   = fit_cal,

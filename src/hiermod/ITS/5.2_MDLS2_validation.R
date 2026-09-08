@@ -134,39 +134,14 @@ sigma_recovery <- check_recovery(
 
 ### Contrast recovery ------------------------------
 
-# means_MDLS2() checks if params are picked up. Let's verify if the
-# contrasts are picked up, which is what we aim for: plot the whole
-# posterior distributions of these estimands and check where the true
-# (synthetic) data contrasts actually fall.
-
-pf_sim <- post_full(fit_sim, means_MDLS2)
-names(pf_sim)
-
-# mean_1=conv_May, mean_2=conv_July, mean_3=org_May, mean_4=org_July:
-m_sim  <- pf_sim$median
-
-pc_estimands_sim <- estimand_rows(list(
-  "Median May gap (Organic - Conventional)"  = m_sim$median_3 - m_sim$median_1,
-  "Median July gap (Organic - Conventional)" = m_sim$median_4 - m_sim$median_2,
-  "Seasonal change in median gap (July - May)"= (m_sim$median_4 - m_sim$median_2) - (m_sim$median_3 - m_sim$median_1)
-))
-
-may_gap <- may_org-may_conv
-july_gap <- may_org*exp(july_conv_shift+july_org_shift)-may_conv*exp(july_conv_shift)
-
-true_estimands <- tribble(
-  ~statistic,                                   ~value,
-  "Median May gap (Organic - Conventional)",    may_gap,
-  "Median July gap (Organic - Conventional)",   july_gap,
-  "Seasonal change in median gap (July - May)", july_gap-may_gap,
-)
+cr <- contrast_recovery(fit_sim, means_MDLS2, may_conv, may_org, july_conv_shift, july_org_shift)
 
 p_sim_contrast <- contrast_plot_panels(
-  pc_estimands_sim, quant = c(0, 0.995), scales = 'free_y',
+  cr$estimands, quant = c(0, 0.995), scales = 'free_y',
   group_pal = Management_palette,
-  true_vals = true_estimands); p_sim_contrast
+  true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", "MDLS2", fit_sim, pc_estimands_sim, model,
+save_report("sim_summary", "MDLS2", fit_sim, cr$estimands, model,
             recovery = bind_rows(fixed_recovery, sigma_recovery), model_name = "The Splitter")
 save_gg("sim_contrast_density", "MDLS2", p_sim_contrast)
 

@@ -1,12 +1,11 @@
-#  simulation-based calibration harness. Runs fit/simulate/rank loop.
+# sbc_helpers.R -- simulation-based calibration (SBC): repeatedly simulate
+# from the priors, refit, and check whether the true value's rank in the
+# resulting posterior is uniformly distributed across replicates.
 
-
-# One prior-draws replicate -> the i-th "true" parameter set, for whatever
-# names extract.prior() returned (an indexed parameter like loga is a
-# matrix, row i is its slice; a scalar like sigma_loc is a plain vector,
-# element i is its slice) -- same shape logic post_full() already handles,
-# so this needs no per-model rewrite: every script's Prior predictive
-# check/SBC section can call it as-is on its own `prior <- extract.prior(...)`.
+# Pulls the i-th prior draw out of extract.prior()'s output as a plain
+# named list, for feeding to a model's sim_div_*() as one "true" parameter
+# set (an indexed parameter comes back as a matrix row, a scalar as one
+# vector element).
 draw_true <- function(priors, i){
   purrr::imap(priors, function(x, name){
     x <- as.matrix(x)
@@ -14,57 +13,32 @@ draw_true <- function(priors, i){
   })
 }
 
- 
-# SBC harness
-# 99% Claude Code
-# Model-specific pieces (simulate_fn/means_fn)  supplied as argument
-#   model_fit   : a compiled ulam fit of the model to validate -- supplies
-#                 both the model spec (re-fit each replicate) and the prior
-#                 draws (extract.prior()), so the two can't drift apart.
-#   simulate_fn : function(true_params) -> data.frame (via sim_div_*()), with
-#                 columns already matching the model's data arguments.
-#   means_fn    : function(post) -> list(mean = cbind(v1, v2), ...) -- same
-#                 convention postcounts()/post_full() use for the real fit.
+# Runs the full SBC loop: simulate data from prior draw i, refit the
+# model, and record where the true (simulating) value ranks in the
+# resulting posterior, for n_sbc replicates.
+#   model_fit   : a compiled ulam fit -- supplies both the model spec and
+#                 the prior draws (extract.prior()), so they can't drift apart.
+#   simulate_fn : function(true_params) -> data.frame matching the model's data
+#   means_fn    : function(post) -> list(mean = cbind(v1, v2), ...)
 #   contrast_fn : function(post, true_params, means_fn) -> list(post_contrast,
-#                 true_contrast) -- defaults to contrast_from_means(), which
-#                 assumes `mean` is a 2-column matrix and tests column2-column1
-#                 (models 1-3's single Mg contrast). A model whose `mean` has
-#                 more columns (model 4's 4-cell MDLS) MUST supply its own --
-#                 contrast_from_means() would silently grab the wrong pair of
-#                 columns instead of erroring, so this isn't optional there.
-#   control     : passed to ulam(); match the real fit's control= or SBC will
-#                 see spurious divergences from a weaker sampler setting alone.
-#   n_parallel  : replicates run at once via parallel::mclapply() (default 1
-#                 = current sequential behaviour, unchanged). Safe with
-#                 cmdstanr (each chain is an external subprocess, not
-#                 in-process compiled code the way rstan is -- forking is a
-#                 known hazard for the latter, not this). Budget
-#                 n_parallel * cores against your core count: replicates are
-#                 fully independent fits, so this is the lever that actually
-#                 uses idle cores, unlike within-chain `threads` (reduce_sum),
-#                 which only pays off with large per-replicate N -- worth
-#                 more for the one real-data fit than for a small SBC
-#                 replicate. cat()'s per-replicate progress line will arrive
-#                 out of numeric order once n_parallel > 1 (forked stdout).
-#
-# Returns a list of per-iteration results (rank, Ns, true_contrast,
-# n_divergent, n_transitions) -- pass to save_sbc_report() for a pass/fail
-# read plus the rank-histogram plot.
-
-run_sbc <- function(model_fit, simulate_fn, means_fn, contrast_fn = contrast_from_means,
-                    n_sbc = 8, iter = 1000, chains = 2, cores = chains, refresh = 0,
-                    control = NULL, n_parallel = 1){
+#                 true_contrast); defaults to a 2-column mean, must be
+#                 supplied when a model's estimand doesn't reduce to that
+#   n_parallel  : replicates run concurrently via parallel::mclapply()
+#                 (safe with cmdstanr's subprocess-based chains)
+# Returns a list of per-replicate results, for save_sbc_report().
+run_sbc <- function(
+    model_fit, simulate_fn, means_fn, contrast_fn = contrast_from_means,
+    n_sbc = 8, iter = 1000, chains = 2, cores = chains, refresh = 0,
+    control = NULL, n_parallel = 1) {
 
   model  <- model_fit@formula
   message('Extracting parameters from priors...')
   priors <- extract.prior(model_fit, n = n_sbc)
 
   one_replicate <- function(i){
-    # 1. Simulate a dataset from one set of prior parameters
     true_params <- draw_true(priors, i)
     dat_list    <- as.list(simulate_fn(true_params))
 
-    # 2. Fit the model to the fake data
     fit <- if (is.null(control)) {
       ulam(model, data = dat_list, chains = chains, cores = cores,
            iter = iter, refresh = refresh)
@@ -72,35 +46,25 @@ run_sbc <- function(model_fit, simulate_fn, means_fn, contrast_fn = contrast_fro
       ulam(model, data = dat_list, chains = chains, cores = cores,
            iter = iter, refresh = refresh, control = control)
     }
-    # cmdstanr backend (@cstanfit), not rstan (@stanfit)
     ndiv <- sum(fit@cstanfit$diagnostic_summary(diagnostics = "divergences")$num_divergent)
 
-    # 3. Recover the fitted posterior and compare it against the true value
-    # that actually generated this replicate's data.
     post <- extract.samples(fit)
     cres <- contrast_fn(post, true_params, means_fn)
 
-    # 4. Rank = how many posterior draws fall below the true value. Across
-    # n_sbc replicates this rank should be uniformly distributed if the model
-    # is calibrated -- that's what save_sbc_report()'s ks.test checks.
+    # rank = how many posterior draws fall below the true value; should be
+    # uniform across replicates if the model is calibrated.
     res <- list(
       rank          = sum(cres$post_contrast < cres$true_contrast),
       Ns            = length(cres$post_contrast),
       true_contrast = cres$true_contrast,
       n_divergent   = ndiv,
-      # Divergences only happen during sampling, not warmup, and this
-      # harness always uses the default 50/50 iter split (no warmup=
-      # override anywhere) -- so sampling transitions/chain = iter/2.
       n_transitions = (iter %/% 2) * chains
     )
     cat(i, "done, divergences:", ndiv, "\n")
     res
   }
 
-  # Retries a replicate on failure;  the compile-cache race below is rare
-  # once primed (~1 in 5 *batches* still hit it in testing, not 1 in 5
-  # replicates) but not eliminated; a bounded retry is cheap insurance
-  # against a transient subprocess-launch race silently shrinking n_sbc.
+  # Bounded retry: a rare compile-cache race can fail a replicate's launch.
   safe_replicate <- function(i, max_tries = 3){
     for (attempt in seq_len(max_tries)) {
       res <- tryCatch(one_replicate(i), error = function(e) e)
@@ -110,9 +74,6 @@ run_sbc <- function(model_fit, simulate_fn, means_fn, contrast_fn = contrast_fro
   }
 
   if (n_parallel > 1) {
-    # ulam() recompiles fresh per replicate (new data -> same Stan code),
-    # caching the binary to a tempdir() path all forked children inherit
-    # unchanged. 
     message('Compiling once before forking...')
     first <- one_replicate(1)
     rest  <- if (n_sbc > 1) parallel::mclapply(2:n_sbc, safe_replicate, mc.cores = n_parallel) else list()
@@ -122,12 +83,9 @@ run_sbc <- function(model_fit, simulate_fn, means_fn, contrast_fn = contrast_fro
   }
 }
 
-# Summarizes a run_sbc() result (rank uniformity via KS test, divergence
-# rate) and plots the rank histogram 
-#
-# Divergence rate is expressed as a % of actual sampling transitions
-# (n_transitions, from run_sbc()'s (iter/2)*chains per replicate)
-
+# Summarizes a run_sbc() result: KS test for rank uniformity, divergence
+# rate (as a % of sampling transitions, not a raw count), and a
+# rank-histogram plot.
 save_sbc_report <- function(sbc_out, step, dir = hiermod_out_dir){
   ranks         <- sapply(sbc_out, function(x) x$rank / x$Ns)
   ks_test       <- ks.test(ranks, "punif")

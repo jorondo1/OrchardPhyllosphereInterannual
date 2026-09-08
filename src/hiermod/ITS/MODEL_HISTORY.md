@@ -239,8 +239,20 @@ matches far better than a linear effect on raw counts.
 
 **Variance budget calibration:** K stays at 4 here. The three control
 covariates are additive `mu`-level fixed effects, the same category
-`cv[Cv]` already was in Model 6, not new summed variance terms, so this
-carries Model 6's calibrated rates forward rather than recomputing them.
+`cv[Cv]` already was in Model 6, not new summed variance terms. Rather
+than recomputing a calibration pass in the validation script (Model 6's
+own pattern), Model 6's calibrated rates are hardcoded directly into
+`7.1_MDLSYC_model.R`'s priors (`sigma ~ dexp(3.46)`, `sigma_loc`/
+`sigma_tr`/`sigma_yr ~ dexp(2.31)`) -- there's no clean way to source them
+from `6.2_MDLSY_validation.R`, where they only exist as a local variable.
+This also let `7.2_MDLSYC_validation.R` drop the separate uncalibrated-vs-
+calibrated fit comparison Model 6's script has: with the prior already
+calibrated from the start, there's nothing to compare against.
+
+**Tooling:** `contrast_recovery()` (`postcontrast_helpers.R`) was
+extracted here and retrofitted onto Models 4, 5, 5-shifted, and 6's
+validation scripts: the May-gap/July-gap/seasonal-change posterior +
+true-value computation was identical boilerplate in every one of them.
 
 **Known limitation:** all three covariates are likely correlated with
 Season and/or Year in the real data (already confirmed for weather in an

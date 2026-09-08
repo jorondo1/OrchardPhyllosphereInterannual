@@ -163,7 +163,9 @@ answers "what would the data look like," never "what is the parameter."
   `mu` itself (`cv[Cv]`, `b_deg`, `b_precip`, `b_seq`): these affect mean
   and median directly via `exp(mu)` and are outside this mechanism
   entirely. Used from Model 6 onward; tabled for Model 5 since K didn't
-  actually grow there.
+  actually grow there. Model 7 doesn't run a new calibration pass either
+  (same reason, its three added covariates are (b) not (a)) -- it just
+  hardcodes Model 6's already-calibrated rates into its own priors.
 - **Bayesian R2 / variance-partition coefficient (VPC)**: the share of
   total outcome variance attributable to each variance source (fixed
   effects combined = "explained"/R2, plus each random effect's own

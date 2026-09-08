@@ -1,4 +1,4 @@
-Model 6 (MDLSY, "The Weatherman") -- formal specification
+Model 6 (MDLSY, "The Varietal") -- formal specification
 ============================================================
 
 Paste each $$...$$ block below into a Word equation box (Insert >
@@ -14,9 +14,11 @@ second linear model of Management, not a single number. This is
 literally the `gamma <- s_conv + gap_shift*(Mg-1)` line already in
 `6.1_MDLSY_model.R`, given its own equation instead of being folded in.
 
-Naming convention: single plain letters, a through j (skipping i,
+Naming convention: single plain letters, a through g (skipping i,
 reserved for the observation index), one per fitted coefficient. sigma
-is paired to its matching random-effect letter by subscript.
+is paired to its matching random-effect letter by subscript. (Model 7
+picks up where this leaves off, h/j/m, for its three control covariates
+-- see model7_MDLSYC_latex.txt.)
 
   a  = Management intercept (May baseline, index-variable form, 2 levels)
   b  = Season slope at Conventional (shared May->July shift)
@@ -26,8 +28,6 @@ is paired to its matching random-effect letter by subscript.
   f  = Year effect (random, pooled)
   g  = Cultivar effect (fixed, unpooled -- indexed like a, not like d/e/f:
        no population SD, no shrinkage, just an independent prior per level)
-  h  = degree-hours slope
-  j  = precipitation slope
 
 
 1. Notation
@@ -45,8 +45,6 @@ For observation i = 1, ..., N (each row is one Tree x Season measurement):
   - Tr[i] in {1,...,n_Tr}  Tree (study unit, nested in Location)
   - Yr[i] in {1,2,3}    Year
   - Cv[i] in {1,...,5}  Cultivar
-  - X^deg_i, X^precip_i   standardized degree-hours (day before) /
-                           precipitation (3 days before)
 
 k[i], the residual-scale index -- a plain 4-level categorical variable,
 used only so $\sigma$ can differ by Management x Season cell:
@@ -66,7 +64,6 @@ $$
 $$
 \mu_i = a_{\mathrm{Mg}[i]} + \gamma_{\mathrm{Mg}[i]}\, S_i
 + d_{\mathrm{Lo}[i]} + e_{\mathrm{Tr}[i]} + f_{\mathrm{Yr}[i]} + g_{\mathrm{Cv}[i]}
-+ h\,X^{deg}_i + j\,X^{precip}_i
 $$
 
 The Season slope is itself a linear model of Management, not a single
@@ -112,9 +109,7 @@ $$
 a_{\mathrm{Mg}} &\sim \mathrm{Normal}(2,2), & \mathrm{Mg}&=1,2\\
 b &\sim \mathrm{Normal}(0,1)\\
 c &\sim \mathrm{Normal}(0,1)\\
-g_{\mathrm{Cv}} &\sim \mathrm{Normal}(0,1), & \mathrm{Cv}&=1,\dots,5\\
-h &\sim \mathrm{Normal}(0,1)\\
-j &\sim \mathrm{Normal}(0,1)
+g_{\mathrm{Cv}} &\sim \mathrm{Normal}(0,1), & \mathrm{Cv}&=1,\dots,5
 \end{aligned}
 $$
 
@@ -142,8 +137,7 @@ beyond what was already validated.
 7. Derived estimands
 -----------------------
 Population-level mean at Management $m$, Season $s\in\{0,1\}$
-(marginalized over Location/Tree/Year; reference weather
-$X^{deg}=X^{precip}=0$), floor added back:
+(marginalized over Location/Tree/Year), floor added back:
 
 $$
 \mathrm{E}[H \mid m,s] = 1 + \exp\!\left(a_m + \gamma_m s + \tfrac{1}{2}V_{k(m,s)}\right),
