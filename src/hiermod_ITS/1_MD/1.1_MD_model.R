@@ -1,6 +1,6 @@
 # 1.1_MD_model.R --- MODEL 1 (constant variance) and MODEL 2 (Mg-specific
-# variance) definitions: model alist, means_fn, data-generating function, and
-# the postcounts() convenience wrapper for each.
+# variance) definitions: model alist, means_fn, and data-generating function
+# for each.
 
 ## Data-generating function ---------------------------------------------------
 # Hand-rolled simulator: raw mean_/cv_ -> lognormal Dv, given a group index Mg.
@@ -34,8 +34,6 @@ means_MD <- function(post){
   ))
 }
 
-postcounts_Model1 <- function(fit) postcounts(fit, means_MD)
-
 ## MODEL 2 -- Allow Management-specific variance (heteroscedasticity) --------
 # One variance per group: sigma[Mg] instead of a shared sigma.
 
@@ -55,5 +53,3 @@ means_MDv <- function(post){
     lognormal_mean(post$loga[,2], post$sigma[,2]^2)
   ))
 }
-
-postcounts_Model2 <- function(fit) postcounts(fit, means_MDv)

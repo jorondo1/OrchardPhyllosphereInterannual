@@ -3,89 +3,14 @@
 # model, from a simple 2-group difference to a multi-estimand model, can
 # reuse the same report/plot functions.
 
-# ---- Single-contrast helpers (mean only) ---------------------------------
-
-# Prints mean/median/PI/HPDI of a contrast vector. Quick console check.
-report_postcount_stats <- function(post_counts) {
-  message("Mean: ", round(mean(post_counts$contrast),2))
-  message("Median: ", round(median(post_counts$contrast),2))
-  pint <- PI(post_counts$contrast)
-  message("PI: 5%: ", round(pint[1],2), "; 94%: ", round(pint[2],2))
-  hpdi <- HPDI(post_counts$contrast)
-  message("HPDI: 5%: ", round(hpdi[1],2), "; 94%: ", round(hpdi[2],2))
-}
-
-# Extracts a fit's posterior, runs means_fn() for a 2-group estimand, and
-# returns group1/group2/their difference as a data.frame. Models 1-2's
-# simpler two-group pipeline.
-postcounts <- function(fit, means_fn){
-  post <- extract.samples(fit)
-  m <- means_fn(post)
-  post_counts <- data.frame(mean1 = m$mean[,1], mean2 = m$mean[,2]) %>%
-    mutate(contrast = mean2 - mean1)
-  report_postcount_stats(post_counts)
-  post_counts
-}
-
-# SBC counterpart to postcounts(): compares means_fn()'s posterior contrast
-# against the true (simulating) contrast instead of just reporting it.
+# SBC contrast_fn default for the simple 2-group case (Models 2-3): compares
+# means_fn()'s posterior contrast against the true (simulating) contrast.
+# Models 4+ supply their own contrast_fn instead, since their estimand isn't
+# a single group1/group2 difference.
 contrast_from_means <- function(post, true_params, means_fn){
   m <- means_fn(post)
   mean_true <- lognormal_mean(true_params$loga, true_params$sigma^2)
   list(post_contrast = m$mean[,2] - m$mean[,1], true_contrast = mean_true[2] - mean_true[1])
-}
-
-# Density plot of one or more posterior columns (e.g. mean1/mean2/contrast),
-# cropped to a quantile range with a caption noting how much was cropped.
-# Keeps extreme tail draws from stretching the plotted axis into uselessness.
-plot_contrast_density <- function(post_counts, quant = 1, group_name){
-
-  quant <- if (length(quant) == 1) c(0, quant) else sort(quant)
-  lower_q <- quant[1]; upper_q <- quant[2]
-
-  post_upper <- post_counts %>%
-    lapply(function(x) quantile(x, probs = upper_q)) %>%
-    as_vector() %>% max()
-
-  post_lower <- post_counts %>%
-    lapply(function(x) quantile(x, probs = lower_q)) %>%
-    as_vector() %>% min()
-
-  prop_dropped <- post_counts %>%
-    sapply(., function(x) sum(x > post_upper | x < post_lower) / nrow(.)) %>%
-    mean() %>% {100*.} %>% signif(digits = 3)
-
-  p <- post_counts %>%
-    pivot_longer(cols = everything(), names_to = group_name) %>%
-    ggplot(aes(x = value, group = !!sym(group_name))) +
-    geom_density(aes(colour = !!sym(group_name), fill = !!sym(group_name)), alpha = 0.5, linewidth = 0.2) +
-    coord_cartesian(xlim = c(floor(post_lower), ceiling(post_upper)))
-
-  if(prop_dropped>0){
-    dropped_above <- post_counts %>% lapply(function(x) x[x > post_upper]) %>% unlist(use.names = FALSE)
-    dropped_below <- post_counts %>% lapply(function(x) x[x < post_lower]) %>% unlist(use.names = FALSE)
-
-    fmt <- function(x) if (abs(x) >= 1e5) formatC(x, format = "e", digits = 2)
-    else format(round(x), big.mark = ",", scientific = FALSE)
-
-    range_bits <- c(
-      if (length(dropped_below) > 0) paste0("below: [", fmt(min(dropped_below)), "-", fmt(max(dropped_below)), "]"),
-      if (length(dropped_above) > 0) paste0("above: ", fmt(min(dropped_above)), "-", fmt(max(dropped_above)), "]")
-    )
-
-    extent_text <- if (lower_q == 0) {
-      paste0("exceed the ", format(100*upper_q), "th percentile")
-    } else if (upper_q == 1) {
-      paste0("fall below the ", format(100*lower_q), "th percentile")
-    } else {
-      paste0("fall outside the ", format(100*lower_q), "th-", format(100*upper_q), "th percentile range")
-    }
-
-    p <- p + labs(caption = paste0(
-      "Approximately ", prop_dropped, "% of samples ", extent_text,
-      " (", paste(range_bits, collapse = "; "), ") and are not shown on this plot."))
-  }
-  return(p)
 }
 
 # ---- Full posterior, model-agnostic list -----------------------------------
@@ -192,20 +117,6 @@ report_contrasts_full <- function(pc_full){
       HPDI_upper = HPDI(value)[2],
       .groups = "drop"
     )
-}
-
-# One row summary (median + 89% PI) for a single vector of draws.
-cell_summary <- function(x) tibble(median = median(x), lo89 = PI(x)[1], hi89 = PI(x)[2])
-
-# Prints report_contrasts_full()'s summary rows to the console.
-message_contrasts_full <- function(pc_full){
-  report_contrasts_full(pc_full) %>%
-    purrr::pwalk(function(statistic, mean, median, PI89_lower, PI89_upper, HPDI_lower, HPDI_upper, ...){
-      message(statistic, " -- mean: ", round(mean,2),
-              "; median: ", round(median,2),
-              "; 89% PI: [", round(PI89_lower,2), ", ", round(PI89_upper,2), "]",
-              "; 89% HPDI: [", round(HPDI_lower,2), ", ", round(HPDI_upper,2), "]")
-    })
 }
 
 # One density panel per statistic, both groups plus their Contrast
@@ -336,4 +247,30 @@ contrast_recovery <- function(fit, means_fn, may_conv, may_org,
   )
 
   list(estimands = estimands, true_estimands = true_estimands)
+}
+
+# Spearman correlation + significance for named pairs of posterior draws,
+# with human-readable labels -- formalizes the ad hoc cor() collinearity
+# checks used since Model 6 into one table, ready for knitr::kable().
+# vars: named list of posterior vectors (caller resolves any indexing,
+# e.g. yr_2022 = post$yr[,1]). pairs: list of 2-element name vectors into
+# vars. labels: optional name -> display-string map.
+posterior_cor_table <- function(vars, pairs, labels = character(0)){
+  display <- function(nm) unname(ifelse(nm %in% names(labels), labels[nm], nm))
+
+  purrr::map_dfr(pairs, function(p){
+    ct <- suppressWarnings(cor.test(vars[[p[1]]], vars[[p[2]]], method = "spearman"))
+    tibble(
+      `Variable 1` = display(p[1]),
+      `Variable 2` = display(p[2]),
+      rho = unname(ct$estimate),
+      p_value = ct$p.value
+    )
+  }) %>%
+    mutate(signif = case_when(
+      p_value < 0.001 ~ "***",
+      p_value < 0.01  ~ "**",
+      p_value < 0.05  ~ "*",
+      TRUE ~ ""
+    ))
 }

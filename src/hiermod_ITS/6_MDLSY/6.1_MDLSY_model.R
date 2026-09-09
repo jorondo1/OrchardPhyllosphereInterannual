@@ -6,7 +6,7 @@
 
 ## Model definition -------------------------------------------------
 
-source('src/hiermod/ITS/5.1_MDLS2_model.R')
+source('src/hiermod_ITS/5_MDLS2/5.1_MDLS2_model.R')
 
 model$main_model <- quote(
   mu <- loga[Mg] + gamma*(Mo-1) + b[Lo]*sigma_loc + yr[Yr]*sigma_yr +

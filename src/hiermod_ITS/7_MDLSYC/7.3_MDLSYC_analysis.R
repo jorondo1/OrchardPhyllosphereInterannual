@@ -2,25 +2,13 @@
 # components, and the Bayesian R2 / variance-partition (VPC) view, run
 # against the fit saved by 7.2_MDLSYC_validation.R -- no refit needed.
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/7.1_MDLSYC_model.R') # model, means_MDLSYC(), variance_partition_MDLSYC()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/7_MDLSYC/7.1_MDLSYC_model.R') # model, means_MDLSYC(), variance_partition_MDLSYC()
 hiermod_out_dir <- "out/hiermod/ITS_7_lognormal_MDLSYC"
 
 fit_MDLSYC <- readRDS(file.path(hiermod_out_dir, "fit_MDLSYC.rds"))
 
-dat <- list(
-  Dv = div$Hill_1 - 1, # subtract the floor because Dv must be (0, Inf)-support to match the likelihood
-  Mg = idx$Mg$to_index(div$Management),
-  Lo = idx$Lo$to_index(div$Location),
-  Mo = idx$Mo$to_index(div$Time),
-  Yr = idx$Yr$to_index(div$Year),
-  Tr = idx$Tr$to_index(div$Tree_id),
-  Cv = idx$Cv$to_index(div$Cultivar),
-  deg_h_z = div$deg_h_z,
-  precip_72h_z = div$precip_72h_z,
-  seq_depth_z = div$seq_depth_z
-)
-dat$cell <- (dat$Mg - 1) * 2 + dat$Mo
+dat <- readRDS(file.path(hiermod_out_dir, "dat_MDLSYC.rds")) # built once, in 7.2_MDLSYC_validation.R
 
 # Extract samples and derive quantities of interest :
 post <- extract.samples(fit_MDLSYC)

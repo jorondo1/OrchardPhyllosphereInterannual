@@ -1,8 +1,8 @@
 # 6.2_MDLSY_validation.R -- MODEL 6 (MDLSY): parameter recovery,
 # prior-predictive check, SBC, the real fit, and PPC.
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/6.1_MDLSY_model.R') # model, means_MDLSY(), variance_partition_MDLSY(), sim_div_MDLSY(), contrast_may_gap_MDLSY(), simulate_from_priors()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/6_MDLSY/6.1_MDLSY_model.R') # model, means_MDLSY(), variance_partition_MDLSY(), sim_div_MDLSY(), contrast_may_gap_MDLSY(), simulate_from_priors()
 hiermod_out_dir <- "out/hiermod/ITS_6_lognormal_MDLSY"
 
 ## Model specification ---------------------------------------------------------
@@ -254,6 +254,7 @@ fit_MDLSY <- ulam(
   control = list(adapt_delta = 0.99)
 )
 save_fit("fit", "MDLSY", fit_MDLSY)
+saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLSY.rds")) # so 6.3 doesn't rebuild it
 
 precis(fit_MDLSY, depth = 2)
 

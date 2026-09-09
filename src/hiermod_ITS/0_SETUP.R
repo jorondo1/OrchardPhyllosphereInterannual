@@ -1,11 +1,11 @@
 # Shared preamble for every hiermod ITS script
 
 pacman::p_load(rethinking, tidyverse, bayesm, bayesplot, ggridges, magrittr, patchwork, rlang, scales, posterior)
-source('src/hiermod/utils/hiermod_core.R')
-source('src/hiermod/utils/saver_functions.R')
-source('src/hiermod/utils/postcontrast_helpers.R')
-source('src/hiermod/utils/predictive_checks.R')
-source('src/hiermod/utils/sbc_helpers.R')
+source('src/utils/hiermod_core.R')
+source('src/utils/saver_functions.R')
+source('src/utils/postcontrast_helpers.R')
+source('src/utils/predictive_checks.R')
+source('src/utils/sbc_helpers.R')
 
 div.ITS <- read_rds('data/diversity_data.rds')
 div <- div.ITS$Fungi$alpha

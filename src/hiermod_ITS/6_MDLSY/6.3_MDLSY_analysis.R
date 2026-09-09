@@ -2,22 +2,13 @@
 # components, and the Bayesian R2 / variance-partition (VPC) view, run
 # against the fit saved by 6.2_MDLSY_validation.R -- no refit needed.
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/6.1_MDLSY_model.R') # model, means_MDLSY(), variance_partition_MDLSY()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/6_MDLSY/6.1_MDLSY_model.R') # model, means_MDLSY(), variance_partition_MDLSY()
 hiermod_out_dir <- "out/hiermod/ITS_6_lognormal_MDLSY"
 
 fit_MDLSY <- readRDS(file.path(hiermod_out_dir, "fit_MDLSY.rds"))
 
-dat <- list(
-  Dv = div$Hill_1 - 1, # subtract the floor because Dv must be (0, Inf)-support to match the likelihood
-  Mg = idx$Mg$to_index(div$Management),
-  Lo = idx$Lo$to_index(div$Location),
-  Mo = idx$Mo$to_index(div$Time),
-  Yr = idx$Yr$to_index(div$Year),
-  Tr = idx$Tr$to_index(div$Tree_id),
-  Cv = idx$Cv$to_index(div$Cultivar)
-)
-dat$cell <- (dat$Mg - 1) * 2 + dat$Mo
+dat <- readRDS(file.path(hiermod_out_dir, "dat_MDLSY.rds")) # built once, in 6.2_MDLSY_validation.R
 
 post <- extract.samples(fit_MDLSY)
 pf   <- post_full(fit_MDLSY, means_MDLSY, shift = 1)

@@ -1,8 +1,8 @@
 # 3.2_MDLv_validation.R -- MODEL 3 (Management effect by Location): parameter
 # recovery, prior-predictive check, SBC, the real fit, and PPC.
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/3.1_MDLv_model.R') # model, means_MDLv(), mdlv_labels, sim_div_MLvary(), simulate_from_priors()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/3_MDLv/3.1_MDLv_model.R') # model, means_MDLv(), mdlv_labels, sim_div_MLvary(), simulate_from_priors()
 hiermod_out_dir <- "out/hiermod/ITS_3_lognormal_MDLv"
 
 ## Model specification ---------------------------------------------------------

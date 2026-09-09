@@ -1,8 +1,8 @@
 # 4.2_MDLS_validation.R -- MODEL 4 (Management effect by Season): parameter
 # recovery, prior-predictive check, SBC, the real fit, and PPC.
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/4.1_MDLS_model.R') # model, means_MDLS(), sim_div_MDLS(), contrast_may_gap_MDLS(), simulate_from_priors()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/4_MDLS/4.1_MDLS_model.R') # model, means_MDLS(), sim_div_MDLS(), contrast_may_gap_MDLS(), simulate_from_priors()
 hiermod_out_dir <- "out/hiermod/ITS_4_lognormal_MDLS"
 
 ## Model specification ---------------------------------------------------------

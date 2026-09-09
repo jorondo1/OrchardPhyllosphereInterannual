@@ -1,7 +1,7 @@
 # Model validation 
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/7.1_MDLSYC_model.R') # model, means_MDLSYC(), variance_partition_MDLSYC(), sim_div_MDLSYC(), contrast_may_gap_MDLSYC(), simulate_from_priors()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/7_MDLSYC/7.1_MDLSYC_model.R') # model, means_MDLSYC(), variance_partition_MDLSYC(), sim_div_MDLSYC(), contrast_may_gap_MDLSYC(), simulate_from_priors()
 hiermod_out_dir <- "out/hiermod/ITS_7_lognormal_MDLSYC"
 
 ## Model specification ---------------------------------------------------------
@@ -110,6 +110,61 @@ save_gg("sim_contrast_density", "MDLSYC", p_sim_contrast)
 
 # Extremely good recovery !
 
+## Collinearity-aware parameter recovery --------------------------------------
+# The real fit shows ~1% divergences and 1/6 chains with E-BFMI < 0.3. SBC
+# above draws deg_h_z/precip_72h_z/seq_depth_z independently, so it only
+# tests recoverability, not whether the real design's collinearity
+# (deg_h ~ Season r=-0.73; Seq_depth targeted here at -0.5 with the
+# structural diversity signal) degrades sampler geometry. Calibration
+# itself shouldn't be affected by collinearity in a correctly-specified
+# model -- what's actually at stake is convergence (divergences/E-BFMI),
+# which this checks directly across a handful of replicates, cheaper than
+# a full SBC re-run. Escalate to a full SBC only if this shows real
+# degradation vs. the plain recovery run above.
+
+n_confound_reps <- 15
+confound_chains <- 6
+confound_iter   <- 10000
+
+confound_diag <- map_dfr(seq_len(n_confound_reps), function(i){
+  dat_confound <- sim_div_MDLSYC(
+    N_samples = 240, n_loc = 4,
+    loga = log(c(may_conv, may_org)), s_conv = july_conv_shift,
+    gap_shift = july_org_shift, sigma = true_sigma, sigma_yr = true_sigma_yr,
+    b_deg = true_b_deg, b_precip = true_b_precip, b_seq = true_b_seq,
+    cv = true_cv, p_dropout = 0.1, shift = 1,
+    rho_deg_season = -0.73, rho_seq_mu = -0.5
+  )
+
+  fit_confound <- ulam(
+    model, data = as.list(dat_confound),
+    chains = confound_chains, cores = confound_chains, iter = confound_iter,
+    control = list(adapt_delta = 0.99)
+  )
+
+  diag <- fit_confound@cstanfit$diagnostic_summary(diagnostics = c("divergences", "treedepth", "ebfmi"))
+  tibble(
+    rep             = i,
+    n_divergent     = sum(diag$num_divergent),
+    n_max_treedepth = sum(diag$num_max_treedepth),
+    min_ebfmi       = min(diag$ebfmi),
+    # attenuated below the -0.5 target by residual sigma[cell] noise on
+    # top of the structural signal -- expected, see 7.1_MDLSYC_model.R
+    realized_cor_seq_Dv = cor(dat_confound$seq_depth_z, dat_confound$Dv)
+  )
+})
+
+confound_diag
+n_transitions <- n_confound_reps * confound_chains * (confound_iter %/% 2)
+cat("Divergence rate:", round(100 * sum(confound_diag$n_divergent) / n_transitions, 3), "%\n")
+cat("Replicates with any chain E-BFMI < 0.3:", sum(confound_diag$min_ebfmi < 0.3), "/", n_confound_reps, "\n")
+
+# Compare divergence rate / E-BFMI here against the plain fit_sim run
+# above -- if similar, the real fit's geometry issue likely isn't (mainly)
+# this collinearity; if clearly worse, it's evidence to escalate to a full
+# SBC re-run under this confounded simulator (simulate_from_priors()
+# already accepts rho_deg_season/rho_seq_mu for that).
+
 ## Prior predictive check -------------------------------------------------------
 
 n_prior <- 1000
@@ -172,21 +227,47 @@ fit_MDLSYC <- ulam(
   control = list(adapt_delta = 0.99)
 )
 save_fit("fit", "MDLSYC", fit_MDLSYC)
+saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLSYC.rds")) # so 7.3 doesn't rebuild it
 
 precis(fit_MDLSYC, depth = 2) 
 
 save_pdf("fit_traceplot", "MDLSYC", function() traceplot(fit_MDLSYC, n_cols = 6, max_rows = 10))
 save_pdf("fit_trankplot", "MDLSYC", function() trankplot(fit_MDLSYC, n_cols = 6, max_rows = 10))
 
-# Real-data collinearity check: correlated draws are the expected symptom
-# of the correlation noted above, not a red flag on their own.
+# Real-data collinearity table: correlated draws are the expected symptom
+# of the correlation noted above, not a red flag on their own. Spearman
+# rho + significance stars are a descriptive summary of posterior
+# dependence here, not a classical hypothesis test (draws aren't
+# independent samples).
 post_MDLSYC <- extract.samples(fit_MDLSYC)
-cor(post_MDLSYC$b_deg, post_MDLSYC$s_conv)
-cor(post_MDLSYC$b_deg, post_MDLSYC$gap_shift)
-cor(post_MDLSYC$b_precip, post_MDLSYC$s_conv)
-cor(post_MDLSYC$b_deg, post_MDLSYC$yr[,1])
-cor(post_MDLSYC$b_seq, post_MDLSYC$s_conv)
-cor(post_MDLSYC$b_seq, post_MDLSYC$yr[,1])
+
+param_labels <- c(
+  b_deg     = "Degree-hours slope (weather control)",
+  b_precip  = "Precipitation slope (weather control)",
+  b_seq     = "Sequencing-depth slope (detection-effort control)",
+  s_conv    = "Season shift, Conventional (May -> July)",
+  gap_shift = "Season x Management interaction",
+  yr_2022   = "Year 2022 effect"
+)
+
+cor_vars <- list(
+  b_deg     = post_MDLSYC$b_deg,
+  b_precip  = post_MDLSYC$b_precip,
+  b_seq     = post_MDLSYC$b_seq,
+  s_conv    = post_MDLSYC$s_conv,
+  gap_shift = post_MDLSYC$gap_shift,
+  yr_2022   = post_MDLSYC$yr[,1]
+)
+
+cor_pairs <- list(
+  c("b_deg", "s_conv"), c("b_deg", "gap_shift"), c("b_deg", "yr_2022"),
+  c("b_precip", "s_conv"), c("b_seq", "s_conv"), c("b_seq", "yr_2022"),
+  c("b_deg", "b_precip"), c("b_deg", "b_seq"), c("b_precip", "b_seq")
+)
+
+collinearity_table <- posterior_cor_table(cor_vars, cor_pairs, param_labels)
+knitr::kable(collinearity_table, digits = 3,
+             caption = "Model 7 (MDLSYC): posterior collinearity, control covariates vs structural parameters")
 
 ## Posterior predictive check --------------------------------------------------
 

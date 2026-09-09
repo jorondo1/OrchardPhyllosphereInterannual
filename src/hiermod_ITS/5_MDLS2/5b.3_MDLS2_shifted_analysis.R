@@ -2,8 +2,8 @@
 # variance components, run against the fit saved by
 # 5b.2_MDLS2_shifted_validation.R -- no refit needed.
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/5.1_MDLS2_model.R') # model, means_MDLS2()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/5_MDLS2/5.1_MDLS2_model.R') # model, means_MDLS2()
 hiermod_out_dir <- "out/hiermod/ITS_5_lognormal_MDLS2_shifted"
 
 fit_MDLS2_shifted <- readRDS(file.path(hiermod_out_dir, "fit_MDLS2_shifted.rds"))

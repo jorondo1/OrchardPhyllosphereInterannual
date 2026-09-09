@@ -1,8 +1,8 @@
 # 4.3_MDLS_analysis.R -- MODEL 4 (MDLS): posterior contrast, run against the
 # fit saved by 4.2_MDLS_validation.R -- no refit needed.
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/4.1_MDLS_model.R') # model, means_MDLS()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/4_MDLS/4.1_MDLS_model.R') # model, means_MDLS()
 hiermod_out_dir <- "out/hiermod/ITS_4_lognormal_MDLS"
 
 fit_MDLS <- readRDS(file.path(hiermod_out_dir, "fit_MDLS.rds"))

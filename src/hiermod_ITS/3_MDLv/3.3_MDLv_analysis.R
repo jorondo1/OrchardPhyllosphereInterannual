@@ -1,17 +1,11 @@
 # 3.3_MDLv_analysis.R -- MODEL 3 (MDLv): posterior contrast, run against the
 # fit saved by 3.2_MDLv_validation.R -- no refit needed.
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/3.1_MDLv_model.R') # model, means_MDLv(), mdlv_labels
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/3_MDLv/3.1_MDLv_model.R') # model, means_MDLv(), mdlv_labels
 hiermod_out_dir <- "out/hiermod/ITS_3_lognormal_MDLv"
 
 fitb <- readRDS(file.path(hiermod_out_dir, "fit_MDLv.rds"))
-
-dat <- list(
-  Dv = div$Hill_1,
-  Mg = idx$Mg$to_index(div$Management),
-  Lo = idx$Lo$to_index(div$Location)
-)
 
 ## Posterior contrast ---------------------------------------------------------
 

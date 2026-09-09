@@ -3,8 +3,8 @@
 # enough (no pooling, no hierarchical structure) that a full calibration
 # check wasn't judged necessary (see MODEL_HISTORY.md).
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/1.1_MD_model.R') # model_MD/model_MDv, means_MD/means_MDv, sim_div_M(), postcounts_Model1/2()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/1_MD/1.1_MD_model.R') # model_MD/model_MDv, means_MD/means_MDv, sim_div_M()
 
 hiermod_out_dir <- "out/hiermod/ITS_1_lognormal_MD"
 
@@ -48,11 +48,13 @@ fit_MD_sim <- ulam(
 )
 precis(fit_MD_sim, depth = 2)
 
-post_counts_MD_sim <- postcounts_Model1(fit_MD_sim)
-save_report("sim_summary", "MD", fit_MD_sim, post_counts_MD_sim, model_MD, model_name = "The Bare Bones")
+pf_MD_sim <- post_full(fit_MD_sim, means_MD)
+pc_MD_sim <- compute_contrasts(pf_MD_sim, keep = "mean", group_levels = idx$Mg$levels)
+save_report("sim_summary", "MD", fit_MD_sim, pc_MD_sim, model_MD, model_name = "The Bare Bones")
 
 # it's in the vicinity
-p_MD_sim_contrast <- plot_contrast_density(post_counts_MD_sim, group_name = 'Posterior mean'); p_MD_sim_contrast
+p_MD_sim_contrast <- contrast_plot_panels(pc_MD_sim, quant = c(0, 1), group_pal = Management_palette) +
+  labs(x = 'Mean Hill number of order 1'); p_MD_sim_contrast
 save_gg("sim_contrast_density", "MD", p_MD_sim_contrast)
 
 ### Model fit ----------------------------------------------------------------
@@ -101,13 +103,14 @@ output_iter <- file.path(hiermod_out_dir, "unequal_variance_iters.txt"); for (i 
       Mg = dat_sim$Mg
     ), chains = 6, cores = 6, iter = 10000)
 
-  post_counts <- postcounts_Model1(fit_MD_sim)
+  pf_iter <- post_full(fit_MD_sim, means_MD)
+  contrast_iter <- pf_iter$mean$mean_2 - pf_iter$mean$mean_1
 
   # Write data row with tabs
   cat(i, "\t",
-      mean(post_counts$contrast), "\t",
-      median(post_counts$contrast), "\t",
-      PI(post_counts$contrast), "\n",
+      mean(contrast_iter), "\t",
+      median(contrast_iter), "\t",
+      PI(contrast_iter), "\n",
       file = output_iter, append = TRUE)
 
 } # Rarely reaches 4, range 2-4
@@ -132,12 +135,13 @@ output_iter <- file.path(hiermod_out_dir, "unequal_variance_iters_fixed.txt"); f
       Mg = dat_sim$Mg
     ),chains = 2, cores = 2, iter = 1000)
 
-  post_counts <- postcounts_Model2(fit_MD_sim)
+  pf_iter <- post_full(fit_MD_sim, means_MDv)
+  contrast_iter <- pf_iter$mean$mean_2 - pf_iter$mean$mean_1
 
   cat(i, "\t",
-      mean(post_counts$contrast), "\t",
-      median(post_counts$contrast), "\t",
-      PI(post_counts$contrast), "\n",
+      mean(contrast_iter), "\t",
+      median(contrast_iter), "\t",
+      PI(contrast_iter), "\n",
       file = output_iter, append = TRUE)
 
 }  # contrasts hover around 4, range 3-5
@@ -151,16 +155,16 @@ fit_MDv_sim <- ulam(
 
 precis(fit_MDv_sim, depth = 2 )
 
-post_counts_MDv_sim <- postcounts_Model2(fit_MDv_sim)
+pf_MDv_sim <- post_full(fit_MDv_sim, means_MDv)
+pc_MDv_sim <- compute_contrasts(pf_MDv_sim, keep = "mean", group_levels = idx$Mg$levels)
 
 # Plot contrast
-p_MDv_sim_contrast <- plot_contrast_density(post_counts_MDv_sim, group_name = 'Posterior mean') +
+p_MDv_sim_contrast <- contrast_plot_panels(pc_MDv_sim, quant = c(0, 1), group_pal = Management_palette) +
   labs(
     subtitle = "Here, allowing group-specific variances allows the recovery of the true contrast.",
-    x = 'Mean Hill number of order 1') +
-  theme(legend.position = c(0.8, 0.8)); p_MDv_sim_contrast
+    x = 'Mean Hill number of order 1'); p_MDv_sim_contrast
 
-save_report("sim_summary", "MDv", fit_MDv_sim, post_counts_MDv_sim, model_MDv, model_name = "The Loose Cannon")
+save_report("sim_summary", "MDv", fit_MDv_sim, pc_MDv_sim, model_MDv, model_name = "The Loose Cannon")
 save_gg("sim_contrast_density", "MDv", p_MDv_sim_contrast, width = 8, height = 4)
 
 ### Prior predictive check -------------------------------------------------------

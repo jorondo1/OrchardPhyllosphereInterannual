@@ -97,12 +97,7 @@ separate modeling choice.)
 $$
 \begin{aligned}
 a_{\mathrm{Mg}} &\sim \mathrm{Normal}(2,2), & \mathrm{Mg}&=1,2\\
-b &\sim \mathrm{Normal}(0,1)\\
-c &\sim \mathrm{Normal}(0,1)\\
-g_{\mathrm{Cv}} &\sim \mathrm{Normal}(0,1), & \mathrm{Cv}&=1,\dots,5\\
-h &\sim \mathrm{Normal}(0,1)\\
-j &\sim \mathrm{Normal}(0,1)\\
-m &\sim \mathrm{Normal}(0,1)
+b, c, g_{\mathrm{Cv}}, h, j, m &\sim \mathrm{Normal}(0,1), & \mathrm{Cv}&=1,\dots,5\\
 \end{aligned}
 $$
 
@@ -112,9 +107,7 @@ $$
 $$
 \begin{aligned}
 \sigma_{k} &\sim \mathrm{Exponential}(3.46), \qquad k=1,2,3,4\\
-\sigma_d &\sim \mathrm{Exponential}(2.31)\\
-\sigma_e &\sim \mathrm{Exponential}(2.31)\\
-\sigma_f &\sim \mathrm{Exponential}(2.31)
+\sigma_d, \sigma_e, \sigma_f &\sim \mathrm{Exponential}(2.31)
 \end{aligned}
 $$
 

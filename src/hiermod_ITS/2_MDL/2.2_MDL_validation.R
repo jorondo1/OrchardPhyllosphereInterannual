@@ -2,8 +2,8 @@
 # untightened priors) -- MODEL 2B (tightened priors, actually fit to real data).
 # Parameter recovery, prior-predictive check, SBC, the real fit, and PPC.
 
-source('src/hiermod/ITS/0_SETUP.R')
-source('src/hiermod/ITS/2.1_MDL_model.R') # model, means_MDL(), sim_div_ML(), simulate_from_priors()
+source('src/hiermod_ITS/0_SETUP.R')
+source('src/hiermod_ITS/2_MDL/2.1_MDL_model.R') # model, means_MDL(), sim_div_ML(), simulate_from_priors()
 hiermod_out_dir <- "out/hiermod/ITS_2_lognormal_MDL"
 
 # MODEL 2 -- Partial pooling across Location (non-centered) =================
@@ -32,7 +32,8 @@ fit_sim <- ulam(
   data = as.list(dat_sim),
   chains = 6, cores = 6, iter = 10000 ) # divergences!
 
-post_counts_sim <- postcounts(fit_sim, means_fn = means_MDL)
+pf_sim <- post_full(fit_sim, means_MDL)
+pc_sim <- compute_contrasts(pf_sim, keep = "mean", group_levels = idx$Mg$levels)
 
 # Mean is often apart from median (iterate to see range)
 
@@ -42,9 +43,9 @@ save_pdf("fit_pairs", "MDL", function()
 
 precis(fit_sim, depth = 2 )
 
-p_sim_contrast <- plot_contrast_density(post_counts_sim, 0.999, group_name = 'Posterior mean'); p_sim_contrast
+p_sim_contrast <- contrast_plot_panels(pc_sim, quant = c(0, 0.999), group_pal = Management_palette); p_sim_contrast
 
-save_report("sim_summary", "MDL", fit_sim, post_counts_sim, model, model_name = "The Wildcard")
+save_report("sim_summary", "MDL", fit_sim, pc_sim, model, model_name = "The Wildcard")
 save_gg("sim_contrast_density", "MDL", p_sim_contrast)
 
 ## Prior predictive check -------------------------------------------------------
@@ -162,9 +163,10 @@ fitb_sim <- ulam(
 
 precis(fitb_sim, depth = 2 ) # good r_hats
 
-post_countsb_sim <- postcounts(fitb_sim, means_fn = means_MDL)
+pf_b_sim <- post_full(fitb_sim, means_MDL)
+pc_b_sim <- compute_contrasts(pf_b_sim, keep = "mean", group_levels = idx$Mg$levels)
 # Iterate, mean sometimes way over target
-mean(post_countsb_sim$contrast > 100) # should be very small (~0)
+mean(pf_b_sim$mean$mean_2 - pf_b_sim$mean$mean_1 > 100) # should be very small (~0)
 
 # if divergences cluster where sigma_loc is small, funnel:
 pairs_plot <- pairs(fitb_sim, pars = c("sigma_loc","b[1]","b[2]"))
@@ -178,10 +180,9 @@ trankplot(fitb_sim)
 save_pdf("sim_traceplot", "MDLb", function() traceplot(fitb_sim))
 save_pdf("sim_trankplot", "MDLb", function() trankplot(fitb_sim))
 
-save_report("sim_summary", "MDLb", fitb_sim, post_countsb_sim, model_ppc1, model_name = "The Tamed Wildcard")
+save_report("sim_summary", "MDLb", fitb_sim, pc_b_sim, model_ppc1, model_name = "The Tamed Wildcard")
 
-pb_sim_contrast <- plot_contrast_density(
-  post_countsb_sim, 0.995, group_name = 'Posterior mean') +
+pb_sim_contrast <- contrast_plot_panels(pc_b_sim, quant = c(0, 0.995), group_pal = Management_palette) +
   labs(x = 'Estimates for mean Hill number of order 1 and its contrast'); pb_sim_contrast
 # Not incredible, but much better (depends on iteration/unstable; let's SBC!)
 

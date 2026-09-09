@@ -5,7 +5,7 @@
 
 ## Model definition ---------------------------------------------------
 
-source('src/hiermod/ITS/6.1_MDLSY_model.R')
+source('src/hiermod_ITS/6_MDLSY/6.1_MDLSY_model.R')
 
 model$main_model <- quote(
   mu <- loga[Mg] + gamma*(Mo-1) + b[Lo]*sigma_loc + yr[Yr]*sigma_yr +
@@ -104,15 +104,21 @@ variance_partition_MDLSYC <- function(post, dat){
 
 ## Data-generating function --------------------------------------------
 
-# Add deg_h_z/precip_72h_z/seq_depth_z, each  independent rnorm(0,1) draws.
-#  NOT reproducing the real deg_h/precip_72h ~ Season/Year
-# correlation (see 7.2_MDLSYC_validation.R); this tests whether b_deg/
-# b_precip/b_seq are recoverable in principle, not how identifiable they are
-# under the real design's collinearity.
+# deg_h_z/precip_72h_z/seq_depth_z default to independent rnorm(0,1)
+# draws -- tests whether b_deg/b_precip/b_seq are recoverable in
+# principle, not how identifiable they are under the real design's
+# collinearity. rho_deg_season/rho_seq_mu (default 0, i.e. no change from
+# that) optionally correlate deg_h_z with Season and seq_depth_z with the
+# structural diversity signal instead, at approximately the given
+# correlation -- a stress test for sampler geometry under realistic
+# confounding (see 7.2_MDLSYC_validation.R's "Collinearity-aware
+# parameter recovery" section), via the standard target-correlation
+# construction: z = rho*scale(x) + sqrt(1-rho^2)*noise.
 sim_div_MDLSYC <- function(
     N_samples, loga, s_conv, gap_shift, sigma, b_deg, b_precip, b_seq, cv,
     sigma_loc = 0.5, sigma_tr = 0.3, sigma_yr = 0.3,
-    n_loc, p_dropout = 0, shift = NULL){
+    n_loc, p_dropout = 0, shift = NULL,
+    rho_deg_season = 0, rho_seq_mu = 0){
   n_tree <- N_samples %/% 2
   n_yr   <- 3
 
@@ -132,18 +138,25 @@ sim_div_MDLSYC <- function(
   dat <- trees %>% crossing(Mo = 1:2) %>% arrange(Tr)
   dat$cell <- (dat$Mg - 1) * 2 + dat$Mo
 
-  dat$deg_h_z      <- rnorm(nrow(dat))
-  dat$precip_72h_z <- rnorm(nrow(dat))
-  dat$seq_depth_z  <- rnorm(nrow(dat))
-
   loc_offset  <- rnorm(n_loc,  0, sigma_loc)
   tree_offset <- rnorm(n_tree, 0, sigma_tr)
   year_offset <- rnorm(n_yr,   0, sigma_yr)
 
   gamma <- s_conv + gap_shift*(dat$Mg - 1)
-  mu <- loga[dat$Mg] + gamma*(dat$Mo - 1) +
-    loc_offset[dat$Lo] + year_offset[dat$Yr] + tree_offset[dat$Tr] +
-    cv[dat$Cv] + b_deg*dat$deg_h_z + b_precip*dat$precip_72h_z + b_seq*dat$seq_depth_z
+  mu_structural <- loga[dat$Mg] + gamma*(dat$Mo - 1) +
+    loc_offset[dat$Lo] + year_offset[dat$Yr] + tree_offset[dat$Tr] + cv[dat$Cv]
+
+  season_z <- as.vector(scale(dat$Mo - 1))
+  dat$deg_h_z <- if (rho_deg_season == 0) rnorm(nrow(dat)) else
+    rho_deg_season * season_z + sqrt(1 - rho_deg_season^2) * rnorm(nrow(dat))
+
+  mu_z <- as.vector(scale(mu_structural))
+  dat$seq_depth_z <- if (rho_seq_mu == 0) rnorm(nrow(dat)) else
+    rho_seq_mu * mu_z + sqrt(1 - rho_seq_mu^2) * rnorm(nrow(dat))
+
+  dat$precip_72h_z <- rnorm(nrow(dat))
+
+  mu <- mu_structural + b_deg*dat$deg_h_z + b_precip*dat$precip_72h_z + b_seq*dat$seq_depth_z
 
   dat$Dv <- rlnorm(nrow(dat), meanlog = mu, sdlog = sigma[dat$cell])
   if (!is.null(shift)) dat$Dv_shifted <- shift + dat$Dv
@@ -170,9 +183,12 @@ contrast_may_gap_MDLSYC <- function(post, true_params, means_fn){
   list(post_contrast = post_contrast, true_contrast = true_org_May - true_conv_May)
 }
 
-# Prior simulator (SBC/prior-predictive glue).
+# Prior simulator (SBC/prior-predictive glue). rho_deg_season/rho_seq_mu
+# pass through to sim_div_MDLSYC() (default 0, i.e. unchanged) so a future
+# full SBC re-run under realistic collinearity can reuse this unchanged.
 simulate_from_priors <- function(true_params, N_samples = 250,
-                                 n_loc = 4, p_dropout = 0.1, shift = NULL){
+                                 n_loc = 4, p_dropout = 0.1, shift = NULL,
+                                 rho_deg_season = 0, rho_seq_mu = 0){
   sim_div_MDLSYC(
     N_samples = N_samples,
     loga = true_params$loga,
@@ -188,6 +204,8 @@ simulate_from_priors <- function(true_params, N_samples = 250,
     sigma_yr = true_params$sigma_yr,
     n_loc = n_loc,
     p_dropout = p_dropout,
-    shift = shift
+    shift = shift,
+    rho_deg_season = rho_deg_season,
+    rho_seq_mu = rho_seq_mu
   )
 }
