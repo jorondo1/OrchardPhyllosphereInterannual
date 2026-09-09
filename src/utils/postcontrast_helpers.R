@@ -125,6 +125,7 @@ report_contrasts_full <- function(pc_full){
 # model's validation script.
 contrast_plot_panels <- function(
     pc_full, quant, group_pal, scales = "free",
+    true_vals = NULL, true_vals_label = "True value",
     legend_title = "Posteriors (population mean/median)"){
 
   if(length(quant)!=2){
@@ -149,10 +150,22 @@ contrast_plot_panels <- function(
 
   refactor_statistic <- function(df) df %>% mutate(statistic = factor(statistic, levels = levels(pc_full$statistic)))
 
+  
   trimmed %>%
     ggplot(aes(x = value, fill = group, colour = group)) +
     geom_density(alpha = 0.5, linewidth = 0.2) +
     geom_vline(xintercept = 0, colour = "grey50") +
+    { if (!is.null(true_vals)) {
+      tv <- refactor_statistic(true_vals)
+      if ("group" %in% names(tv)) {
+        geom_vline(data = tv, aes(xintercept = value, colour = group, linetype = true_vals_label),
+                   linewidth = 0.7, show.legend = c(colour = FALSE, linetype = TRUE))
+      } else {
+        geom_vline(data = tv, aes(xintercept = value, linetype = true_vals_label),
+                   colour = "grey20", linewidth = 0.7, show.legend = c(linetype = TRUE))
+      }
+    }
+    } +
     geom_text(data = labels, aes(label = label), x = Inf, y = Inf,
               hjust = 1.05, vjust = 1.3, size = 2.8, colour = "grey20",
               inherit.aes = FALSE, family = "mono") +
