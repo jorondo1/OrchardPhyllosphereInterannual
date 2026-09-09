@@ -1,7 +1,7 @@
-# postcontrast_helpers.R -- turn posterior draws (via each model's own
-# means_X()) into contrast tables and plots. One consistent shape so every
-# model, from a simple 2-group difference to a multi-estimand model, can
-# reuse the same report/plot functions.
+# postcontrast_helpers.R
+
+# turn posterior draws (via each model's own means_X() function) into contrast 
+# tables and plots. Handles 2-group diffs and multi-estimand models.
 
 # SBC contrast_fn default for the simple 2-group case (Models 2-3): compares
 # means_fn()'s posterior contrast against the true (simulating) contrast.

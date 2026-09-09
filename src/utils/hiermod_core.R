@@ -64,8 +64,8 @@ scale_dexp_rate <- function(rate_ref, k_ref, k_new) round(rate_ref * sqrt(k_new 
 # Subsamples an mcmc_pairs() plot's draws (capped at 2 chains, n_keep total)
 # so the output stays a reasonable size and sidesteps a bayesplot bug where
 # mcmc_pairs() errors past 2 chains (bayesplot 1.15.0 / ggplot2 4.0.3,
-# confirmed). Plain random subsample, not divergence-preserving -- at this
-# project's typical divergence rates (1-9%) that's still hundreds of
+# confirmed). Plain random subsample, not divergence-preserving.
+# At project typical divergence rates (1-9%) that's still hundreds of
 # divergent points shown. cs: a fit's compiled cmdstanr object
 # (attr(fit, "cstanfit")). Returns list(draws, np) for
 # bayesplot::mcmc_pairs(thinned$draws, np = thinned$np).
