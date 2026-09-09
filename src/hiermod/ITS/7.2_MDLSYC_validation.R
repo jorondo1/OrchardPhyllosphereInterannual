@@ -148,7 +148,6 @@ sbc_MDLSYC <- run_sbc(
   control = list(adapt_delta = 0.99))
 
 sbc_out_MDLSYC <- save_sbc_report(sbc_MDLSYC, paste0("MDLSYC_",n_sbc,"iter"))
-hist(sbc_out_MDLSYC$ranks, breaks = 30)
 
 ## Model fit ----------------------------------------------------------------
 
@@ -174,7 +173,7 @@ fit_MDLSYC <- ulam(
 )
 save_fit("fit", "MDLSYC", fit_MDLSYC)
 
-precis(fit_MDLSYC, depth = 2)
+precis(fit_MDLSYC, depth = 2) 
 
 save_pdf("fit_traceplot", "MDLSYC", function() traceplot(fit_MDLSYC, n_cols = 6, max_rows = 10))
 save_pdf("fit_trankplot", "MDLSYC", function() trankplot(fit_MDLSYC, n_cols = 6, max_rows = 10))

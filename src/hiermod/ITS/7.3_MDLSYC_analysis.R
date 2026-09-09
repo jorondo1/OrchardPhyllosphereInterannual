@@ -22,6 +22,7 @@ dat <- list(
 )
 dat$cell <- (dat$Mg - 1) * 2 + dat$Mo
 
+# Extract samples and derive quantities of interest :
 post <- extract.samples(fit_MDLSYC)
 pf   <- post_full(fit_MDLSYC, means_MDLSYC, shift = 1)
 m    <- pf$mean
@@ -65,6 +66,7 @@ p_contrast_median <- contrast_plot_panels(
   pc_estimands_medians, quant = c(0.005,.995), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population medians)"); p_contrast_median
+
 save_gg("fit_contrast_median", "MDLSYC", p_contrast_median)
 
 ## Variance components -----------------------------------------------------------

@@ -105,7 +105,7 @@ save_sbc_report <- function(sbc_out, step, dir = hiermod_out_dir){
     geom_histogram(bins = 10, boundary = 0, fill = "#4E79A7", colour = "white", linewidth = 0.3) +
     geom_hline(yintercept = expected_per_bin, linetype = "dashed", colour = "grey40") +
     annotate("label", x = Inf, y = Inf, hjust = 1.05, vjust = 1.3, label = label_text,
-             family = "mono", size = 3, fill = "white", label.size = 0.3, colour = "grey20") +
+             family = "mono", size = 3, fill = "white", colour = "grey20") +
     labs(title = paste("Simulation-based calibration rank histogram", step),
          caption = "Dashed line: count expected under perfect calibration",
          x = "rank", y = "count")
