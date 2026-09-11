@@ -245,14 +245,14 @@ save_gg("sim_contrast_density", "MDLb", pb_sim_contrast)
 # actually declares.
 
 # We reuse simulate_from_priors() from before
-sbcb <- run_sbc(
+sbc <- run_sbc(
   model_fit = fit_sim_ppc1,  # model_ppc1's formula + priors, both from this one fit
   means_fn = means_MDL,
   simulate_fn = simulate_from_priors,
   n_sbc = 100, iter = 10000, chains = 4,
   control = list(adapt_delta = 0.99))
 
-sbc_out <- save_sbc_report(sbcb, "MDLb")
+sbc_out <- save_sbc_report(sbc, "MDLb")
 par(mfrow= c(1,1))
 hist(sbc_out$ranks)
 
