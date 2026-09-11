@@ -1,0 +1,26 @@
+==== model: The Bare Bones ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma)
+
+$linear_model
+mu <- loga[Mg]
+
+$prior_loga
+loga[Mg] ~ dnorm(2, 2)
+
+$prior_sigma
+sigma ~ dexp(1)
+
+
+
+==== precis: fit_MD_sim ====
+
+         mean    sd  5.5% 94.5% rhat ess_bulk
+loga[1] 4.967 0.068 4.860 5.076    1 28959.04
+loga[2] 4.626 0.074 4.508 4.742    1 27946.05
+sigma   0.705 0.036 0.651 0.764    1 28407.74
+
+
+==== posterior contrast ====
+mean -- mean: -53.416  median: -53.213  89% PI: [ -79.115 , -28.247 ]  89% HPDI: [ -78.897 , -28.121 ]

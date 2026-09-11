@@ -254,16 +254,16 @@ fit_MDLSY <- ulam(
   control = list(adapt_delta = 0.99)
 )
 save_fit("fit", "MDLSY", fit_MDLSY)
-saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLSY.rds")) # so 6.3 doesn't rebuild it
+saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLSY.rds")) 
 
 precis(fit_MDLSY, depth = 2)
 
 save_pdf("fit_traceplot", "MDLSY", function() traceplot(fit_MDLSY, n_cols = 6, max_rows = 10))
 save_pdf("fit_trankplot", "MDLSY", function() trankplot(fit_MDLSY, n_cols = 6, max_rows = 10))
 
-post_MDLSY <- extract.samples(fit_MDLSY)
 
 ## Posterior predictive check --------------------------------------------------
+post_MDLSY <- extract.samples(fit_MDLSY)
 
 ### Overall, by Management x Season cell ----
 

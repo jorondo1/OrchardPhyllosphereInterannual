@@ -2,7 +2,6 @@
 
 # - partial pools yr[Yr] into non-centered random effect
 # - adds Cultivar (cv[Cv]) as a fixed effect, same treatment as Management/old-Year.
-# Weather/sequencing-depth controls live in Model 7 (7.1_MDLSYC_model.R), not here.
 
 ## Model definition -------------------------------------------------
 

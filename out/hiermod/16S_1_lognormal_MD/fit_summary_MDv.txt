@@ -1,0 +1,27 @@
+==== model: The Loose Cannon ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$linear_model
+mu <- loga[Mg]
+
+$prior_loga
+loga[Mg] ~ dnorm(2, 2)
+
+$prior_sigma
+sigma[Mg] ~ dexp(1)
+
+
+
+==== precis: fit_MDv ====
+
+          mean    sd  5.5% 94.5% rhat ess_bulk
+loga[1]  4.603 0.099 4.445 4.761    1 38307.41
+loga[2]  3.316 0.122 3.122 3.509    1 39529.56
+sigma[1] 1.194 0.070 1.088 1.311    1 38683.82
+sigma[2] 1.205 0.087 1.074 1.353    1 38458.24
+
+
+==== posterior contrast ====
+mean -- mean: -147.78  median: -145.576  89% PI: [ -196.829 , -106.127 ]  89% HPDI: [ -191.165 , -101.992 ]

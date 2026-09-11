@@ -29,8 +29,15 @@ reasoning lives in `MODEL_HISTORY.md`.
 - [ ] Rerun real fit/SBC/PPC: response is now shifted (`Hill_1 - 1`) and
   weather covariates moved out to Model 7, so the numbers in
   `MODEL_HISTORY.md` predate both changes
-- [ ] Organic-May under-dispersion (PPC finding): `yrep` too peaked/narrow
-  vs broader observed, check `sigma[3]` directly
+- [ ] Organic-May PPC mismatch: not a dispersion/`sigma[cell]` issue (the
+  full `total_var`, residual+Location+Tree+Year, already covers the raw
+  empirical spread comfortably) -- traced instead to Windsor supplying
+  54% of Organic-May/July data with the strongest Location effect
+  (`b[Lo]` median +0.5, a ~1.65x multiplier); population-average estimand
+  is correctly discounting this, raw pooled median isn't a fair
+  benchmark. See "Location x Season interaction" under Potential
+  robustness checks for the fuller writeup and what (if anything) to do
+  about it
 - [x] `scale_dexp_rate()` variance budget calibration, used from Model 6
   onward (K genuinely grows 3→4 here; no-op for Model 4→5)
 - [x] Fixed `idx$Cv` (was 4 blank placeholder levels vs Cultivar's real 5)
@@ -93,6 +100,46 @@ reasoning lives in `MODEL_HISTORY.md`.
 ## Potential robustness checks
 
 - [ ] Hill order 2: focus on dominant species (harmonic mean)
+- [ ] Location x Season interaction -- shelved for now, revisit if a
+  reviewer questions whether the season-flip finding is really just
+  Windsor. Full reasoning below so this doesn't need re-deriving.
+
+  **The finding that raised the question:** Model 6's Organic-May PPC
+  mismatch traced to Windsor supplying 54% of Organic-May/July data, with
+  a raw May->July change (log-scale) of -0.34 -- the opposite sign from
+  Compton (+0.61) and Milton (+1.11), the other two Organic-sampled
+  orchards.
+
+  **Why it doesn't actually contradict the headline finding:** benchmarked
+  against what Conventional does at each site (Compton -1.92, Saint-Benoit
+  -1.60, Milton -1.11 -- steep declines everywhere), even Windsor's -0.34
+  is far shallower than Conventional's mildest decline. Rough per-location
+  `gap_shift`-equivalents (Organic change minus ~-1.5 average Conventional
+  decline): Milton ~+2.65, Compton ~+2.15, Windsor ~+1.20. Same sign at
+  all 3 Organic-sampled locations -- the "Organic buffers the May->July
+  drop" direction holds -- but a real 2x+ spread in magnitude that the
+  single pooled `gap_shift` currently can't show.
+
+  **What `h[Lo]` (a Location-varying Season interaction) would buy:** add
+  `gamma <- s_conv + gap_shift*(Mg-1) + h[Lo]*sigma_h` (same non-centered
+  pattern as `b[Lo]`/`tr[Tr]`/`yr[Yr]`).
+  - May gap: untouched -- `gamma` only multiplies `(Mo-1)`, zero in May.
+  - July gap / seasonal change in gap: point estimate likely similar
+    (`h[Lo]` is mean-zero), but the credible interval should honestly
+    widen to reflect real between-location heterogeneity that's currently
+    either silently absorbed into `sigma[cell]` or just missing from
+    `gap_shift`'s own posterior spread.
+  - Buys a real robustness statement instead of one pooled number:
+    `sigma_h`'s posterior (how consistent is the interaction across
+    orchards) plus per-location `h[Lo]` estimates.
+
+  **Real limits, not fixable by more model structure:** Saint-Benoit has
+  zero Organic data (`h[Saint-Benoit]` fully unidentified, pure
+  prior/shrinkage); Windsor has zero Conventional data (`h[Windsor]`
+  can't separate an Organic-specific season effect from "something about
+  Windsor as a place" -- a data gap, not a modeling one); only 3
+  informative locations feed `sigma_h`, expect the same weak-identification
+  flavour already seen with `sigma_yr` (3 years).
 
 ## Paper outline (population-parameter results)
 
