@@ -90,17 +90,22 @@ dat <- rbind(
 
 
 dat %>% 
-  count(Barcode, Year, Time, Cultivar, Code, Management) %>%
+  mutate(Dataset = case_when(
+    Cultivar %in% c('Honeycrisp', 'Spartan') ~ '2-year dataset',
+    TRUE ~ '3-year dataset'
+  )) %>% 
+  count(Barcode, Dataset, Year, Time, Cultivar, Code, Management) %>%
   rename(N_samples = n) %>% 
   ggplot(aes(x = Time, y = N_samples, fill = Code)) +
   geom_col(position = "dodge") +
-  ggh4x::facet_nested(Barcode+Year ~ Management + Cultivar) +  # Facet by 2 variables
+  ggh4x::facet_nested(Barcode+Year ~ Dataset + Management + Cultivar) +  # Facet by 2 variables
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   theme_light()  +
   theme(
     legend.position = 'bottom',
-    panel.grid = element_blank())
-
+    panel.grid = element_blank()) +
+  guides(fill = guide_legend(nrow = 1)) +
+  labs(fill = 'Orchard')
 
 ggsave('out/summaries/sample_count_by_metadata.pdf',
        bg = 'white', width = 2200, height = 2000, 
