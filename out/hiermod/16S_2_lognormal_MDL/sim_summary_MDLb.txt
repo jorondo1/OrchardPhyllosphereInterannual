@@ -1,4 +1,4 @@
-==== model: The Wildcard ====
+==== model: The Tamed Wildcard ====
 
 $likelihood
 Dv ~ dlnorm(mu, sigma[Mg])
@@ -35,5 +35,5 @@ sigma_loc  0.256 0.164  0.099  0.534 1.001  3233.567
 
 
 ==== posterior contrast ====
-mean -- mean: -39.334  median: -38.78  89% PI: [ -70.466 , -9.012 ]  89% HPDI: [ -69.851 , -8.618 ]
-median -- mean: -56.883  median: -56.098  89% PI: [ -81.554 , -34.176 ]  89% HPDI: [ -78.924 , -31.897 ]
+mean -- mean: -38.137  median: -37.545  89% PI: [ -69.15 , -9.028 ]  89% HPDI: [ -67.445 , -7.636 ]
+median -- mean: -55.131  median: -54.41  89% PI: [ -79.37 , -32.674 ]  89% HPDI: [ -77.941 , -31.638 ]

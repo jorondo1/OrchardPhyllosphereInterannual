@@ -49,9 +49,7 @@ sink_ITS <- function(append = TRUE) sink(file.path(path_summary, "ITS_summary.tx
 sink_16S(append = FALSE); cat("== 16S: DADA2 -> phyloseq summary ==\n"); sink()
 sink_ITS(append = FALSE); cat("== ITS: DADA2 -> phyloseq summary ==\n"); sink()
 
-##############################################################################
 # 1. Load DADA2 outputs -------------------------------------------------
-##############################################################################
 
 # --- 16S ---
 seqtab_16S <- read_rds(file.path(path_in, "seqtab_16S.RDS")) %>% as.data.frame()
@@ -83,9 +81,7 @@ tax_ITS %<>% mutate(across(everything(), ~ case_when(
   . == "Unassigned" | str_detect(., 'Incertae') | is.na(.) ~ "Unclassified", 
   TRUE ~ .))) 
 
-##############################################################################
 # 2. Raw phyloseq objects (nothing filtered/removed) --------------------
-##############################################################################
 
 # --- 16S ---
 ps_raw_16S <- phyloseq(
@@ -99,9 +95,7 @@ ps_raw_ITS <- phyloseq(
   tax_table(as.matrix(tax_ITS))
 )
 
-##############################################################################
 # 3. Taxonomy-based & rare-ASV filtering ---------------------------------
-##############################################################################
 
 n_rare <- 10 # minimum total reads for an ASV to be kept
 
@@ -167,16 +161,13 @@ seqtab_ITS_filt <- seqtab_ITS[, keep_asv]
 
 sink()
 
-##############################################################################
+
 # 4. Rarefaction curves ----------------------------------------------------
-##############################################################################
 
 plot_rarecurve(seqtab_16S_filt, thresholds = c(7000, 8000), dataset = "16S")
 plot_rarecurve(seqtab_ITS_filt, thresholds = c(2500, 4000), dataset = "ITS")
 
-##############################################################################
 # 5. Drop low-depth samples ----------------------------------------------
-##############################################################################
 
 # --- 16S ---
 sink_16S()
@@ -206,9 +197,7 @@ seqtab_ITS_filt <- seqtab_ITS_filt[keep_samples, ]
 
 sink()
 
-##############################################################################
 # 6. Filtered phyloseq objects -------------------------------------------
-##############################################################################
 
 # --- 16S ---
 sink_16S()
@@ -246,9 +235,7 @@ ps_filt_ITS <- phyloseq(
 
 sink()
 
-##############################################################################
 # 7. Trees and species clusters ----------------------------------------------
-##############################################################################
 
 # Build NJ trees
 ps.16S.tree <- mgx.tools::ASV_tree_for_physeq(ps_filt_16S, ncores = 7)
@@ -278,9 +265,84 @@ ps.ITS.clust <- mgx.tools::cluster_ASVs_physeq(ps.ITS.tree, threshold = 0.0295)
 # The only "important" ones (according to mean, n or max) are Unclassified
 # Let's keep them, with inconsistencies
 
-##############################################################################
-# 8. Export objects ---------------------------------------------------------
-##############################################################################
+# 8. Species cluster majority consensus taxonomy ----------------------------
+
+ranks <- c("Phylum", "Class", "Order", "Family", "Genus")
+
+species_cluster_consensus_tax <- function(ps, barcode){
+  
+  # 1. Relative abundance of each ASV within each sample
+  ps_rel <- ps %>%
+    psflashmelt() %>% 
+    group_by(Sample) %>%
+    mutate(relAb = Abundance / sum(Abundance)) %>%
+    ungroup() %>% 
+    filter(Abundance>0)
+  
+  # 2. Sum relative abundances per cluster × rank × value
+  props <- ps_rel %>%
+    pivot_longer(cols = all_of(ranks), names_to = "Rank", values_to = "Value") %>%
+    group_by(Species_cluster, Rank, Value) %>%
+    summarise(w = sum(relAb), .groups = "drop") %>%
+    group_by(Species_cluster, Rank) %>%
+    mutate(prop = w / sum(w),
+           Rank = factor(Rank, levels = ranks)) %>%
+    ungroup()
+  
+  # 3. Find consensus
+  consensus <- props %>%
+    group_by(Species_cluster, Rank) %>%
+    slice_max(prop, n = 1, with_ties = FALSE) %>%
+    ungroup() %>%
+    mutate(Rank = factor(Rank, levels = ranks))
+  
+  # Plot
+  consensus_plot <- ggplot(consensus, aes(x = Rank, y = prop)) +
+    geom_violin(fill = "steelblue", alpha = 0.7) +
+    geom_hline(yintercept = 0.5, linetype = "dashed", color = "red") +
+    labs(x = "Taxonomic rank", y = "Consensus proportion (weighted by reads)",
+         title = "Relative-abundance-weighted taxonomy consensus by taxonomic rank across species clusters") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+  ggsave(consensus_plot, filename = paste0("out/summaries/species_clust_consensus_",barcode,".pdf"), bg = 'white', 
+         width = 2000, height = 2000, units = 'px', dpi = 220)
+  
+  # 4. Rename clusters
+  rank_order_low_to_high <- rev(ranks)   # Genus → Kingdom (deepest first)
+  
+  best_rank <- consensus %>%
+    filter(prop > 0.5, Value != "Unclassified") %>%
+    mutate(Rank = factor(Rank, levels = rank_order_low_to_high)) %>%
+    group_by(Species_cluster) %>%
+    slice_min(as.integer(Rank), n = 1, with_ties = FALSE) %>%
+    ungroup() %>%
+    select(Species_cluster, Rank, Value, prop)
+
+  # spot check:
+  # consensus %>% filter(Species_cluster %in% c('1099', '1165'))
+  # best_rank %>% filter(Species_cluster %in% c('1099', '1165'))
+  
+  renamed <- ps_rel %>%
+    distinct(Species_cluster) %>%
+    left_join(best_rank, by = "Species_cluster") %>%
+    mutate(
+      new_name = paste0(Value, "_sp_clust_", Species_cluster)
+    )
+  
+  tt <- as.data.frame(tax_table(ps))          # rownames = ASVs
+  tt$Species_cluster <- renamed$new_name[match(tt$Species_cluster, renamed$Species_cluster)]
+  return(as.matrix(tt))
+}
+
+tax_16S_clusternames <- species_cluster_consensus_tax(ps.16S.clust, "16S")
+tax_ITS_clusternames <- species_cluster_consensus_tax(ps.ITS.clust, "ITS")
+
+tax_table(ps.16S.clust) <- tax_16S_clusternames
+tax_table(ps.ITS.clust) <- tax_ITS_clusternames
+
+
+# 9. Export objects ---------------------------------------------------------
 
 list.out <- list(
   Bacteria = list(

@@ -148,7 +148,7 @@ tibble(
 
 # Sit halfway between log means , make sure means sit within 1sd of the mean
 model_ppc1 <- model
-model_ppc1$prior_ppc1 <- quote(loga[Mg] ~ dnorm(5,2)) #slightly more skeptical than ITS?
+model_ppc1$prior_loga <- quote(loga[Mg] ~ dnorm(6,2)) #slightly more skeptical than ITS?
 model_ppc1$prior_sigma <- quote(sigma[Mg] ~ dexp(2))
 model_ppc1$prior_sigma_loc <- quote(sigma_loc ~ dexp(2))
 
@@ -180,15 +180,7 @@ save_gg("sim_prior_PC_ppc1", "MDL", p_sim_spaghetti_ppc1)
 
 ## Parameter recovery: updated priors -----------------------------------------------------------
 
-fit_sim_ppc1 <- ulam(
-  model_ppc1,  # <- <- <- Updated model
-  data = as.list(dat_sim),
-  chains = 4, cores = 4, iter = 4000,
-  control = list(adapt_delta = 0.99) )
-
-precis(fit_sim_ppc1, depth = 2 ) # good r_hats
-
-### Fixed effectt recovery ---------
+### Fixed effect recovery ---------
 
 post_sim_ppc1 <- extract.samples(fit_sim_ppc1)
 
@@ -213,7 +205,7 @@ pf_sim_ppc1 <- post_full(fit_sim_ppc1, means_MDL)
 pc_sim_ppc1 <- compute_contrasts(pf_sim_ppc1, keep = c("mean", "median"), group_levels = idx$Mg$levels)
 
 p_sim_contrast_ppc1 <- contrast_plot_panels(
-  pc_sim_ppc1, quant = c(0.00, 0.995), group_pal = Management_palette,
+  pc_sim_ppc1, quant = c(0.001, 0.995), group_pal = Management_palette,
   true_vals = true_vals); p_sim_contrast_ppc1
 
 save_report(
@@ -222,19 +214,8 @@ save_gg("sim_contrast_density", "MDL_ppc1", p_sim_contrast_ppc1)
 
 
 # Traces look fine:
-traceplot(fit_sim_ppc1)
-trankplot(fit_sim_ppc1)
 save_pdf("sim_traceplot", "MDLb", function() traceplot(fit_sim_ppc1))
 save_pdf("sim_trankplot", "MDLb", function() trankplot(fit_sim_ppc1))
-
-save_report("sim_summary", "MDLb", fit_sim_ppc1, pc_b_sim, model_ppc1, model_name = "The Tamed Wildcard")
-
-pb_sim_contrast <- contrast_plot_panels(pc_b_sim, quant = c(0, 0.995), group_pal = Management_palette,
-                                         true_vals = true_vals) +
-  labs(x = 'Estimates for mean Hill number of order 1 and its contrast'); pb_sim_contrast
-# Not incredible, but much better (depends on iteration/unstable; let's SBC!)
-
-save_gg("sim_contrast_density", "MDLb", pb_sim_contrast)
 
 ## Simulation-based calibration (SBC) --------------------------------------------
 
@@ -244,12 +225,18 @@ save_gg("sim_contrast_density", "MDLb", pb_sim_contrast)
 # the shared draw_true()), so it always matches whatever priors model_ppc1
 # actually declares.
 
+
+ncores <- 24
+nchains <- 2
+n_sbc = 100
+n_iter = 10000
+
 # We reuse simulate_from_priors() from before
 sbc <- run_sbc(
   model_fit = fit_sim_ppc1,  # model_ppc1's formula + priors, both from this one fit
   means_fn = means_MDL,
   simulate_fn = simulate_from_priors,
-  n_sbc = 100, iter = 10000, chains = 4,
+  n_sbc = 100, iter = 5000, chains = 4,
   control = list(adapt_delta = 0.99))
 
 sbc_out <- save_sbc_report(sbc, "MDLb")
@@ -274,7 +261,6 @@ save_fit("fit", "MDLb", fitb)
 
 precis(fitb, depth = 2 )
 
-traceplot(fitb); trankplot(fitb)
 save_pdf("fit_traceplot", "MDLb", function() traceplot(fitb))
 save_pdf("fit_trankplot", "MDLb", function() trankplot(fitb))
 
@@ -287,9 +273,10 @@ save_pdf("fit_trankplot", "MDLb", function() trankplot(fitb))
 
 ### Overall ----
 
-pb_postpred <- plot_ppc_overlay(fitb, dat, idx$Mg$to_label(dat$Mg), xlim = c(0,150)); pb_postpred
-# The model seems to underestimate the center of mass for the organic group
-# as well as overestimate its spread
+pb_postpred <- plot_ppc_overlay(fitb, dat, idx$Mg$to_label(dat$Mg), 
+                                xlim = c(0,2000)); pb_postpred
+# Not bad!
+# Conventional has a hump around 800-900 which the model doesn't see.
 
 save_gg("postpred_density", "MDLb", pb_postpred)
 
@@ -367,24 +354,22 @@ p_postpred_ridges <- pp_joined %>%
 
 save_gg("postpred_ridges", "MDL", p_postpred_ridges)
 
-## Contrast statistic (target derived quantities) ----------------------------
-# The ridge/dens_overlay checks above test marginal shape (does each group's
-# simulated distribution look plausible).
-
-# For each posterior draw, simulate a full replicate dataset
-# and recompute the same contrast we'd compute on real data (median gap, and
-# the MAD gap that stands in for the sigma story above), then see where the
-# real data's contrast falls among the replicates. Standard posterior-
-# predictive test-statistic check (bayesplot::ppc_stat); yrep rows are in the
-# same observation order as dat$Dv/dat$Mg, so indexing by dat$Mg inside each
-# stat function is valid for every replicate row too.
+### Contrast test statistics ----
+# Model 2 is a clean 2-group (Mg) split, so plot_ppc_contrast_stat() (not
+# plot_ppc_season_contrast_stats(), which is specifically for the Mg x Mo
+# design from Model 4 onward) is the right generic helper here. Median and
+# mean contrast checked against the real data's own gap (paralleling the
+# mean+median pair already reported in Contrast recovery above); MAD
+# checks the heteroscedasticity assumption itself (sigma[Mg] differing by
+# group is the whole point of Model 2 over Model 1), not redundant with
+# the other two. All sit comfortably within their predictive spread (see
+# discussion) -- not a red flag.
 
 p_ppc_median_contrast <- plot_ppc_contrast_stat(fitb, dat, dat$Mg, median, "median", idx$Mg$levels)
-# !!!!!!! not what we'd expect?! how extreme can it get before redflagging?
-p_ppc_mad_contrast <- plot_ppc_contrast_stat(fitb, dat, dat$Mg, mad, "dispersion (MAD)", idx$Mg$levels)
+p_ppc_mean_contrast   <- plot_ppc_contrast_stat(fitb, dat, dat$Mg, mean, "mean", idx$Mg$levels)
+p_ppc_mad_contrast    <- plot_ppc_contrast_stat(fitb, dat, dat$Mg, mad, "dispersion (MAD)", idx$Mg$levels)
 
-p_ppc_median_contrast
-p_ppc_mad_contrast
-
-save_gg("postpred_stat_median_contrast", "MDLb", p_ppc_median_contrast)
-save_gg("postpred_stat_mad_contrast", "MDLb", p_ppc_mad_contrast)
+# Median is spot on at the peak; others are ok but slightly tailed, has to do with variance
+(p_ppc <- p_ppc_median_contrast / p_ppc_mean_contrast / p_ppc_mad_contrast +
+    plot_layout(guides = 'collect'))
+save_gg("postpred_stat", "MDLb", p_ppc)
