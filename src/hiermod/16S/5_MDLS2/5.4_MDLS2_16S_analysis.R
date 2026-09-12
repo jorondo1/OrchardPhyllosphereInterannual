@@ -42,7 +42,7 @@ pc_estimands_medians <- estimand_panels(
 )
 
 p_contrast_median <- contrast_plot_panels(
-  pc_estimands_medians, quant = c(0.005,.995), scales = 'free_y',
+  pc_estimands_medians, quant = c(0.01,.995), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population medians)"); p_contrast_median
 save_gg("fit_contrast_median", "MDLS2_shifted", p_contrast_median, width = 10, height = 6)

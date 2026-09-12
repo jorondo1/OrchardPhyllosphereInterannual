@@ -24,7 +24,7 @@ mdlv_labels <- c(
   sigma_loc = "Global location SD (log scale)")
 # sigma_g isn't Mg-indexed -- compute_contrasts() gives it a single
 # Contrast-only row (no group1/group2 pair to difference). Per-Location
-# breakdown is in g_by_loc (3.4_MDLv_analysis.R). sigma_loc isn't part of
+# breakdown is in g_by_loc (3.4_MDLv_ITS_analysis.R). sigma_loc isn't part of
 # this panel set at all -- see precis(fitb, depth = 2) for it directly.
 
 # Mean backtransformation: Organic carries an extra variance term (sigma_g)

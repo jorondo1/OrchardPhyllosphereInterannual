@@ -174,7 +174,7 @@ answers "what would the data look like," never "what is the parameter."
   exactly 1 per draw (a true composition); `variance_partition_MDLSY()`
   (`hiermod/Models/MDLSY_model.R`), visualized as the stacked-bar (posterior
   medians) + ridge-density (full posterior shape) combo in
-  `6.4_MDLSY_analysis.R`.
+  `6.4_MDLSY_ITS_analysis.R`.
 
 ## Diagnostics (sampling / calibration)
 

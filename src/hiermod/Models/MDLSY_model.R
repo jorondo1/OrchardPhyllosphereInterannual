@@ -19,7 +19,7 @@ model_MDLSY_ITS$pr_sigma_yr <- quote(sigma_yr ~ dexp(2))    # same rate as sigma
 # MODEL_HISTORY.md). cv[Cv] deliberately left OUT of mu here -- no sigma_cv
 # to marginalize over (unpooled fixed effect), same precedent yr[Yr] set
 # pre-Model-6 -- reported instead via its own posterior panel in
-# 6.4_MDLSY_analysis.R.
+# 6.4_MDLSY_ITS_analysis.R.
 means_MDLSY <- function(post, shift = 0){
   total_var <- post$sigma^2 + as.vector(post$sigma_loc)^2 +
     as.vector(post$sigma_tr)^2 + as.vector(post$sigma_yr)^2

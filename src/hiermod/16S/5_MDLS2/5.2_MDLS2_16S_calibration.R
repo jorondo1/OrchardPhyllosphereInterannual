@@ -129,16 +129,17 @@ tibble(
 
 # Biggest gap  is with sigma_tr, then sigma_max
 
-### Update sigma priors --------------------
+### Update sigma priors ----------------------------------------------
 model_ppc1 <- model
 model_ppc1$pr_sigma_tr  <- quote(sigma_tr  ~ dexp(2.5)) #tighter
 model_ppc1$pr_sigma     <- quote(sigma[cell] ~ dexp(2.5))
 model_ppc1$pr_sigma_loc <- quote(sigma_loc ~ dexp(2.5))
+model_ppc1$prior_loga <- quote(loga[Mg] ~ dnorm(5,2))
 
 fit_sim_ppc1 <- ulam(
   model_ppc1,
   data = as.list(dat_sim),
-  chains = 6, cores = 6, iter = 5000 )
+  chains = 6, cores = 6, iter = 10000 )
 precis(fit_sim_ppc1, depth = 2 )
 
 prior_ppc1 <- extract.prior(fit_sim_ppc1, n = n_prior)
@@ -165,7 +166,7 @@ post_sim_ppc1 <- extract.samples(fit_sim_ppc1)
 
 ### Fixed effects recovery -------------
 
-fixed_recovery <- check_recovery(
+check_recovery(
   true = c(loga1 = log(may_conv),
            loga2 = log(may_org),
            s_conv = july_conv_shift,
@@ -179,7 +180,7 @@ fixed_recovery <- check_recovery(
 
 ### Sigma recovery -------------
 
-sigma_recovery <- check_recovery(
+check_recovery(
   true = list(sigma1 = true_sigma[1], sigma2 = true_sigma[2],
               sigma3 = true_sigma[3], sigma4 = true_sigma[4]),
   post_draws = list(sigma1 = post_sim_ppc1$sigma[,1], sigma2 = post_sim_ppc1$sigma[,2],
@@ -203,17 +204,23 @@ save_report("sim_summary", "MDLS2_ppc1", fit_sim_ppc1, cr$estimands, model,
 save_gg("sim_contrast_density", "MDLS2_ppc1", p_sim_contrast_ppc1)
 
 # Traces look fine:
-save_pdf("sim_traceplot", "MDLb_ppc1", function() traceplot(fit_sim_ppc1))
+#save_pdf("sim_traceplot", "MDLb_ppc1", function() traceplot(fit_sim_ppc1))
 save_pdf("sim_trankplot", "MDLb-ppc1", function() trankplot(fit_sim_ppc1))
 
 ## Simulation-based calibration (SBC) --------------------------------------------
+
+ncores <- 24
+nchains <- 2
+n_sbc = 100
+n_iter = 20000
 
 sbc_MDLS2_shifted <- run_sbc(
   model_fit   = fit_sim_ppc1,
   means_fn    = means_MDLS2,
   contrast_fn = contrast_may_gap_MDLS2,
   simulate_fn = function(true_params) simulate_from_priors_MDLS2(true_params, shift = 1),
-  n_sbc = 30, iter = 15000, n_parallel = 4, chains = 2, cores = 2,
+  n_sbc = n_sbc, iter = n_iter,
+  n_parallel = ncores/nchains, chains = nchains, cores = nchains,
   control = list(adapt_delta = 0.99))
 
 sbc_out_MDLS2_shifted <- save_sbc_report(sbc_MDLS2_shifted, "MDLS2_shifted_30sbc_iter")

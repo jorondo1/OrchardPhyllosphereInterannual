@@ -104,7 +104,7 @@ variance_partition_MDLSYC <- function(post, dat){
 # that) optionally correlate deg_h_z with Season and seq_depth_z with the
 # structural diversity signal instead, at approximately the given
 # correlation -- a stress test for sampler geometry under realistic
-# confounding (see 7.2_MDLSYC_calibration.R's "Collinearity-aware
+# confounding (see 7.2_MDLSYC_ITS_calibration.R's "Collinearity-aware
 # parameter recovery" section), via the standard target-correlation
 # construction: z = rho*scale(x) + sqrt(1-rho^2)*noise.
 sim_div_MDLSYC <- function(

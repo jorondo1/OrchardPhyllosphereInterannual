@@ -116,13 +116,15 @@ save_gg("sim_contrast_density", "MDLSYC", p_sim_contrast)
 # Extremely good recovery !
 
 ## Collinearity-aware parameter recovery --------------------------------------
+
+# Full Claude suggestion! ---
 # The real fit shows ~1% divergences and 1/6 chains with E-BFMI < 0.3. SBC
 # above draws deg_h_z/precip_72h_z/seq_depth_z independently, so it only
 # tests recoverability, not whether the real design's collinearity
 # (deg_h ~ Season r=-0.73; Seq_depth targeted here at -0.5 with the
-# structural diversity signal) degrades sampler geometry. Calibration
+# structural diversity signal) affects the sampler. Calibration
 # itself shouldn't be affected by collinearity in a correctly-specified
-# model -- what's actually at stake is convergence (divergences/E-BFMI),
+# model (right?); what's actually at stake is convergence (divergences/E-BFMI),
 # which this checks directly across a handful of replicates, cheaper than
 # a full SBC re-run. Escalate to a full SBC only if this shows real
 # degradation vs. the plain recovery run above.
@@ -138,6 +140,7 @@ confound_diag <- map_dfr(seq_len(n_confound_reps), function(i){
     gap_shift = july_org_shift, sigma = true_sigma, sigma_yr = true_sigma_yr,
     b_deg = true_b_deg, b_precip = true_b_precip, b_seq = true_b_seq,
     cv = true_cv, p_dropout = 0.1, shift = 1,
+    # New parameters to force colinearity between variables:
     rho_deg_season = -0.73, rho_seq_mu = -0.5
   )
 

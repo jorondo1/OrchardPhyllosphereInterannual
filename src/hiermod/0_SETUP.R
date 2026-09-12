@@ -29,8 +29,7 @@ fill_cult <- c("#7DB16B", "#45818E", "#AB4F84", "#AE9FCB", "#99CFE1")
 idx <- list(
   Mg = make_index(div$Management, levels = c("Conventional", "Organic"),
                    palette = c(Conventional = "#F28E2B", Organic = "#499894")),
-  Lo = make_index(div$Location, levels = c("Saint-Benoît", "Compton", "Windsor", "Milton"),
-                   palette = fill_loc),
+  Lo = make_index(div$Location, palette = fill_loc),
   Tr = make_index(div$Tree_id),
   Cv = make_index(div$Cultivar, levels = c("Cortland", "Liberty", "Paulared", "Honeycrisp", "Spartan"),
                    palette = fill_cult),

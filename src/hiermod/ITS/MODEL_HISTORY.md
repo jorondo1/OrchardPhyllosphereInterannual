@@ -138,7 +138,7 @@ test looks good (D=0.13, p=0.67 at n_sbc=30), but divergences across
 replicates are non-trivial, plausibly because each `sigma[cell]` is backed
 by roughly half the data `sigma[Mg]` had.
 
-## Model 5, shifted — `5b.2_MDLS2_shifted_calibration.R`
+## Model 5, shifted — `5b.2_MDLS2_shifted_ITS_calibration.R`
 
 **Structure:** Same `model` as plain Model 5, unmodified. Only data
 preparation changes: real `Dv` is fit as `Hill_1 - 1`, and
@@ -244,9 +244,9 @@ than recomputing a calibration pass in the validation script (Model 6's
 own pattern), Model 6's calibrated rates are hardcoded directly into
 `hiermod/Models/MDLSYC_model.R`'s priors (`sigma ~ dexp(3.46)`, `sigma_loc`/
 `sigma_tr`/`sigma_yr ~ dexp(2.31)`), inherited directly from `model_MDLSY_ITS`
-rather than resourced from `6.2_MDLSY_calibration.R`, where they only
+rather than resourced from `6.2_MDLSY_ITS_calibration.R`, where they only
 existed as a local variable before being promoted. This also let
-`7.2_MDLSYC_calibration.R` drop the separate uncalibrated-vs-
+`7.2_MDLSYC_ITS_calibration.R` drop the separate uncalibrated-vs-
 calibrated fit comparison Model 6's script has: with the prior already
 calibrated from the start, there's nothing to compare against.
 
