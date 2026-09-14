@@ -172,30 +172,11 @@ dq_MDLS2v <- derived_quantities(
 n_sbc  <- 100
 n_iter <- 10000
 
-# Tried parallelizing this via future.chunk.size -- reverted. Its worker
-# processes don't have `rethinking` (or draw_true()/fit_sim(), etc.)
-# available even after listing future.globals explicitly ("could not find
-# function extract.prior" even once draw_true() was fixed): every package
-# the generator's call chain touches would need explicit future.packages=
-# too. Not worth chasing for a step that isn't the bottleneck -- the ~100
-# real refits below dominate wall-clock time by orders of magnitude more
-# than serially generating 100 small datasets ever will.
 datasets_MDLS2v <- generate_datasets(SBC_generator_function(generate_one_MDLS2v), n_sbc)
 
-# refresh = 0: cmdstanr's own default per-iteration progress printing,
-# multiplied across 100 refits, would flood the log far more than anything
-# suppressMessages()/suppressWarnings() below are doing.
 backend_MDLS2v <- SBC_backend_ulam(model_MDLS2v_16S, chains = 2, iter = n_iter,
                                     refresh = 0, control = list(adapt_delta = 0.99))
 
-# Divergence/treedepth/E-BFMI chatter from cmdstanr comes through as
-# message() conditions (yes, even though the text itself says "Warning:"
-# -- confirmed empirically, suppressWarnings() alone does not catch it),
-# plus whatever genuine warning()s show up elsewhere (e.g. ks.test ties).
-# Safe to blanket-silence here because the same information is already
-# captured numerically in $backend_diagnostics (n_divergent/
-# n_max_treedepth/n_low_ebfmi) and compute_SBC()'s own end-of-run summary
-# isn't part of this stream, so nothing is actually lost, only decluttered.
 sbc_MDLS2v <- compute_SBC(
   datasets_MDLS2v, backend_MDLS2v, dquants = dq_MDLS2v,
   cache_mode = "results", cache_location = file.path(hiermod_out_dir, "sbc_cache_MDLS2v"),
