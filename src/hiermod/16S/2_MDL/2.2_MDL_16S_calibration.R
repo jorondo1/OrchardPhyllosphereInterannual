@@ -1,22 +1,26 @@
-# MODEL 2 (MDL), 16S: same structure as ITS's Model 2 (partial pooling
-# across Location). 16S's raw diversity scale is much higher than ITS's, so
-# this checks how much the shared naive priors need retuning here.
+# MODEL 2 (MDLb), 16S: partial pooling across Location (non-centered
+# b[Lo]*sigma_loc). ITS's default loga ~ dnorm(2,2) doesn't make sense here --
+# 16S's raw diversity scale is much higher -- so this starts straight from
+# loga ~ dnorm(5,2) (same scale already used for MDLS2v/MDLS2vz, so any SBC
+# comparison against those is apples-to-apples) rather than re-demonstrating
+# the mismatch.
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
 source('src/hiermod/Models/MDL_model.R') # model_MDL_16S, means_MDL(), sim_div_MDL(), simulate_from_priors_MDL()
+
 model <- model_MDL_16S
+model$prior_loga     <- quote(loga[Mg] ~ dnorm(5,2))
+model$prior_sigma     <- quote(sigma[Mg] ~ dexp(2))
+model$prior_sigma_loc <- quote(sigma_loc ~ dexp(2))
 
 hiermod_out_dir <- "out/hiermod/16S_2_lognormal_MDL"
 
-# MODEL 2 -- Partial pooling across Location (non-centered) =================
-#same rationale as ITS model 2
-
 ## Parameter recovery -----------------------------------------------------------
-# Dummy values
+
 conv <- 180
-org <- 120
-true_sigma <- cv_to_sigma(c(0.5, 0.8))# keep different variances
+org  <- 120
+true_sigma     <- cv_to_sigma(c(0.5, 0.8)) # keep different variances
 true_sigma_loc <- 0.5
 
 dat_sim <- sim_div_MDL(
@@ -30,35 +34,29 @@ dat_sim <- sim_div_MDL(
 fit_sim <- ulam(
   model,
   data = as.list(dat_sim),
-  chains = 6, cores = 6, iter = 5000 )
-precis(fit_sim, depth = 2 )
-
-### Fixed effect recovery ---------
+  chains = 6, cores = 6, iter = 5000,
+  control = list(adapt_delta = 0.99))
+precis(fit_sim, depth = 2)
 
 post_sim <- extract.samples(fit_sim)
 
-check_recovery(
-  true = c(loga1 = log(conv),
-           loga2 = log(org)),
-  post_draws = list(
-    loga1 = post_sim$loga[,1],
-    loga2 = post_sim$loga[,2])
-) # all gooood
+### Fixed effect + sigma recovery ---------
 
-### Sigma recovery -------------
+check_recovery(
+  true = c(loga1 = log(conv), loga2 = log(org)),
+  post_draws = list(loga1 = post_sim$loga[,1], loga2 = post_sim$loga[,2])
+)
 
 check_recovery(
   true = list(sigma1 = true_sigma[1], sigma2 = true_sigma[2]),
   post_draws = list(sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2])
-) # all gooood
+)
 
 ### Contrast recovery -------------
-
-# means_MDL() already returns both mean and median
-
-# True contrast: median needs no total_var (median = exp(loga), the raw
-# conv/org values loga was built from); mean does (sigma[Mg]^2 +
-# sigma_loc^2, matching means_MDL()'s own total_var.
+# means_MDL() already returns both mean and median. Median needs no
+# total_var (median = exp(loga), the raw conv/org values loga was built
+# from); mean does (sigma[Mg]^2 + sigma_loc^2, matching means_MDL()'s own
+# total_var).
 
 true_median_contrast <- org - conv
 true_mean_contrast <- lognormal_mean(log(org), true_sigma[2]^2 + true_sigma_loc^2) -
@@ -77,164 +75,118 @@ p_sim_contrast <- contrast_plot_panels(
   pc_sim, quant = c(0.005, 0.99), group_pal = Management_palette,
   true_vals = true_vals); p_sim_contrast
 
-save_report("sim_summary", "MDL", fit_sim, pc_sim, model, model_name = "The Wildcard")
-save_gg("sim_contrast_density", "MDL", p_sim_contrast)
+save_report("sim_summary", model_id, fit_sim, pc_sim, model, model_name = "The Wildcard")
+save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
-## Prior predictive checks -------------------------------------------------------
+save_pdf("sim_traceplot", model_id, function() traceplot(fit_sim))
+save_pdf("sim_trankplot", model_id, function() trankplot(fit_sim))
 
-### ITS dataset priors (dnorm(2,2)) ------------------------
-
-# Let's see what happens with the model we imported from ITS
-# Likely wrong, because in general the distribution of diversity is a lot higher
+## Prior predictive check ---------------------------------------------------
 
 n_prior <- 10000
-
 prior <- extract.prior(fit_sim, n = n_prior)
 
 # draw_true() is shared (sbc_helpers.R) -- generic slice of any extract.prior()
-# output, no per-model rewrite needed. simulate_from_priors_MDL() is sourced
-# from hiermod/Models/MDL_model.R above.
-
-# One simulated dataset per prior draw
+# output, no per-model rewrite needed.
 prior_pred <- map_dfr(seq_len(n_prior), function(i){
   simulate_from_priors_MDL(draw_true(prior, i))
 }, .id = "draw")
 
-summary(prior_pred$Dv)  # raw per-observation draws
-# Median suspiciously low
-# Mean extremely high (trillions)
-# sd a bit low
+summary(prior_pred$Dv)  # judge on median/IQR, not mean/SD -- multiplicative
+                         # blowups make the raw mean/sd meaningless here
 
 p_sim_spaghetti <- prior_predictive_spaghetti(
   prior_pred, upper_q = 0.99, model = model,
-  title = "Prior predictive check: loga[Mg]~dnorm(2,2) (imported from ITS model))"); p_sim_spaghetti
-# sd is in the billions! haha
-save_gg("sim_prior_PC_default", "MDL", p_sim_spaghetti)
+  title = "Prior predictive check: loga[Mg] ~ dnorm(5,2)"); p_sim_spaghetti
 
-# So our model will produce draws with undeestimated medians and (highly) overestimated means
+save_gg("sim_prior_PC", model_id, p_sim_spaghetti)
 
+## loga x sigma_loc funnel check ---------------------------------------------
+# With only n_loc=4, loga and sigma_loc can trade off against each other
+# (the classic NCP funnel): motivated by MDLS2v/MDLS2vz's SBC finding that
+# loga's bias correlates with sigma_loc. Eyeball whether that geometry is
+# already visible here, in the simplest model that includes Location.
 
-summary(div$Hill_1)
-# Indeed, median is way to low (data is 50) and mean way too high (data is 145)
-# Median is probably a loga prior problem;
+p_funnel <- function(){
+  par(mfrow = c(1,2))
+  plot(post_sim$sigma_loc, post_sim$loga[,1],
+       xlab = "sigma_loc", ylab = "loga[1] (Conventional)", pch = 16, col = scales::alpha("black", 0.15))
+  plot(post_sim$sigma_loc, post_sim$loga[,2],
+       xlab = "sigma_loc", ylab = "loga[2] (Organic)", pch = 16, col = scales::alpha("black", 0.15))
+  par(mfrow = c(1,1))
+}
+save_pdf("loga_sigmaloc_funnel", model_id, p_funnel)
 
-# mean is probably a sigma problem, because multiplicative can randomly escalate.
+## Simulation-based calibration (SBC), via the SBC package -----------------------
+# Checks whether loga[]/sigma_loc's SBC miscalibration found in MDLS2v (and
+# still present after the sum-to-zero fix in MDLS2vz) already shows up in
+# the simplest model that includes Location at all -- MDL has no
+# covariates, no Tree, no Year, just Mg + Lo. If it shows up here too, the
+# pathology is intrinsic to a 4-level Location random effect, not
+# something later structure (covariates splitting loga, Tree/Year layers)
+# amplifies.
+# b[Lo] itself stays out of `variables` for the same reason as MDLS2v: the
+# simulator draws a fresh per-location offset internally, so a prior draw
+# of the array isn't what generated the data.
+source('src/utils/sbc_backend_ulam.R')
+library(SBC)
+future::plan(future::multisession)
 
-div %>% group_by(Management) %>%
-  summarise(mean_ = mean(Hill_1),
-            sd_ = sd(Hill_1),
-            median_ = median(Hill_1)) %>%
-  mutate(
-    logmean_ = log(mean_),
-    logmedian_ = log(median_)
-  )
+generate_one_MDL <- function(){
+  true_params <- suppressMessages(suppressWarnings(draw_true(extract.prior(fit_sim, n = 1, refresh = 0), 1)))[
+    c("loga", "sigma", "sigma_loc")]
+  dat <- simulate_from_priors_MDL(true_params)
+  list(variables = true_params, generated = as.list(dat[, c("Dv", "Mg", "Lo")]))
+}
 
-# Which prior is driving the extreme tail?
-diagnose_extreme_tail(
-  prior_pred, value_col = "Dv",
-  candidates = list(
-    sigma_loc = prior$sigma_loc,
-    sigma_max = pmax(prior$sigma[,1], prior$sigma[,2])))
+# median/mean contrast, matching means_MDL()'s own total_var construction.
+dq_MDL <- derived_quantities(
+  median_contrast = exp(loga[2]) - exp(loga[1]),
+  mean_contrast =
+    exp(loga[2] + (sigma[2]^2 + sigma_loc^2) / 2) -
+    exp(loga[1] + (sigma[1]^2 + sigma_loc^2) / 2)
+)
 
-# sigma max is quite extreme; sigma loc a little too
+n_sbc  <- 100
+n_iter <- 10000
 
-### Update loga prior --------------------------------------
+datasets_path_MDL <- file.path(hiermod_out_dir, "sbc_datasets_MDL.rds")
+if (file.exists(datasets_path_MDL)) {
+  datasets_MDL <- readRDS(datasets_path_MDL)
+} else {
+  datasets_MDL <- generate_datasets(SBC_generator_function(generate_one_MDL), n_sbc)
+  saveRDS(datasets_MDL, datasets_path_MDL, compress = "xz")
+}
 
-# Sit halfway between log means , make sure means sit within 1sd of the mean
-model_ppc1 <- model
-model_ppc1$prior_loga <- quote(loga[Mg] ~ dnorm(6,2)) #slightly more skeptical than ITS?
-model_ppc1$prior_sigma <- quote(sigma[Mg] ~ dexp(2))
-model_ppc1$prior_sigma_loc <- quote(sigma_loc ~ dexp(2))
+backend_MDL <- SBC_backend_ulam(model, iter = n_iter, refresh = 0,
+                                 control = list(adapt_delta = 0.99))
 
-fit_sim_ppc1 <- ulam(
-  model_ppc1,
-  data = as.list(dat_sim),
-  chains = 6, cores = 6, iter = 5000 )
-precis(fit_sim_ppc1, depth = 2 )
+sbc_MDL <- compute_SBC(
+  datasets_MDL, backend_MDL, dquants = dq_MDL,
+  cache_mode = "results", cache_location = file.path(hiermod_out_dir, "sbc_cache_MDL"),
+  globals = c("SBC_fit.SBC_backend_ulam", "SBC_fit_to_draws_matrix.ulam",
+              "SBC_fit_to_diagnostics.ulam"))
 
-prior_ppc1 <- extract.prior(fit_sim_ppc1, n = n_prior)
+p_sbc_rank  <- plot_rank_hist(sbc_MDL)
+p_sbc_ecdf  <- plot_ecdf_diff(sbc_MDL)
+p_sbc_cover <- plot_coverage(sbc_MDL)
 
-# One simulated dataset per prior draw
-prior_ppc1_pred <- map_dfr(seq_len(n_prior), function(i){
-  simulate_from_priors_MDL(draw_true(prior_ppc1, i))
-}, .id = "draw")
+sbc_step <- paste0(model_id, "_", n_sbc, "sbc_iter")
+save_gg("SBC_rank_hist", sbc_step, p_sbc_rank, width = 9, height = 7)
+save_gg("SBC_ecdf_diff", sbc_step, p_sbc_ecdf, width = 9, height = 7)
+save_gg("SBC_coverage",  sbc_step, p_sbc_cover, width = 9, height = 7)
 
-summary(prior_ppc1_pred$Dv) # raw per-observation draws
-# Much better!
-# Mean still very high (trillions), but
-# sd more reasonable and 4rd quartile also
+(sbc_diag_summary <- sbc_MDL$backend_diagnostics %>%
+   dplyr::summarise(total_divergent = sum(n_divergent), total_max_treedepth = sum(n_max_treedepth),
+                     total_low_ebfmi = sum(n_low_ebfmi), n_replicates = dplyr::n()))
 
-p_sim_spaghetti_ppc1 <- prior_predictive_spaghetti(
-  prior_ppc1_pred, upper_q = 0.99, model = model_ppc1,
-  title = "Prior predictive check: adapted priors)"); p_sim_spaghetti_ppc1
+# The actual test: does loga show the same rank-fraction skew here as in
+# MDLS2v (~0.16, expected ~0.5)?
+sbc_MDL$stats |>
+  dplyr::filter(variable %in% c("loga[1]", "loga[2]")) |>
+  dplyr::group_by(variable) |>
+  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
-save_gg("sim_prior_PC_ppc1", "MDL", p_sim_spaghetti_ppc1)
-
-# Visually, priors can easily explore the <2000 diversity
-
-## Parameter recovery: updated priors -----------------------------------------------------------
-
-### Fixed effect recovery ---------
-
-post_sim_ppc1 <- extract.samples(fit_sim_ppc1)
-
-check_recovery(
-  true = c(loga1 = log(conv),
-           loga2 = log(org)),
-  post_draws = list(
-    loga1 = post_sim_ppc1$loga[,1],
-    loga2 = post_sim_ppc1$loga[,2])
-) # all gooood
-
-### Sigma recovery -------------
-
-check_recovery(
-  true = list(sigma1 = true_sigma[1], sigma2 = true_sigma[2]),
-  post_draws = list(sigma1 = post_sim_ppc1$sigma[,1], sigma2 = post_sim_ppc1$sigma[,2])
-) # all gooood
-
-### Contrast recovery -------------
-
-pf_sim_ppc1 <- post_full(fit_sim_ppc1, means_MDL)
-pc_sim_ppc1 <- compute_contrasts(pf_sim_ppc1, keep = c("mean", "median"), group_levels = idx$Mg$levels)
-
-p_sim_contrast_ppc1 <- contrast_plot_panels(
-  pc_sim_ppc1, quant = c(0.001, 0.995), group_pal = Management_palette,
-  true_vals = true_vals); p_sim_contrast_ppc1
-
-save_report(
-  "sim_summary", model_id, fit_sim_ppc1, pc_sim_ppc1, model_ppc1, model_name = "The Tamed Wildcard")
-save_gg("sim_contrast_density", model_id, p_sim_contrast_ppc1)
-
-
-# Traces look fine:
-save_pdf("sim_traceplot", model_id, function() traceplot(fit_sim_ppc1))
-save_pdf("sim_trankplot", model_id, function() trankplot(fit_sim_ppc1))
-
-## Simulation-based calibration (SBC) --------------------------------------------
-
-# Does this model recover the contrast, without divergences, across many
-# datasets drawn from its own priors (not just the one simulation above)?
-# run_sbc() pulls "true" params via extract.prior() on fit_sim_ppc1 itself (via
-# the shared draw_true()), so it always matches whatever priors model_ppc1
-# actually declares.
-
-
-ncores <- 24
-nchains <- 2
-n_sbc = 100
-n_iter = 10000
-
-# We reuse simulate_from_priors_MDL() from before
-sbc <- run_sbc(
-  model_fit = fit_sim_ppc1,  # model_ppc1's formula + priors, both from this one fit
-  means_fn = means_MDL,
-  simulate_fn = simulate_from_priors_MDL,
-  n_sbc = 100, iter = 5000, chains = 4,
-  control = list(adapt_delta = 0.99))
-
-sbc_out <- save_sbc_report(sbc, model_id)
-par(mfrow= c(1,1))
-hist(sbc_out$ranks)
-
-saveRDS(model_ppc1, file.path(hiermod_out_dir, "model_ppc1.rds"))
+# Saved as model_ppc1.rds for compatibility with 2.3_MDL_16S_fit.R's existing
+# readRDS() call -- rerun 2.3/2.4 against this if the fit itself needs updating.
+saveRDS(model, file.path(hiermod_out_dir, "model_ppc1.rds"))

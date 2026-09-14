@@ -168,11 +168,11 @@ if (file.exists(datasets_path_MDLS2vz)) {
 backend_MDLS2vz <- SBC_backend_ulam(model, iter = n_iter,
                                      refresh = 0, control = list(adapt_delta = 0.99))
 
-sbc_MDLS2vz <- suppressMessages(suppressWarnings(compute_SBC(
+sbc_MDLS2vz <- compute_SBC(
   datasets_MDLS2vz, backend_MDLS2vz, dquants = dq_MDLS2vz,
   cache_mode = "results", cache_location = file.path(hiermod_out_dir, "sbc_cache_MDLS2vz"),
   globals = c("SBC_fit.SBC_backend_ulam", "SBC_fit_to_draws_matrix.ulam",
-              "SBC_fit_to_diagnostics.ulam"))))
+              "SBC_fit_to_diagnostics.ulam"))
 
 p_sbc_rank  <- plot_rank_hist(sbc_MDLS2vz)
 p_sbc_ecdf  <- plot_ecdf_diff(sbc_MDLS2vz)
