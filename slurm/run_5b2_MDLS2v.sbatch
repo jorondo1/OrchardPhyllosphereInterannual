@@ -2,9 +2,8 @@
 #SBATCH --account=def-ilafores
 #SBATCH --job-name=SBC
 #SBATCH --nodes=1
-#SBATCH --partition=cpularge
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=24
+#SBATCH --cpus-per-task=48
 #SBATCH --mem=240G
 #SBATCH --time=24:00:00
 #SBATCH --output=/net/nfs-bio/jbod2/def-ilafores/analysis/orchardPhyllosphere2/slurm/logs/%x-%j.out
