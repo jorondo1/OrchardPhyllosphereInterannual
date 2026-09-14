@@ -1,17 +1,17 @@
 #!/bin/bash
 #SBATCH --account=def-ilafores
-#SBATCH --job-name=MDLS2v_sbc
+#SBATCH --job-name=SBC
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=48
+#SBATCH --cpus-per-task=24
 #SBATCH --mem=240G
 #SBATCH --time=24:00:00
-#SBATCH --output=slurm/logs/%x-%j.out
+#SBATCH --output=/net/nfs-bio/jbod2/def-ilafores/analysis/orchardPhyllosphere2/slurm/logs/%x-%j.out
 
 set -euo pipefail
 
 export REPO=/net/nfs-bio/jbod2/def-ilafores/analysis/orchardPhyllosphere2
-export SCRIPT=src/hiermod/16S/5b_MDLS2v/5b.2_MDLS2v_16S_calibration.R
+export SCRIPT=$REPO/src/hiermod/16S/5b_MDLS2v/5b.2_MDLS2v_16S_calibration.R
 cd "$REPO"
 git pull
 
