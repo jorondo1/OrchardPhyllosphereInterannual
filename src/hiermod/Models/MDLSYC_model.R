@@ -4,6 +4,7 @@
 
 source('src/hiermod/Models/MDLSY_model.R')
 
+# ITS MODEL -----------------
 model_MDLSYC_ITS <- model_MDLSY_ITS
 model_MDLSYC_ITS$main_model <- quote(
   mu <- loga[Mg] + gamma*(Mo-1) + b[Lo]*sigma_loc + yr[Yr]*sigma_yr +
@@ -23,6 +24,11 @@ model_MDLSYC_ITS$pr_sigma_tr  <- quote(sigma_tr    ~ dexp(2.31))
 model_MDLSYC_ITS$pr_sigma_yr  <- quote(sigma_yr    ~ dexp(2.31))
 
 model_id <- "MDLSYC"
+
+# 16S MODEL ---------------
+# import output model from calibration? we'll see, depends on what we see after
+# complete sbc rebuild
+
 
 # Backtransforming function --------------------------------------------------
 

@@ -5,7 +5,7 @@ source('src/hiermod/0_SETUP.R')
 source('src/hiermod/Models/MDLS2_model.R') # means_MDLS2(), sim_div_MDLS2()
 
 hiermod_out_dir <- "out/hiermod/16S_5_lognormal_MDLS2_shifted"
-model_ppc1 <- readRDS(file.path(hiermod_out_dir, "model_ppc1.rds"))
+model <- readRDS(file.path(hiermod_out_dir, "model_ppc1.rds"))
 
 ## Model fit ----------------------------------------------------------------
 
@@ -20,11 +20,12 @@ dat <- list(
 dat$cell <- (dat$Mg - 1) * 2 + dat$Mo   # 1=Conv-May, 2=Conv-July, 3=Org-May, 4=Org-July
 
 fit_MDLS2 <- ulam(
-  model_ppc1,
+  model,
   data = dat,
   chains = 6, cores = 6, iter = 20000,
   control = list(adapt_delta = 0.99)
 )
+
 save_fit("fit", model_id_MDLS2_16S, fit_MDLS2)
 saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLS2_shifted.rds"))
 

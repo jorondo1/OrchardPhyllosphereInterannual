@@ -70,7 +70,14 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
   }
 
   cat("==== precis:", deparse(substitute(fit)), "====\n\n")
-  print(round(precis(fit, depth = depth), 3))
+  precis_fit <- precis(fit, depth = depth)
+  # ess_bulk as a fraction of total post-warmup draws -- can exceed 1 under
+  # negative autocorrelation (a real, documented feature of rank-normalized
+  # ESS, not a bug: HMC sometimes samples weakly-identified parameters
+  # slightly anti-correlated, which is *more* efficient than i.i.d.).
+  # Values well below ~0.1-0.2 are the ones worth a second look.
+  precis_fit$ess_ratio <- precis_fit$ess_bulk / NROW(extract.samples(fit)[[1]])
+  print(round(precis_fit, 3))
 
   if (!is.null(recovery)) {
     cat("\n\n==== parameter recovery ====\n")

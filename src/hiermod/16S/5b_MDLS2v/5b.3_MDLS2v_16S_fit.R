@@ -17,7 +17,6 @@ dat <- list(
   Yr = idx$Yr$to_index(div$Year),
   Tr = idx$Tr$to_index(div$Tree_id)
 )
-# no `cell` column needed -- sigma is derived per-observation directly from Mg/Mo
 
 fit_MDLS2v <- ulam(
   model,
@@ -25,12 +24,15 @@ fit_MDLS2v <- ulam(
   chains = 6, cores = 6, iter = 20000,
   control = list(adapt_delta = 0.99)
 )
+
 save_fit("fit", model_id, fit_MDLS2v)
-saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLS2v_shifted.rds"))
+saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLS2v.rds"))
 
-precis(fit_MDLS2v, depth = 2)
+p <- precis(fit_MDLS2v, depth = 2); p$ess_ratio <- round(p$ess_bulk / NROW(extract.samples(fit_MDLS2v)[[1]]), 2); p
 
-save_pdf("fit_trankplot", model_id, function() trankplot(fit_MDLS2v, n_cols = 6, max_rows = 10))
+save_pdf(width = 30, height = 50,
+  "fit_trankplot", model_id, 
+  function() trankplot(fit_MDLS2v, n_cols = 6, max_rows = 25))
 
 ## Posterior predictive check --------------------------------------------------
 
