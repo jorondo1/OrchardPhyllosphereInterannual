@@ -8,9 +8,19 @@ SBC_backend_ulam <- function(model, ...){
   structure(list(model = model, args = list(...)), class = "SBC_backend_ulam")
 }
 
+# chains is always set to whatever `cores` compute_SBC() hands us for this
+# fit, never taken from backend$args -- compute_SBC()'s own cores_per_fit
+# defaults to 1 whenever n_sbc is large relative to available cores (true
+# for any real SBC run, confirmed for both an 8-core laptop and a 48-core
+# HPC node at n_sbc=100), so a fixed chains=2 in the backend would mean 2
+# chains contending for 1 allocated core on every replicate -- oversub-
+# scription, not a future::multisession vs mirai question. Pass
+# cores_per_fit=N explicitly to compute_SBC() instead if you want every
+# replicate to keep N>1 chains (at the cost of fewer replicates running
+# concurrently) -- this backend will follow whatever it's given either way.
 SBC_fit.SBC_backend_ulam <- function(backend, generated, cores){
   do.call(rethinking::ulam,
-          c(list(flist = backend$model, data = generated, cores = cores), backend$args))
+          c(list(flist = backend$model, data = generated, chains = cores, cores = cores), backend$args))
 }
 
 SBC_fit_to_draws_matrix.ulam <- function(fit){

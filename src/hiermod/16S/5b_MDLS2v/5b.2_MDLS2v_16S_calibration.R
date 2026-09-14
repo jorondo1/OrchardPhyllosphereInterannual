@@ -174,7 +174,7 @@ n_iter <- 10000
 
 datasets_MDLS2v <- generate_datasets(SBC_generator_function(generate_one_MDLS2v), n_sbc)
 
-backend_MDLS2v <- SBC_backend_ulam(model_MDLS2v_16S, chains = 2, iter = n_iter,
+backend_MDLS2v <- SBC_backend_ulam(model_MDLS2v_16S, iter = n_iter,
                                     refresh = 0, control = list(adapt_delta = 0.99))
 
 sbc_MDLS2v <- compute_SBC(
@@ -195,10 +195,50 @@ save_gg("SBC_rank_hist", sbc_step, p_sbc_rank, width = 9, height = 7)
 save_gg("SBC_ecdf_diff", sbc_step, p_sbc_ecdf, width = 9, height = 7)
 save_gg("SBC_coverage",  sbc_step, p_sbc_cover, width = 9, height = 7)
 
-# Divergences/treedepth/E-BFMI across all 100 refits
-(sbc_diag_summary <- sbc_MDLS2v$backend_diagnostics %>%
-   dplyr::summarise(total_divergent = sum(n_divergent), total_max_treedepth = sum(n_max_treedepth),
-                     total_low_ebfmi = sum(n_low_ebfmi), n_replicates = dplyr::n()))
+
+sum(sbc_MDLS2v$backend_diagnostics$n_divergent)/(n_sbc*n_iter)
+sum(sbc_MDLS2v$backend_diagnostics$n_low_ebfmi)/200 # chains
+
+# Concentrated divergences; 430 in 2M sampling transitions
+# most of which come from just 7 replicates; they are just
+# unlicky cell-sigma+sigma_loc/tr combinations
+sbc_MDLS2v$stats %>% 
+  dplyr::filter(variable %in% c("loga[1]", "loga[2]")) %>% 
+  dplyr::group_by(variable) %>% 
+  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
+# we expect 0.5 under perfect calibration. Woops!
+
+# Are our intrcepts, loga, confounded with the MEAN of sigma_loc or sigma_tr?
+sbc_MDLS2v$stats |>
+  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "sigma_loc", "sigma_tr", "ls0")) |>
+  dplyr::select(sim_id, variable, simulated_value) |>
+  tidyr::pivot_wider(names_from = variable, values_from = simulated_value) |>
+  dplyr::left_join(
+    sbc_MDLS2v$stats |>
+      dplyr::filter(variable %in% c("loga[1]", "loga[2]")) |>
+      dplyr::mutate(bias = mean - simulated_value) |>
+      dplyr::select(sim_id, variable, bias) |>
+      tidyr::pivot_wider(names_from = variable, values_from = bias, names_prefix = "bias_"),
+    by = "sim_id"
+  ) |>
+  dplyr::summarise(
+    cor_bias1_sigmaloc = cor(`bias_loga[1]`, sigma_loc),
+    cor_bias1_sigmatr  = cor(`bias_loga[1]`, sigma_tr),
+    cor_bias1_ls0      = cor(`bias_loga[1]`, ls0)
+  )
+
+# the 4 b[Lo] offsets (each ~dnorm(0,1), scaled by sigma_loc) don't reliably 
+# average to zero by chance. The bigger sigma_loc is, the bigger that chance
+# non-zero average can be in absolute terms. Model can't tell that apart
+# from "the true baseline is higher." The more between-location variability 
+# the model believes is plausible, the more room there is to explain 
+# "A is low" as "Location A is just different" instead of "Conventional 
+# is lower here", and vice versa.
+
+# But especially, or our model confounds Management with Location, which
+# is a true structural limitation. This warrants eventually making a 
+# B-D location-only model, once results are in, to see the extent to which
+# our target contrasts/estimates might be Location-specific.
 
 # _______ if need be, caclibrate more:
 

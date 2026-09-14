@@ -31,7 +31,7 @@ true_sigma_yr <- 0.3
 true_cv <- c(0.05, -0.05, 0.1, -0.1, 0)  # 5 Cultivar levels, same magnitudes ITS's own MDLSY calibration used
 
 true_sigma <- true_sigma_from_ls(list(ls0 = true_ls0, ls_Mg = true_ls_Mg,
-                                       ls_Mo = true_ls_Mo, ls_MgMo = true_ls_MgMo))
+                                      ls_Mo = true_ls_Mo, ls_MgMo = true_ls_MgMo))
 true_sigma # conv_May, conv_July, org_May, org_July
 
 true_coefs <- c(
@@ -83,7 +83,7 @@ cr <- contrast_recovery(
 p_sim_contrast <- contrast_plot_panels(
   cr$estimands, quant = c(0.01, 0.99), scales = 'free_y',
   group_pal = Management_palette,
-  true_vals = cr$true_estimands); p_sim_contrast
+  true_vals = cr$true_estimands)
 
 save_report("sim_summary", model_id, fit_sim, cr$estimands, model,
             recovery = coef_recovery, model_name = "The Varietal Splitter")
@@ -102,36 +102,36 @@ summary(prior_pred$Dv_shifted)  # judge on median/IQR, not mean/SD -- see MDLS2v
 
 p_prior_pc <- prior_predictive_spaghetti(
   prior_pred, value_col = "Dv_shifted", upper_q = 0.99, model = model,
-  title = "Prior predictive check", observed = dat_sim$Dv_shifted); p_prior_pc
+  title = "Prior predictive check", observed = dat_sim$Dv_shifted)#; p_prior_pc
 
 save_gg("sim_prior_PC", model_id, p_prior_pc)
-
-diagnose_extreme_tail(
-  prior_pred, value_col = "Dv_shifted",
-  candidates = list(
-    loga_max  = pmax(extracted_prior$loga[,1], extracted_prior$loga[,2]),
-    sigma_loc = extracted_prior$sigma_loc,
-    sigma_tr  = extracted_prior$sigma_tr,
-    sigma_yr  = extracted_prior$sigma_yr,
-    sigma_max = pmax(
-      sigma_cell(1,1, extracted_prior$ls0, extracted_prior$ls_Mg, extracted_prior$ls_Mo, extracted_prior$ls_MgMo),
-      sigma_cell(1,2, extracted_prior$ls0, extracted_prior$ls_Mg, extracted_prior$ls_Mo, extracted_prior$ls_MgMo),
-      sigma_cell(2,1, extracted_prior$ls0, extracted_prior$ls_Mg, extracted_prior$ls_Mo, extracted_prior$ls_MgMo),
-      sigma_cell(2,2, extracted_prior$ls0, extracted_prior$ls_Mg, extracted_prior$ls_Mo, extracted_prior$ls_MgMo))
-  ))
+# 
+# diagnose_extreme_tail(
+#   prior_pred, value_col = "Dv_shifted",
+#   candidates = list(
+#     loga_max  = pmax(extracted_prior$loga[,1], extracted_prior$loga[,2]),
+#     sigma_loc = extracted_prior$sigma_loc,
+#     sigma_tr  = extracted_prior$sigma_tr,
+#     sigma_yr  = extracted_prior$sigma_yr,
+#     sigma_max = pmax(
+#       sigma_cell(1,1, extracted_prior$ls0, extracted_prior$ls_Mg, extracted_prior$ls_Mo, extracted_prior$ls_MgMo),
+#       sigma_cell(1,2, extracted_prior$ls0, extracted_prior$ls_Mg, extracted_prior$ls_Mo, extracted_prior$ls_MgMo),
+#       sigma_cell(2,1, extracted_prior$ls0, extracted_prior$ls_Mg, extracted_prior$ls_Mo, extracted_prior$ls_MgMo),
+#       sigma_cell(2,2, extracted_prior$ls0, extracted_prior$ls_Mg, extracted_prior$ls_Mo, extracted_prior$ls_MgMo))
+#   ))
 
 ## Simulation-based calibration -----------------------
 # Same template as 5b.2_MDLS2v_16S_calibration.R
 
 source('src/utils/sbc_backend_ulam.R')
 library(SBC)
-future::plan(future::multisession)3
+future::plan(future::multisession)
 
-generate_one_MDLSYv <- function(){3333
+generate_one_MDLSYv <- function(){
   true_params <- suppressMessages(suppressWarnings(
     draw_true(extract.prior(fit_sim, n = 1, refresh = 0), 1)))[
-    c("loga", "s_conv", "gap_shift", "ls0", "ls_Mg", "ls_Mo", "ls_MgMo",
-      "sigma_loc", "sigma_tr", "sigma_yr", "cv")]
+      c("loga", "s_conv", "gap_shift", "ls0", "ls_Mg", "ls_Mo", "ls_MgMo",
+        "sigma_loc", "sigma_tr", "sigma_yr", "cv")]
   dat <- simulate_from_priors_MDLSYv(true_params, shift = 1)
   list(variables = true_params,
        generated = as.list(dat[, c("Dv", "Mg", "Lo", "Mo", "Yr", "Tr", "Cv")]))
@@ -148,9 +148,9 @@ dq_MDLSYv <- derived_quantities(
     exp(loga[1] + s_conv +             (exp(ls0 + ls_Mo)^2                 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2),
   seasonal_change =
     (exp(loga[2] + s_conv + gap_shift + (exp(ls0 + ls_Mg + ls_Mo + ls_MgMo)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
-     exp(loga[1] + s_conv +             (exp(ls0 + ls_Mo)^2                 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2)) -
+       exp(loga[1] + s_conv +             (exp(ls0 + ls_Mo)^2                 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2)) -
     (exp(loga[2] + (exp(ls0 + ls_Mg)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
-     exp(loga[1] + (exp(ls0)^2         + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2))
+       exp(loga[1] + (exp(ls0)^2         + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2))
 )
 
 n_sbc  <- 100
@@ -158,11 +158,20 @@ n_iter <- 10000
 
 # Dataset generation left serial -- see 5b.2's own comment for why
 # parallelizing it isn't worth chasing (future workers lack rethinking
-# and every custom function the generator's call chain touches).
-datasets_MDLSYv <- generate_datasets(SBC_generator_function(generate_one_MDLSYv), n_sbc)
+# and every custom function the generator's call chain touches). Cached
+# to disk instead, so re-running this script (e.g. after a crash further
+# down) doesn't redo it -- delete the file to force regeneration.
+datasets_path_MDLSYv <- file.path(hiermod_out_dir, "sbc_datasets_MDLSYv.rds")
+if (file.exists(datasets_path_MDLSYv)) {
+  datasets_MDLSYv <- readRDS(datasets_path_MDLSYv)
+} else {
+  datasets_MDLSYv <- generate_datasets(SBC_generator_function(generate_one_MDLSYv), n_sbc)
+  saveRDS(datasets_MDLSYv, datasets_path_MDLSYv, compress = "xz")
+}
 
-backend_MDLSYv <- SBC_backend_ulam(model, chains = 2, iter = n_iter,
-                                    refresh = 0, control = list(adapt_delta = 0.99))
+backend_MDLSYv <- SBC_backend_ulam(
+  model, iter = n_iter,
+  refresh = 0, control = list(adapt_delta = 0.99))
 
 sbc_MDLSYv <- compute_SBC(
   datasets_MDLSYv, backend_MDLSYv, dquants = dq_MDLSYv,
@@ -180,5 +189,5 @@ save_gg("SBC_ecdf_diff", sbc_step, p_sbc_ecdf, width = 9, height = 7)
 save_gg("SBC_coverage",  sbc_step, p_sbc_cover, width = 9, height = 7)
 
 (sbc_diag_summary <- sbc_MDLSYv$backend_diagnostics %>%
-   dplyr::summarise(total_divergent = sum(n_divergent), total_max_treedepth = sum(n_max_treedepth),
+    dplyr::summarise(total_divergent = sum(n_divergent), total_max_treedepth = sum(n_max_treedepth),
                      total_low_ebfmi = sum(n_low_ebfmi), n_replicates = dplyr::n()))
