@@ -2,6 +2,7 @@
 #SBATCH --account=def-ilafores
 #SBATCH --job-name=SBC
 #SBATCH --nodes=1
+#SBATCH --partition=cpularge
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=48
 #SBATCH --mem=240G
