@@ -16,6 +16,8 @@ model_MDLv_ITS <- alist(
   pr_sigma_g   = sigma_g   ~ dexp(2)    # Spread of Organic-Conventional gap by Location
 )
 
+model_id <- "MDLv"
+
 mdlv_labels <- c(
   median  = "Median diversity (Hill number scale)",
   mean    = "Mean diversity (Hill number scale)",

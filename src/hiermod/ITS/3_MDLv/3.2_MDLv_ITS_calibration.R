@@ -44,8 +44,8 @@ fit_sim <- ulam(
 precis(fit_sim, depth = 2)
 
 traceplot(fit_sim); trankplot(fit_sim)
-save_pdf("sim_traceplot", "MDLv", function() traceplot(fit_sim))
-save_pdf("sim_trankplot", "MDLv", function() trankplot(fit_sim))
+save_pdf("sim_traceplot", model_id, function() traceplot(fit_sim))
+save_pdf("sim_trankplot", model_id, function() trankplot(fit_sim))
 
 # draw posterior samples
 pf_sim <- post_full(fit_sim, means_MDLv)        # raw draws + mean/median
@@ -60,8 +60,8 @@ p_sim_contrast <- pc_full_sim %>%
   contrast_plot_panels(
     quant = c(0,0.995), group_pal = Management_palette); p_sim_contrast
 
-save_report("sim_summary", "MDLv", fit_sim, pc_full_sim, model, model_name = "The Copycat")
-save_gg("sim_contrast_density", "MDLv", p_sim_contrast)
+save_report("sim_summary", model_id, fit_sim, pc_full_sim, model, model_name = "The Copycat")
+save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -79,7 +79,7 @@ p_prior_pc <- prior_predictive_spaghetti(
   prior_pred, upper_q = 0.99, model = model,
   title = "Prior predictive check"); p_prior_pc
 
-save_gg("sim_prior_PC", "MDLv", p_prior_pc)
+save_gg("sim_prior_PC", model_id, p_prior_pc)
 # if this still looks implausible for Hill_1, tighten sigma_g further before
 # moving on -- same read as MDLb's own prior predictive check
 
@@ -92,5 +92,5 @@ sbc_MDLv <- run_sbc(
   simulate_fn = simulate_from_priors_MDLv,
   n_sbc = 100, iter = 4000, chains = 4, control = list(adapt_delta = 0.99))
 
-sbc_out_MDLv <- save_sbc_report(sbc_MDLv, "MDLv")
+sbc_out_MDLv <- save_sbc_report(sbc_MDLv, model_id)
 hist(sbc_out_MDLv$ranks)

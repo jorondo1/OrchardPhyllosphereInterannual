@@ -108,10 +108,10 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", "MDLSYC", fit_sim, cr$estimands, model,
+save_report("sim_summary", model_id, fit_sim, cr$estimands, model,
             recovery = bind_rows(fixed_recovery, sigma_recovery, cv_recovery),
             model_name = "The Weatherman")
-save_gg("sim_contrast_density", "MDLSYC", p_sim_contrast)
+save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 # Extremely good recovery !
 
@@ -188,7 +188,7 @@ p_prior_pc <- prior_predictive_spaghetti(
   prior_pred, value_col = "Dv_shifted", upper_q = 0.99, model = model,
   title = "Prior predictive check", observed = dat_sim$Dv_shifted) ; p_prior_pc
 
-save_gg("sim_prior_PC", "MDLSYC", p_prior_pc)
+save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## Simulation-based calibration (SBC) --------------------------------------------
 # No separate variance-budget-calibration pass here: `model`'s sigma priors

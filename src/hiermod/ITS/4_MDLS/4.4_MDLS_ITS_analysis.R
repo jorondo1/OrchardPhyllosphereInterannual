@@ -28,14 +28,14 @@ pc_estimands_means <- estimand_panels(
   group_levels = c("Conventional", "Organic")
 )
 
-save_report("fit_summary", "MDLS", fit_MDLS, pc_estimands_means, model, model_name = "The Season Ticket")
+save_report("fit_summary", model_id, fit_MDLS, pc_estimands_means, model, model_name = "The Season Ticket")
 
 p_contrast_mean <- contrast_plot_panels(
   pc_estimands_means, quant = c(0.005, 0.995), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population means)"); p_contrast_mean
 
-save_gg("fit_contrast_mean", "MDLS", p_contrast_mean)
+save_gg("fit_contrast_mean", model_id, p_contrast_mean)
 
 pc_estimands_medians <- estimand_panels(
   pairs = list(`May median` = list(md$median_1, md$median_3),
@@ -49,4 +49,4 @@ p_contrast_median <- contrast_plot_panels(
   pc_estimands_medians, quant = c(0.005,.995), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population medians)"); p_contrast_median
-save_gg("fit_contrast_median", "MDLS", p_contrast_median)
+save_gg("fit_contrast_median", model_id, p_contrast_median)

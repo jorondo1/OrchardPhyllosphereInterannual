@@ -28,6 +28,8 @@ model_MDLS_ITS <- alist(
   pr_sigma_tr  = sigma_tr  ~ dexp(2)  # Global tree spread
 )
 
+model_id <- "MDLS"
+
 # Backtransform wrapper
 # Specific to this model, needs to produce the target estimands
 # i-e compute means for each managament-month pair

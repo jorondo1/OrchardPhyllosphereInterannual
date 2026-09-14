@@ -27,6 +27,13 @@ model_MDLS2_16S <- alist(
   pr_sigma_tr  = sigma_tr    ~ dexp(2)
 )
 
+# model_MDLS2_ITS is reused unchanged for both the plain and shifted ITS
+# scripts (only dat$Dv differs -- the shift is data-handling, not a
+# model-spec change), so the two need distinct ids despite sharing one alist.
+model_id_MDLS2_ITS         <- "MDLS2"
+model_id_MDLS2_ITS_shifted <- "MDLS2_shifted"
+model_id_MDLS2_16S         <- "MDLS2_shifted"
+
 # Backtransforming function --------------------------------------------------
 
 # means_MDLS2(): post$sigma now comes back as an n_draws x 4 matrix (cell

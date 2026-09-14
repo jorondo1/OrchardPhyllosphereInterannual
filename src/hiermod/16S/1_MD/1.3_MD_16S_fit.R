@@ -23,16 +23,16 @@ fit_MD <- ulam(
   data = dat_MD,
   chains = 6, cores = 6, iter = 10000
 )
-save_fit("fit", "MD", fit_MD)
+save_fit("fit", model_id_MD, fit_MD)
 
 precis(fit_MD, depth = 2)
 traceplot(fit_MD)
-save_pdf("fit_traceplot", "MD", function() traceplot(fit_MD))
+save_pdf("fit_traceplot", model_id_MD, function() traceplot(fit_MD))
 
 ### Posterior predictive check --------------------------------------------------
 
 p_postpred_MD <- plot_ppc_overlay(fit_MD, dat_MD, idx$Mg$to_label(dat_MD$Mg))
-save_gg("postpred_density", "MD", p_postpred_MD)
+save_gg("postpred_density", model_id_MD, p_postpred_MD)
 
 ## MDv -- Allow Management-specific variance (heteroscedasticity) ============
 
@@ -43,14 +43,14 @@ fit_MDv <- ulam(
   data = dat_MD,
   chains = 6, cores = 6, iter = 10000
 )
-save_fit("fit", "MDv", fit_MDv)
+save_fit("fit", model_id_MDv, fit_MDv)
 
 precis(fit_MDv, depth = 2)
 traceplot(fit_MDv)
-save_pdf("fit_traceplot", "MDv", function() traceplot(fit_MDv))
+save_pdf("fit_traceplot", model_id_MDv, function() traceplot(fit_MDv))
 
 ### Posterior predictive check --------------------------------------------------
 # Barely affected relative to MD, but the tail is not as heavy.
 
 p_postpred_MDv <- plot_ppc_overlay(fit_MDv, dat_MD, idx$Mg$to_label(dat_MD$Mg))
-save_gg("postpred_density", "MDv", p_postpred_MDv)
+save_gg("postpred_density", model_id_MDv, p_postpred_MDv)

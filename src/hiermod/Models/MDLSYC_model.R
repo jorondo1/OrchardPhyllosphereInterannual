@@ -22,6 +22,8 @@ model_MDLSYC_ITS$pr_sigma_loc <- quote(sigma_loc   ~ dexp(2.31))
 model_MDLSYC_ITS$pr_sigma_tr  <- quote(sigma_tr    ~ dexp(2.31))
 model_MDLSYC_ITS$pr_sigma_yr  <- quote(sigma_yr    ~ dexp(2.31))
 
+model_id <- "MDLSYC"
+
 # Backtransforming function --------------------------------------------------
 
 # means_MDLSYC(): add covariate_offset term

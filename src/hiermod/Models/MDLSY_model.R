@@ -12,6 +12,8 @@ model_MDLSY_ITS$main_model <- quote(
 model_MDLSY_ITS$prior_cv    <- quote(cv[Cv]   ~ dnorm(0,1)) # fixed/unpooled, same as loga[Mg]
 model_MDLSY_ITS$pr_sigma_yr <- quote(sigma_yr ~ dexp(2))    # same rate as sigma_loc/sigma_tr
 
+model_id <- "MDLSY"
+
 # Backtransforming function --------------------------------------------------
 
 # means_MDLSY(): total_var gains sigma_yr^2 -- Year is now a proper

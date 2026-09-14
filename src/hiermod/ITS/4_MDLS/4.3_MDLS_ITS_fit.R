@@ -25,13 +25,13 @@ fit_MDLS <- ulam(
   chains = 6, cores = 6, iter = 10000,
   control = list(adapt_delta = 0.99)
 )
-save_fit("fit", "MDLS", fit_MDLS)
+save_fit("fit", model_id, fit_MDLS)
 
 precis(fit_MDLS, depth = 2)
 
 traceplot(fit_MDLS); trankplot(fit_MDLS)
-save_pdf("fit_traceplot", "MDLS", function() traceplot(fit_MDLS))
-save_pdf("fit_trankplot", "MDLS", function() trankplot(fit_MDLS))
+save_pdf("fit_traceplot", model_id, function() traceplot(fit_MDLS))
+save_pdf("fit_trankplot", model_id, function() trankplot(fit_MDLS))
 
 ## Posterior predictive check --------------------------------------------------
 
@@ -41,7 +41,7 @@ save_pdf("fit_trankplot", "MDLS", function() trankplot(fit_MDLS))
 
 pp_group <- interaction(idx$Mg$to_label(dat$Mg), idx$Mo$to_label(dat$Mo), sep = " ")
 (p_postpred <- plot_ppc_overlay(fit_MDLS, dat, pp_group, xlim = c(0,150)))
-save_gg("postpred_density", "MDLS", p_postpred)
+save_gg("postpred_density", model_id, p_postpred)
 
 ### Contrast test statistics ----
 # contrast_stat()/plot_ppc_contrast_stat() only handle a single binary group
@@ -49,4 +49,4 @@ save_gg("postpred_density", "MDLS", p_postpred)
 
 (p_ppc <- plot_ppc_season_contrast_stats(fit_MDLS, dat))
 
-save_gg("postpred_stat", "MDLS", p_ppc)
+save_gg("postpred_stat", model_id, p_ppc)

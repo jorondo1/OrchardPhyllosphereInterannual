@@ -21,19 +21,19 @@ fitb <- ulam(
   chains = 6, cores = 6, iter = 10000,
   control = list(adapt_delta = 0.99)
 )
-save_fit("fit", "MDLv", fitb)
+save_fit("fit", model_id, fitb)
 
 precis(fitb, depth = 2)
 
 traceplot(fitb); trankplot(fitb)
-save_pdf("fit_traceplot", "MDLv", function() traceplot(fitb))
-save_pdf("fit_trankplot", "MDLv", function() trankplot(fitb))
+save_pdf("fit_traceplot", model_id, function() traceplot(fitb))
+save_pdf("fit_trankplot", model_id, function() trankplot(fitb))
 
 ## Posterior predictive check --------------------------------------------------
 
 pb_postpred <- plot_ppc_overlay(fitb, dat, idx$Mg$to_label(dat$Mg), xlim = c(0,150)); pb_postpred
 
-save_gg("postpred_density", "MDLv", pb_postpred)
+save_gg("postpred_density", model_id, pb_postpred)
 
 ### By Location ---------------------------
 
@@ -76,7 +76,7 @@ p_postpred_ridges <- pp_joined %>%
   labs(x = "Diversity", y = "Location", fill = "Management",
        caption = "Ridges = posterior predictive density; points = observed data (jittered)"); p_postpred_ridges
 
-save_gg("postpred_ridges", "MDLv", p_postpred_ridges)
+save_gg("postpred_ridges", model_id, p_postpred_ridges)
 
 ## Contrast statistic ------------------------------
 # Same idea as MDLb's: does the model reproduce the specific gap we're
@@ -87,7 +87,7 @@ p_ppc_mean_contrast   <- plot_ppc_contrast_stat(fitb, dat, dat$Mg, mean, "mean",
 p_ppc_mad_contrast    <- plot_ppc_contrast_stat(fitb, dat, dat$Mg, mad, "dispersion (MAD)", idx$Mg$levels)
 
 (p_ppc <- p_ppc_median_contrast / p_ppc_mean_contrast / p_ppc_mad_contrast)
-save_gg("postpred_stat", "MDLv", p_ppc)
+save_gg("postpred_stat", model_id, p_ppc)
 
 # Next step: Tree ID + Season/Year. Deliberately not bundled in here -- see
 # write-up. All Dv rows currently get treated as independent even though many

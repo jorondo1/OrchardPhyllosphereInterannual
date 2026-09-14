@@ -99,9 +99,9 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", "MDLS2_shifted", fit_sim, cr$estimands, model,
+save_report("sim_summary", model_id_MDLS2_ITS_shifted, fit_sim, cr$estimands, model,
             recovery = bind_rows(fixed_recovery, sigma_recovery), model_name = "The Floor Raiser")
-save_gg("sim_contrast_density", "MDLS2_shifted", p_sim_contrast)
+save_gg("sim_contrast_density", model_id_MDLS2_ITS_shifted, p_sim_contrast)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -119,7 +119,7 @@ p_prior_pc <- prior_predictive_spaghetti(
   prior_pred, value_col = "Dv_shifted", upper_q = 0.99, model = model,
   title = "Prior predictive check", observed = dat_sim$Dv_shifted) ; p_prior_pc
 
-save_gg("sim_prior_PC", "MDLS2_shifted", p_prior_pc)
+save_gg("sim_prior_PC", model_id_MDLS2_ITS_shifted, p_prior_pc)
 
 ## Simulation-based calibration (SBC) --------------------------------------------
 
@@ -128,13 +128,19 @@ save_gg("sim_prior_PC", "MDLS2_shifted", p_prior_pc)
 # shift cancels. simulate_fn wraps simulate_from_priors_MDLS2() with shift = 1
 # baked in, since run_sbc() only ever calls it as simulate_fn(true_params).
 
+
+ncores <- 30
+nchains <- 2
+n_sbc = 100
+n_iter = 20000
+
 sbc_MDLS2_shifted <- run_sbc(
   model_fit   = fit_sim,
   means_fn    = means_MDLS2,
   contrast_fn = contrast_may_gap_MDLS2,
   simulate_fn = function(true_params) simulate_from_priors_MDLS2(true_params, shift = 1),
-  n_sbc = 30, iter = 15000, n_parallel = 4, chains = 2, cores = 2,
+  n_sbc = n_sbc, iter = n_iter,
+  n_parallel = ncores/nchains, chains = nchains, cores = nchains,
   control = list(adapt_delta = 0.99))
 
-sbc_out_MDLS2_shifted <- save_sbc_report(sbc_MDLS2_shifted, "MDLS2_shifted_30sbc_iter")
-hist(sbc_out_MDLS2_shifted$ranks, breaks = 30)
+sbc_out_MDLS2_shifted <- save_sbc_report(sbc_MDLS2_shifted, paste0("MDLS2_shifted_",n_sbc,"iter"))

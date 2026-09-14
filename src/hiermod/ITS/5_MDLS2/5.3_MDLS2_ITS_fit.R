@@ -26,12 +26,12 @@ fit_MDLS2 <- ulam(
   chains = 6, cores = 6, iter = 20000,
   control = list(adapt_delta = 0.99)
 )
-save_fit("fit", "MDLS2", fit_MDLS2)
+save_fit("fit", model_id_MDLS2_ITS, fit_MDLS2)
 
 precis(fit_MDLS2, depth = 2)
 
-save_pdf("fit_traceplot", "MDLS2", function() traceplot(fit_MDLS2))
-save_pdf("fit_trankplot", "MDLS2", function() trankplot(fit_MDLS2))
+save_pdf("fit_traceplot", model_id_MDLS2_ITS, function() traceplot(fit_MDLS2))
+save_pdf("fit_trankplot", model_id_MDLS2_ITS, function() trankplot(fit_MDLS2))
 
 ## Posterior predictive check --------------------------------------------------
 
@@ -39,7 +39,7 @@ save_pdf("fit_trankplot", "MDLS2", function() trankplot(fit_MDLS2))
 
 pp_group <- interaction(idx$Mg$to_label(dat$Mg), idx$Mo$to_label(dat$Mo), sep = " ")
 (p_postpred <- plot_ppc_overlay(fit_MDLS2, dat, pp_group, xlim = c(0,150)))
-save_gg("postpred_density", "MDLS2", p_postpred)
+save_gg("postpred_density", model_id_MDLS2_ITS, p_postpred)
 
 # Compare against fit_contrast_density_MDLS.pdf (model 4)
 # Conventional-July's yrep hug the observed spike much more closely than model 4's did.
@@ -48,4 +48,4 @@ save_gg("postpred_density", "MDLS2", p_postpred)
 
 (p_ppc <- plot_ppc_season_contrast_stats(fit_MDLS2, dat))
 
-save_gg("postpred_stat", "MDLS2", p_ppc)
+save_gg("postpred_stat", model_id_MDLS2_ITS, p_ppc)

@@ -52,3 +52,7 @@ model_MDL_ITS <- alist(
 
 # Same as ITS: no calibration for either marker yet.
 model_MDL_16S <- model_MDL_ITS
+
+# Canonical id from the real fit onward (both markers already use this) --
+# calibration's own naive pre-tightening stage keeps its own local "MDL" label.
+model_id <- "MDLb"

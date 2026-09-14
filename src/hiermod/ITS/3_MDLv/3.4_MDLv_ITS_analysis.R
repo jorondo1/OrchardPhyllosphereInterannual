@@ -28,8 +28,8 @@ pc_full %>%
   summarise(n_neg = sum(value<=0), n = n()) %>%
   mutate(prop_neg = n_neg/n) # ~25%
 
-save_report("fit_summary", "MDLv", fitb, pc_full, model, model_name = "The Copycat")
-save_gg("fit_contrasts_panel", "MDLv", p_contrasts_panel)
+save_report("fit_summary", model_id, fitb, pc_full, model, model_name = "The Copycat")
+save_gg("fit_contrasts_panel", model_id, p_contrasts_panel)
 
 # Does the gap actually vary by Location, or was MDLb's shared-slope
 # assumption fine all along? sigma_g sits comfortably above 0, therefore
@@ -81,4 +81,4 @@ p_loc_pairs <- g_contrasts %>%
   labs(x = "Location-gap contrast (g[Lo] difference)", y = NULL,
        title = "Pairwise contrasts of the Organic-Conventional gap by Location")
 
-save_gg("fit_posterior_locations", "MDLv", p_loc_pairs)
+save_gg("fit_posterior_locations", model_id, p_loc_pairs)

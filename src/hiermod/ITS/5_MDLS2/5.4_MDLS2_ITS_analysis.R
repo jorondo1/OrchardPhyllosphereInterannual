@@ -24,14 +24,14 @@ pc_estimands_means <- estimand_panels(
 
 # No variance-budget calibration was done for this model (unlike Model 6) --
 # model_MDLS2_ITS is exactly what the real fit (5.3_MDLS2_fit.R) used.
-save_report("fit_summary", "MDLS2", fit_MDLS2, pc_estimands_means, model_MDLS2_ITS, model_name = "The Splitter")
+save_report("fit_summary", model_id_MDLS2_ITS, fit_MDLS2, pc_estimands_means, model_MDLS2_ITS, model_name = "The Splitter")
 
 p_contrast_mean <- contrast_plot_panels(
   pc_estimands_means, quant = c(0.005, 0.995), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population means)"); p_contrast_mean
 
-save_gg("fit_contrast_mean", "MDLS2", p_contrast_mean)
+save_gg("fit_contrast_mean", model_id_MDLS2_ITS, p_contrast_mean)
 
 pc_estimands_medians <- estimand_panels(
   pairs = list(`May median` = list(md$median_1, md$median_3),
@@ -45,7 +45,7 @@ p_contrast_median <- contrast_plot_panels(
   pc_estimands_medians, quant = c(0.005,.995), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population medians)"); p_contrast_median
-save_gg("fit_contrast_median", "MDLS2", p_contrast_median, width = 10, height = 6)
+save_gg("fit_contrast_median", model_id_MDLS2_ITS, p_contrast_median, width = 10, height = 6)
 
 ## Variance components -----------------------------------------------------------
 
@@ -104,4 +104,4 @@ p_random_effects <- variance_component_panels(
   pc_random_effects, quant = c(0.005, 0.995), palette = re_pal,
   sd_stats = stat_levels[2]); p_random_effects
 
-save_gg("fit_location_year_effects", "MDLS2", p_random_effects, width = 8, height = 10)
+save_gg("fit_location_year_effects", model_id_MDLS2_ITS, p_random_effects, width = 8, height = 10)

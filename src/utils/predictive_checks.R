@@ -77,6 +77,65 @@ prior_predictive_spaghetti <- function(
   p
 }
 
+# ---- Prior predictive tail diagnosis ----------------------------------------
+
+# Which prior parameter(s) explain the extreme tail of a prior predictive
+# check? Every calibration script used to hand-roll this (and one -- ITS's
+# own 2.2_MDL_ITS_calibration.R ppc1 stage -- had `xlim_upper_ppc1 <- 0.99`
+# instead of `quantile(..., 0.99)`, silently flagging almost every draw as
+# "extreme").
+#
+# `prior_pred` is the long-format tibble built by looping
+# simulate_from_priors_*() with map_dfr(..., .id = "draw"); `candidates` is
+# a named list of length-n_prior vectors, one per prior parameter suspected
+# of driving the tail (e.g. list(sigma_loc = extracted_prior$sigma_loc,
+# ...)), each indexed 1:n_prior in the same draw order
+# extract.prior()/draw_true() produced them -- not resorted to match
+# prior_pred's own (possibly lexically-sorted) draw labels.
+#
+# Reports two things: (1) each candidate's median among "extreme" vs.
+# "normal" draws (the eyeball check every script already did by hand), and
+# (2) each candidate's correlation with log(max simulated value) -- added
+# because medians can look different between groups even when the
+# relationship is weak (MDLS2v: sigma_loc/sigma_tr's medians differed by
+# group but correlated only ~0.2; loga -- not in the original group
+# breakdown at all -- correlated ~0.7 and was the real driver).
+diagnose_extreme_tail <- function(prior_pred, candidates, value_col = "Dv", upper_q = 0.99){
+  n_prior <- length(candidates[[1]])
+  stopifnot(all(lengths(candidates) == n_prior))
+
+  max_by_draw <- prior_pred %>%
+    group_by(draw) %>%
+    summarise(max_val = max(.data[[value_col]]), .groups = "drop") %>%
+    mutate(draw = as.integer(draw))
+
+  xlim_upper <- quantile(prior_pred[[value_col]], upper_q, na.rm = TRUE)
+  extreme_draws <- max_by_draw$draw[max_by_draw$max_val > xlim_upper]
+
+  cand_tbl <- as_tibble(candidates)
+  cand_tbl$draw    <- seq_len(n_prior)
+  cand_tbl$extreme <- cand_tbl$draw %in% extreme_draws
+
+  by_group <- cand_tbl %>%
+    group_by(extreme) %>%
+    summarise(n = n(), across(all_of(names(candidates)), median), .groups = "drop")
+
+  ordered <- cand_tbl[match(max_by_draw$draw, cand_tbl$draw), names(candidates), drop = FALSE]
+  correlations <- sort(
+    sapply(ordered, function(x) cor(log(max_by_draw$max_val), x)),
+    decreasing = TRUE)
+
+  cat(sprintf("Extreme draws (max %s > %.0f%% quantile = %s): %d / %d\n",
+              value_col, 100 * upper_q, format(signif(xlim_upper, 4), big.mark = ","),
+              length(extreme_draws), n_prior))
+  print(by_group)
+  cat("\nCorrelation with log(max ", value_col, ") -- biggest driver first:\n", sep = "")
+  print(round(correlations, 3))
+
+  invisible(list(xlim_upper = xlim_upper, extreme_draws = extreme_draws,
+                 by_group = by_group, correlations = correlations))
+}
+
 # ---- Posterior predictive checks (bayesplot) -------------------------------
 
 # Reshapes sim()'s wide draws-by-observation matrix into a long tibble.
@@ -132,4 +191,24 @@ plot_ppc_season_contrast_stats <- function(fit, dat, n = 1000){
     labs(title = "PPC: Seasonal change in gap")
 
   p_may / p_july / p_change
+}
+
+# ---- Model comparison --------------------------------------------------
+
+# PSIS model comparison between two ulam fits (both need log_lik = TRUE at
+# fit time), with a Pareto-k sanity check first -- k > 0.7 means that
+# observation's importance-sampling estimate is unreliable, and if a large
+# share of observations are flagged, the comparison table itself (weights,
+# dPSIS) isn't trustworthy, not just that one point. Common in hierarchical
+# models with few observations per group (e.g. Tree here).
+psis_compare <- function(fit_a, fit_b){
+  for (f in list(fit_a, fit_b)) {
+    k <- suppressWarnings(PSIS(f, pointwise = TRUE)$k)
+    n_bad <- sum(k > 0.7, na.rm = TRUE)
+    if (n_bad > 0) {
+      cat(sprintf("Pareto k > 0.7 for %d/%d observations -- PSIS comparison may not be trustworthy.\n",
+                  n_bad, length(k)))
+    }
+  }
+  rethinking::compare(fit_a, fit_b, func = PSIS)
 }

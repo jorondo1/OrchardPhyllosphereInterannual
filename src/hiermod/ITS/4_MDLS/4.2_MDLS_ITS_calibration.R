@@ -89,8 +89,8 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", "MDLS", fit_sim, cr$estimands, model, recovery = fixed_recovery, model_name = "The Season Ticket")
-save_gg("sim_contrast_density", "MDLS", p_sim_contrast)
+save_report("sim_summary", model_id, fit_sim, cr$estimands, model, recovery = fixed_recovery, model_name = "The Season Ticket")
+save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -113,7 +113,7 @@ p_prior_pc <- prior_predictive_spaghetti(
   prior_pred, upper_q = 0.99, model = model,
   title = "Prior predictive check", observed = dat_sim$Dv) ; p_prior_pc
 
-save_gg("sim_prior_PC", "MDLS", p_prior_pc)
+save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 # all seems reasonable but which parameters are driving the tail?
 # Flag draws with extreme values only

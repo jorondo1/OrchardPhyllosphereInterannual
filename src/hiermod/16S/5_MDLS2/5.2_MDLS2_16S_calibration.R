@@ -89,9 +89,9 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", "MDLS2_shifted", fit_sim, cr$estimands, model,
+save_report("sim_summary", model_id_MDLS2_16S, fit_sim, cr$estimands, model,
             recovery = bind_rows(fixed_recovery, sigma_recovery), model_name = "The Splitter")
-save_gg("sim_contrast_density", "MDLS2_shifted", p_sim_contrast)
+save_gg("sim_contrast_density", model_id_MDLS2_16S, p_sim_contrast)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -108,24 +108,15 @@ p_prior_pc <- prior_predictive_spaghetti(
   prior_pred, value_col = "Dv_shifted", upper_q = 0.99, model = model,
   title = "Prior predictive check", observed = dat_sim$Dv_shifted) ; p_prior_pc
 
-save_gg("sim_prior_PC", "MDLS2_shifted", p_prior_pc)
+save_gg("sim_prior_PC", model_id_MDLS2_16S, p_prior_pc)
 
 # Which prior is driving the extreme tail?
-(xlim_upper <- quantile(prior_pred$Dv_shifted, 0.99))
-extreme_draws <- prior_pred %>%
-  group_by(draw) %>%
-  summarise(max_Dv = max(Dv_shifted)) %>%
-  filter(max_Dv > xlim_upper) %>%
-  pull(draw) %>% as.integer()
-
-tibble(
-  draw       = seq_len(n_prior),
-  extreme    = seq_len(n_prior) %in% extreme_draws,
-  sigma_loc  = extracted_prior$sigma_loc,
-  sigma_tr = extracted_prior$sigma_tr,
-  sigma_max  = pmax(extracted_prior$sigma[,1], extracted_prior$sigma[,2])) %>%
-  group_by(extreme) %>%
-  summarise(across(c(sigma_loc, sigma_max, sigma_tr), median))
+diagnose_extreme_tail(
+  prior_pred, value_col = "Dv_shifted",
+  candidates = list(
+    sigma_loc = extracted_prior$sigma_loc,
+    sigma_tr  = extracted_prior$sigma_tr,
+    sigma_max = pmax(extracted_prior$sigma[,1], extracted_prior$sigma[,2])))
 
 # Biggest gap  is with sigma_tr, then sigma_max
 
@@ -134,13 +125,15 @@ model_ppc1 <- model
 model_ppc1$pr_sigma_tr  <- quote(sigma_tr  ~ dexp(2.5)) #tighter
 model_ppc1$pr_sigma     <- quote(sigma[cell] ~ dexp(2.5))
 model_ppc1$pr_sigma_loc <- quote(sigma_loc ~ dexp(2.5))
-model_ppc1$prior_loga <- quote(loga[Mg] ~ dnorm(5,2))
+model_ppc1$prior_loga <- quote(loga[Mg] ~ dnorm(5,2)) # here too, otherwise 3rd q stays high
 
 fit_sim_ppc1 <- ulam(
   model_ppc1,
   data = as.list(dat_sim),
-  chains = 6, cores = 6, iter = 10000 )
-precis(fit_sim_ppc1, depth = 2 )
+  chains = 6, cores = 6, iter = 10000,
+  control = list(adapt_delta = 0.99)
+)
+precis(fit_sim_ppc1, depth = 2)
 
 prior_ppc1 <- extract.prior(fit_sim_ppc1, n = n_prior)
 
@@ -156,36 +149,33 @@ summary(prior_ppc1_pred$Dv) # raw per-observation draws
 
 p_sim_spaghetti_ppc1 <- prior_predictive_spaghetti(
   prior_ppc1_pred, upper_q = 0.99, model = model_ppc1,
-  title = "Prior predictive check: adapted priors)"); p_sim_spaghetti_ppc1
+  title = "Prior predictive check: adapted priors)" ,
+  observed = dat_sim$Dv_shifted); p_sim_spaghetti_ppc1
 
-save_gg("sim_prior_PC_ppc1", "MDLS2", p_sim_spaghetti_ppc1)
-
+save_gg("sim_prior_PC_ppc1", "MDLS2_shifted_ppc1", p_sim_spaghetti_ppc1)
 
 ## Parameter recovery: updated priors -----------------------------------------------------------
 post_sim_ppc1 <- extract.samples(fit_sim_ppc1)
 
 ### Fixed effects recovery -------------
 
-check_recovery(
-  true = c(loga1 = log(may_conv),
-           loga2 = log(may_org),
-           s_conv = july_conv_shift,
-           gap_shift = july_org_shift),
+recovery_ppc1 <- check_recovery(
+  true = list(
+    loga1 = log(may_conv),
+    loga2 = log(may_org),
+    s_conv = july_conv_shift,
+    gap_shift = july_org_shift,
+    sigma1 = true_sigma[1], sigma2 = true_sigma[2],
+    sigma3 = true_sigma[3], sigma4 = true_sigma[4]),
+
   post_draws = list(
     loga1 = post_sim_ppc1$loga[,1],
     loga2 = post_sim_ppc1$loga[,2],
     s_conv = post_sim_ppc1$s_conv,
-    gap_shift = post_sim_ppc1$gap_shift)
-)
-
-### Sigma recovery -------------
-
-check_recovery(
-  true = list(sigma1 = true_sigma[1], sigma2 = true_sigma[2],
-              sigma3 = true_sigma[3], sigma4 = true_sigma[4]),
-  post_draws = list(sigma1 = post_sim_ppc1$sigma[,1], sigma2 = post_sim_ppc1$sigma[,2],
-                    sigma3 = post_sim_ppc1$sigma[,3], sigma4 = post_sim_ppc1$sigma[,4])
-)
+    gap_shift = post_sim_ppc1$gap_shift,
+    sigma1 = post_sim_ppc1$sigma[,1], sigma2 = post_sim_ppc1$sigma[,2],
+    sigma3 = post_sim_ppc1$sigma[,3], sigma4 = post_sim_ppc1$sigma[,4])
+); recovery_ppc1
 
 ### Contrast recovery ------------------------------
 # shift = 1: raw mean/median cell values should reflect the floor
@@ -199,17 +189,18 @@ p_sim_contrast_ppc1 <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast_ppc1
 
-save_report("sim_summary", "MDLS2_ppc1", fit_sim_ppc1, cr$estimands, model,
-            recovery = bind_rows(fixed_recovery, sigma_recovery), model_name = "The Splitter")
-save_gg("sim_contrast_density", "MDLS2_ppc1", p_sim_contrast_ppc1)
+save_report("sim_summary", model_id_MDLS2_16S, fit_sim_ppc1, cr$estimands, model_ppc1,
+            recovery = recovery_ppc1, model_name = "The Splitter")
+save_gg("sim_contrast_density", model_id_MDLS2_16S, p_sim_contrast_ppc1)
 
 # Traces look fine:
-#save_pdf("sim_traceplot", "MDLb_ppc1", function() traceplot(fit_sim_ppc1))
-save_pdf("sim_trankplot", "MDLb-ppc1", function() trankplot(fit_sim_ppc1))
+#save_pdf("sim_traceplot", model_id_MDLS2_16S, function() traceplot(fit_sim_ppc1))
+save_pdf("sim_trankplot", model_id_MDLS2_16S,
+         function() trankplot(fit_sim_ppc1, n_cols = 4, max_rows = 10))
 
 ## Simulation-based calibration (SBC) --------------------------------------------
 
-ncores <- 24
+ncores <- 30
 nchains <- 2
 n_sbc = 100
 n_iter = 20000
@@ -223,8 +214,21 @@ sbc_MDLS2_shifted <- run_sbc(
   n_parallel = ncores/nchains, chains = nchains, cores = nchains,
   control = list(adapt_delta = 0.99))
 
-sbc_out_MDLS2_shifted <- save_sbc_report(sbc_MDLS2_shifted, "MDLS2_shifted_30sbc_iter")
+sbc_out_MDLS2_shifted <- save_sbc_report(sbc_MDLS2_shifted, paste0("MDLS2_shifted_",n_sbc,"sbc_iter"))
 hist(sbc_out_MDLS2_shifted$ranks, breaks = 30)
 
 # Export updated model ! -------------
 saveRDS(model_ppc1, file.path(hiermod_out_dir, "model_ppc1.rds"))
+
+# We get a lot of divergences now. Try a fit with smaller step size:
+
+fit_sim_step999 <- ulam(
+  model_ppc1,
+  data = as.list(dat_sim),
+  chains = 6, cores = 6, iter = 20000,
+  control = list(adapt_delta = 0.999)
+)
+precis(fit_sim_step999, depth = 2)
+
+
+

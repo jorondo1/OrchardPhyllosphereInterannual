@@ -145,9 +145,9 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", "MDLS2", fit_sim, cr$estimands, model,
+save_report("sim_summary", model_id_MDLS2_ITS, fit_sim, cr$estimands, model,
             recovery = bind_rows(fixed_recovery, sigma_recovery), model_name = "The Splitter")
-save_gg("sim_contrast_density", "MDLS2", p_sim_contrast)
+save_gg("sim_contrast_density", model_id_MDLS2_ITS, p_sim_contrast)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -166,7 +166,7 @@ p_prior_pc <- prior_predictive_spaghetti(
   title = "Prior predictive check", observed = dat_sim$Dv) ; p_prior_pc
 # median is great, 3rd quartile in the same ballpark as before
 
-save_gg("sim_prior_PC", "MDLS2", p_prior_pc)
+save_gg("sim_prior_PC", model_id_MDLS2_ITS, p_prior_pc)
 
 ## Simulation-based calibration (SBC) --------------------------------------------
 

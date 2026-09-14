@@ -15,20 +15,20 @@ fit_MDv <- readRDS(file.path(hiermod_out_dir, "fit_MDv.rds"))
 
 pf_MD <- post_full(fit_MD, means_MD)
 pc_MD <- compute_contrasts(pf_MD, keep = "mean", group_levels = idx$Mg$levels)
-save_report("fit_summary", "MD", fit_MD, pc_MD, model_MD, model_name = "The Bare Bones")
+save_report("fit_summary", model_id_MD, fit_MD, pc_MD, model_MD, model_name = "The Bare Bones")
 
 p_MD_contrast <- contrast_plot_panels(pc_MD, quant = c(0, 1), group_pal = Management_palette) +
   labs(x = 'Mean Hill number of order 1'); p_MD_contrast
 
-save_gg("fit_contrast_density", "MD", p_MD_contrast, width = 8, height = 4)
+save_gg("fit_contrast_density", model_id_MD, p_MD_contrast, width = 8, height = 4)
 
 ## MDv -- Posterior contrast ---------------------------------------------------
 
 pf_MDv <- post_full(fit_MDv, means_MDv)
 pc_MDv <- compute_contrasts(pf_MDv, keep = "mean", group_levels = idx$Mg$levels)
-save_report("fit_summary", "MDv", fit_MDv, pc_MDv, model_MDv, model_name = "The Loose Cannon")
+save_report("fit_summary", model_id_MDv, fit_MDv, pc_MDv, model_MDv, model_name = "The Loose Cannon")
 
 p_MDv_contrast <- contrast_plot_panels(pc_MDv, quant = c(0, 0.999), group_pal = Management_palette) +
   labs(x = 'Mean Hill number of order 1'); p_MDv_contrast
 
-save_gg("fit_contrast_density", "MDv", p_MDv_contrast, width = 8, height = 4)
+save_gg("fit_contrast_density", model_id_MDv, p_MDv_contrast, width = 8, height = 4)

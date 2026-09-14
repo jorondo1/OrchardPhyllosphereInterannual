@@ -1,0 +1,50 @@
+# MODEL 7 (MDLSYC) vs MODEL 6: PSIS model comparison. Refits both at much
+# lower iter than the real fits (log_lik = TRUE, not persisted to disk --
+# log_lik draws are massive) since PSIS needs far fewer draws than the
+# reported contrasts do. Both fit Hill_1 - 1, same log-lik scale. Tests
+# whether the three weather/sequencing covariates beat Model 6 predictively.
+
+hiermod_marker <- "ITS"
+source('src/hiermod/0_SETUP.R')
+source('src/hiermod/Models/MDLSYC_model.R') # sources MDLSY_model.R too -> model_MDLSY_ITS, model_MDLSYC_ITS
+
+dat <- list(
+  Dv = div$Hill_1 - 1,
+  Mg = idx$Mg$to_index(div$Management),
+  Lo = idx$Lo$to_index(div$Location),
+  Mo = idx$Mo$to_index(div$Time),
+  Yr = idx$Yr$to_index(div$Year),
+  Tr = idx$Tr$to_index(div$Tree_id),
+  Cv = idx$Cv$to_index(div$Cultivar),
+  deg_h_z = div$deg_h_z,
+  precip_72h_z = div$precip_72h_z,
+  seq_depth_z = div$seq_depth_z
+)
+dat$cell <- (dat$Mg - 1) * 2 + dat$Mo
+
+# Model 6's actual fitted spec (variance-budget-calibrated, see
+# 6.2_MDLSY_ITS_calibration.R) -- model_MDLSY_ITS alone is the naive,
+# pre-VBC spec.
+model_vbc <- model_MDLSY_ITS
+model_vbc$pr_sigma     <- quote(sigma[cell] ~ dexp(3.46))
+model_vbc$pr_sigma_loc <- quote(sigma_loc   ~ dexp(2.31))
+model_vbc$pr_sigma_tr  <- quote(sigma_tr    ~ dexp(2.31))
+model_vbc$pr_sigma_yr  <- quote(sigma_yr    ~ dexp(2.31))
+
+fit_MDLSYC_cmp <- ulam(
+  model_MDLSYC_ITS,
+  data = dat,
+  chains = 6, cores = 6, iter = 2000,
+  control = list(adapt_delta = 0.99),
+  log_lik = TRUE
+)
+
+fit_MDLSY_cmp <- ulam(
+  model_vbc,
+  data = dat,
+  chains = 6, cores = 6, iter = 2000,
+  control = list(adapt_delta = 0.99),
+  log_lik = TRUE
+)
+
+psis_compare(fit_MDLSYC_cmp, fit_MDLSY_cmp)

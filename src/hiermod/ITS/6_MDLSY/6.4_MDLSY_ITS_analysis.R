@@ -27,14 +27,14 @@ pc_estimands_means <- estimand_panels(
   group_levels = c("Conventional", "Organic")
 )
 
-save_report("fit_summary", "MDLSY", fit_MDLSY, pc_estimands_means, model_vbc, model_name = "The Varietal")
+save_report("fit_summary", model_id, fit_MDLSY, pc_estimands_means, model_vbc, model_name = "The Varietal")
 
 p_contrast_mean <- contrast_plot_panels(
   pc_estimands_means, quant = c(0.005, 0.995), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population means)"); p_contrast_mean
 
-save_gg("fit_contrast_mean", "MDLSY", p_contrast_mean)
+save_gg("fit_contrast_mean", model_id, p_contrast_mean)
 
 pc_estimands_medians <- estimand_panels(
   pairs = list(`May median` = list(md$median_1, md$median_3),
@@ -48,7 +48,7 @@ p_contrast_median <- contrast_plot_panels(
   pc_estimands_medians, quant = c(0.005,.995), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population medians)"); p_contrast_median
-save_gg("fit_contrast_median", "MDLSY", p_contrast_median)
+save_gg("fit_contrast_median", model_id, p_contrast_median)
 
 ## Variance components -----------------------------------------------------------
 # Same per-panel-legend treatment as Model 5's (5.3_MDLS2_analysis.R),
@@ -93,7 +93,7 @@ p_random_effects <- variance_component_panels(
   pc_random_effects, quant = c(0.005, 0.995), palette = re_pal,
   sd_stats = stat_levels[4]); p_random_effects
 
-save_gg("fit_variance_components", "MDLSY", p_random_effects, width = 8, height = 15)
+save_gg("fit_variance_components", model_id, p_random_effects, width = 8, height = 15)
 
 ## Variance partition (VPC) / Bayesian R2 -----------------------------------
 
@@ -139,4 +139,4 @@ p_vp_ridge <- vp %>%
 p_variance_partition <- p_vp_ridge / p_vp_bar +
   patchwork::plot_layout(heights = c(4, 1)); p_variance_partition
 
-save_gg("fit_variance_partition", "MDLSY", p_variance_partition, width = 8, height = 8)
+save_gg("fit_variance_partition", model_id, p_variance_partition, width = 8, height = 8)

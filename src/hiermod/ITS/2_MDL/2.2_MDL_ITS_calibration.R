@@ -83,20 +83,11 @@ p_sim_spaghetti <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", "MDL", p_sim_spaghetti)
 
 # Which prior is driving the extreme tail?
-(xlim_upper <- quantile(prior_pred$Dv, 0.99))
-extreme_draws <- prior_pred %>%
-  group_by(draw) %>%
-  summarise(max_Dv = max(Dv)) %>%
-  filter(max_Dv > xlim_upper) %>%
-  pull(draw) %>% as.integer()
-
-tibble(
-  draw       = seq_len(n_prior),
-  extreme    = seq_len(n_prior) %in% extreme_draws,
-  sigma_loc  = prior$sigma_loc,
-  sigma_max  = pmax(prior$sigma[,1], prior$sigma[,2])) %>%
-  group_by(extreme) %>%
-  summarise(across(c(sigma_loc, sigma_max), median))
+diagnose_extreme_tail(
+  prior_pred, value_col = "Dv",
+  candidates = list(
+    sigma_loc = prior$sigma_loc,
+    sigma_max = pmax(prior$sigma[,1], prior$sigma[,2])))
 
 # both sigma separate extreme from non-extreme sharply (~1 -> ~2.5);
 # we don't check loga because it's in the dnorm space
@@ -126,25 +117,15 @@ summary(prior_pred_ppc1$Dv)
 
 
 # Check distribution of parameters between extreme and non-extreme draws
-xlim_upper_ppc1 <- 0.99
-extreme_draws_ppc1 <- prior_pred_ppc1 %>%
-  group_by(draw) %>%
-  summarise(max_Dv = max(Dv)) %>%
-  filter(max_Dv > xlim_upper_ppc1) %>%
-  pull(draw) %>% as.integer()
-
-tibble(
-  draw       = seq_len(n_prior),
-  extreme    = seq_len(n_prior) %in% extreme_draws_ppc1,
-  sigma_loc  = prior_ppc1$sigma_loc,
-  sigma_max  = pmax(prior_ppc1$sigma[,1], prior_ppc1$sigma[,2])
-) %>%
-  group_by(extreme) %>%
-  summarise(across(c(sigma_loc, sigma_max), median))
+diagnose_extreme_tail(
+  prior_pred_ppc1, value_col = "Dv",
+  candidates = list(
+    sigma_loc = prior_ppc1$sigma_loc,
+    sigma_max = pmax(prior_ppc1$sigma[,1], prior_ppc1$sigma[,2])))
 # much more balanced
 
 p_sim_spaghetti_ppc1 <- prior_predictive_spaghetti(
-  prior_pred_ppc1, upper_q = xlim_upper_ppc1,
+  prior_pred_ppc1, upper_q = 0.99,
   model = model_ppc1,
   title = paste("Prior predictive check: sigma tightened to",
                 deparse1(model_ppc1$prior_sigma[[3]]))) +
@@ -173,23 +154,23 @@ mean(pf_b_sim$mean$mean_2 - pf_b_sim$mean$mean_1 > 100) # should be very small (
 
 # if divergences cluster where sigma_loc is small, funnel:
 pairs_plot <- pairs(fitb_sim, pars = c("sigma_loc","b[1]","b[2]"))
-save_pdf("fit_pairs", "MDLb", function()
+save_pdf("fit_pairs", model_id, function()
   pairs(fitb_sim, pars = c("sigma_loc","b[1]","b[2]")))
 # They do, not sure if ok
 
 # Traces look fine:
 traceplot(fitb_sim)
 trankplot(fitb_sim)
-save_pdf("sim_traceplot", "MDLb", function() traceplot(fitb_sim))
-save_pdf("sim_trankplot", "MDLb", function() trankplot(fitb_sim))
+save_pdf("sim_traceplot", model_id, function() traceplot(fitb_sim))
+save_pdf("sim_trankplot", model_id, function() trankplot(fitb_sim))
 
-save_report("sim_summary", "MDLb", fitb_sim, pc_b_sim, model_ppc1, model_name = "The Tamed Wildcard")
+save_report("sim_summary", model_id, fitb_sim, pc_b_sim, model_ppc1, model_name = "The Tamed Wildcard")
 
 pb_sim_contrast <- contrast_plot_panels(pc_b_sim, quant = c(0, 0.995), group_pal = Management_palette) +
   labs(x = 'Estimates for mean Hill number of order 1 and its contrast'); pb_sim_contrast
 # Not incredible, but much better (depends on iteration/unstable; let's SBC!)
 
-save_gg("sim_contrast_density", "MDLb", pb_sim_contrast)
+save_gg("sim_contrast_density", model_id, pb_sim_contrast)
 
 ## Simulation-based calibration (SBC) --------------------------------------------
 
@@ -207,7 +188,7 @@ sbcb <- run_sbc(
   n_sbc = 100, iter = 10000, chains = 4,
   control = list(adapt_delta = 0.99))
 
-sbc_out <- save_sbc_report(sbcb, "MDLb")
+sbc_out <- save_sbc_report(sbcb, model_id)
 par(mfrow= c(1,1))
 hist(sbc_out$ranks)
 

@@ -28,13 +28,13 @@ fit_MDLSY <- ulam(
   chains = 6, cores = 6, iter = 20000,
   control = list(adapt_delta = 0.99)
 )
-save_fit("fit", "MDLSY", fit_MDLSY)
+save_fit("fit", model_id, fit_MDLSY)
 saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLSY.rds"))
 
 precis(fit_MDLSY, depth = 2)
 
-save_pdf("fit_traceplot", "MDLSY", function() traceplot(fit_MDLSY, n_cols = 6, max_rows = 10))
-save_pdf("fit_trankplot", "MDLSY", function() trankplot(fit_MDLSY, n_cols = 6, max_rows = 10))
+save_pdf("fit_traceplot", model_id, function() traceplot(fit_MDLSY, n_cols = 6, max_rows = 10))
+save_pdf("fit_trankplot", model_id, function() trankplot(fit_MDLSY, n_cols = 6, max_rows = 10))
 
 
 ## Posterior predictive check --------------------------------------------------
@@ -44,9 +44,9 @@ post_MDLSY <- extract.samples(fit_MDLSY)
 
 pp_group <- interaction(idx$Mg$to_label(dat$Mg), idx$Mo$to_label(dat$Mo), sep = " ")
 (p_postpred <- plot_ppc_overlay(fit_MDLSY, dat, pp_group, xlim = c(0,150)))
-save_gg("postpred_density", "MDLSY", p_postpred)
+save_gg("postpred_density", model_id, p_postpred)
 
 ### Contrast test statistics ----
 
 (p_ppc <- plot_ppc_season_contrast_stats(fit_MDLSY, dat))
-save_gg("postpred_stat", "MDLSY", p_ppc)
+save_gg("postpred_stat", model_id, p_ppc)

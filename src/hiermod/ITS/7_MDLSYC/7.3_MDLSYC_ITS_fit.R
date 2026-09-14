@@ -30,13 +30,13 @@ fit_MDLSYC <- ulam(
   chains = 6, cores = 6, iter = 20000,
   control = list(adapt_delta = 0.99)
 )
-save_fit("fit", "MDLSYC", fit_MDLSYC)
+save_fit("fit", model_id, fit_MDLSYC)
 saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLSYC.rds")) # so 7.4 doesn't rebuild it
 
 precis(fit_MDLSYC, depth = 2)
 
-save_pdf("fit_traceplot", "MDLSYC", function() traceplot(fit_MDLSYC, n_cols = 6, max_rows = 10))
-save_pdf("fit_trankplot", "MDLSYC", function() trankplot(fit_MDLSYC, n_cols = 6, max_rows = 10))
+save_pdf("fit_traceplot", model_id, function() traceplot(fit_MDLSYC, n_cols = 6, max_rows = 10))
+save_pdf("fit_trankplot", model_id, function() trankplot(fit_MDLSYC, n_cols = 6, max_rows = 10))
 
 # Real-data collinearity table: correlated draws are the expected symptom
 # of the correlation noted above, not a red flag on their own. Spearman
@@ -79,9 +79,9 @@ knitr::kable(collinearity_table, digits = 3,
 
 pp_group <- interaction(idx$Mg$to_label(dat$Mg), idx$Mo$to_label(dat$Mo), sep = " ")
 (p_postpred <- plot_ppc_overlay(fit_MDLSYC, dat, pp_group, xlim = c(0,150)))
-save_gg("postpred_density", "MDLSYC", p_postpred)
+save_gg("postpred_density", model_id, p_postpred)
 
 ### Contrast test statistics ----
 
 (p_ppc <- plot_ppc_season_contrast_stats(fit_MDLSYC, dat))
-save_gg("postpred_stat", "MDLSYC", p_ppc)
+save_gg("postpred_stat", model_id, p_ppc)

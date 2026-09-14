@@ -27,7 +27,7 @@ dat_sim_org <- sim_div_M(rep(1,100), mean_ = 12, cv_ = 0.5)
 div_range <- c(dat_sim_con$Dv, dat_sim_org$Dv)
 dens(dat_sim_con$Dv, lwd =3, xlim = c(floor(min(div_range)),2+ceiling(max(div_range))))
 dens(dat_sim_org$Dv, lwd = 3, col =2, add = TRUE)
-save_pdf("prior_pred_dens", "MD", function(){
+save_pdf("prior_pred_dens", model_id_MD, function(){
   dens(dat_sim_con$Dv, lwd = 3, xlim = c(floor(min(div_range)), 2+ceiling(max(div_range))))
   dens(dat_sim_org$Dv, lwd = 3, col = 2, add = TRUE)
 })
@@ -53,12 +53,12 @@ precis(fit_MD_sim, depth = 2)
 
 pf_MD_sim <- post_full(fit_MD_sim, means_MD)
 pc_MD_sim <- compute_contrasts(pf_MD_sim, keep = "mean", group_levels = idx$Mg$levels)
-save_report("sim_summary", "MD", fit_MD_sim, pc_MD_sim, model_MD, model_name = "The Bare Bones")
+save_report("sim_summary", model_id_MD, fit_MD_sim, pc_MD_sim, model_MD, model_name = "The Bare Bones")
 
 # it's in the vicinity
 p_MD_sim_contrast <- contrast_plot_panels(pc_MD_sim, quant = c(0, 1), group_pal = Management_palette) +
   labs(x = 'Mean Hill number of order 1'); p_MD_sim_contrast
-save_gg("sim_contrast_density", "MD", p_MD_sim_contrast)
+save_gg("sim_contrast_density", model_id_MD, p_MD_sim_contrast)
 
 ## MDv -- Allow Management-specific variance (heteroscedasticity) ============
 
@@ -144,8 +144,8 @@ p_MDv_sim_contrast <- contrast_plot_panels(pc_MDv_sim, quant = c(0, 1), group_pa
     subtitle = "Here, allowing group-specific variances allows the recovery of the true contrast.",
     x = 'Mean Hill number of order 1'); p_MDv_sim_contrast
 
-save_report("sim_summary", "MDv", fit_MDv_sim, pc_MDv_sim, model_MDv, model_name = "The Loose Cannon")
-save_gg("sim_contrast_density", "MDv", p_MDv_sim_contrast, width = 8, height = 4)
+save_report("sim_summary", model_id_MDv, fit_MDv_sim, pc_MDv_sim, model_MDv, model_name = "The Loose Cannon")
+save_gg("sim_contrast_density", model_id_MDv, p_MDv_sim_contrast, width = 8, height = 4)
 
 ### Prior predictive check -------------------------------------------------------
 # TODO: not yet done for this model. Same pattern as MDLb (prior_predictive_spaghetti(), predictive_checks.R).

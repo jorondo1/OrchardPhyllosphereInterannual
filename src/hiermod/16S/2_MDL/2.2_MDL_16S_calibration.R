@@ -33,7 +33,7 @@ fit_sim <- ulam(
   chains = 6, cores = 6, iter = 5000 )
 precis(fit_sim, depth = 2 )
 
-### Fixed effectt recovery ---------
+### Fixed effect recovery ---------
 
 post_sim <- extract.samples(fit_sim)
 
@@ -130,20 +130,11 @@ div %>% group_by(Management) %>%
   )
 
 # Which prior is driving the extreme tail?
-(xlim_upper <- quantile(prior_pred$Dv, 0.99))
-extreme_draws <- prior_pred %>%
-  group_by(draw) %>%
-  summarise(max_Dv = max(Dv)) %>%
-  filter(max_Dv > xlim_upper) %>%
-  pull(draw) %>% as.integer()
-
-tibble(
-  draw       = seq_len(n_prior),
-  extreme    = seq_len(n_prior) %in% extreme_draws,
-  sigma_loc  = prior$sigma_loc,
-  sigma_max  = pmax(prior$sigma[,1], prior$sigma[,2])) %>%
-  group_by(extreme) %>%
-  summarise(across(c(sigma_loc, sigma_max), median))
+diagnose_extreme_tail(
+  prior_pred, value_col = "Dv",
+  candidates = list(
+    sigma_loc = prior$sigma_loc,
+    sigma_max = pmax(prior$sigma[,1], prior$sigma[,2])))
 
 # sigma max is quite extreme; sigma loc a little too
 
@@ -212,13 +203,13 @@ p_sim_contrast_ppc1 <- contrast_plot_panels(
   true_vals = true_vals); p_sim_contrast_ppc1
 
 save_report(
-  "sim_summary", "MDL_ppc1", fit_sim_ppc1, pc_sim_ppc1, model_ppc1, model_name = "The Wildcard")
-save_gg("sim_contrast_density", "MDL_ppc1", p_sim_contrast_ppc1)
+  "sim_summary", model_id, fit_sim_ppc1, pc_sim_ppc1, model_ppc1, model_name = "The Tamed Wildcard")
+save_gg("sim_contrast_density", model_id, p_sim_contrast_ppc1)
 
 
 # Traces look fine:
-save_pdf("sim_traceplot", "MDLb", function() traceplot(fit_sim_ppc1))
-save_pdf("sim_trankplot", "MDLb", function() trankplot(fit_sim_ppc1))
+save_pdf("sim_traceplot", model_id, function() traceplot(fit_sim_ppc1))
+save_pdf("sim_trankplot", model_id, function() trankplot(fit_sim_ppc1))
 
 ## Simulation-based calibration (SBC) --------------------------------------------
 
@@ -242,7 +233,7 @@ sbc <- run_sbc(
   n_sbc = 100, iter = 5000, chains = 4,
   control = list(adapt_delta = 0.99))
 
-sbc_out <- save_sbc_report(sbc, "MDLb")
+sbc_out <- save_sbc_report(sbc, model_id)
 par(mfrow= c(1,1))
 hist(sbc_out$ranks)
 

@@ -1,11 +1,11 @@
-# MODEL 5, SHIFTED: likelihood fit to (Hill_1 - 1). Real fit and PPC.
+# MODEL 5v (MDLS2v), 16S, SHIFTED (Hill_1 - 1): real fit and PPC.
 
-hiermod_marker <- "ITS"
+hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDLS2_model.R') # model_MDLS2_ITS, means_MDLS2(), sim_div_MDLS2()
-model <- model_MDLS2_ITS
+source('src/hiermod/Models/MDLS2v_model.R') # model_MDLS2v_16S, means_MDLS2v()
 
-hiermod_out_dir <- "out/hiermod/ITS_5_lognormal_MDLS2_shifted"
+hiermod_out_dir <- "out/hiermod/16S_5b_lognormal_MDLS2v_shifted"
+model <- model_MDLS2v_16S
 
 ## Model fit ----------------------------------------------------------------
 
@@ -17,19 +17,20 @@ dat <- list(
   Yr = idx$Yr$to_index(div$Year),
   Tr = idx$Tr$to_index(div$Tree_id)
 )
-dat$cell <- (dat$Mg - 1) * 2 + dat$Mo   # 1=Conv-May, 2=Conv-July, 3=Org-May, 4=Org-July
+# no `cell` column needed -- sigma is derived per-observation directly from Mg/Mo
 
-fit_MDLS2_shifted <- ulam(
+fit_MDLS2v <- ulam(
   model,
   data = dat,
   chains = 6, cores = 6, iter = 20000,
   control = list(adapt_delta = 0.99)
 )
-save_fit("fit", model_id_MDLS2_ITS_shifted, fit_MDLS2_shifted)
+save_fit("fit", model_id, fit_MDLS2v)
+saveRDS(dat, file.path(hiermod_out_dir, "dat_MDLS2v_shifted.rds"))
 
-precis(fit_MDLS2_shifted, depth = 2)
+precis(fit_MDLS2v, depth = 2)
 
-save_pdf("fit_trankplot", model_id_MDLS2_ITS_shifted, function() trankplot(fit_MDLS2_shifted, n_cols = 6, max_rows = 10))
+save_pdf("fit_trankplot", model_id, function() trankplot(fit_MDLS2v, n_cols = 6, max_rows = 10))
 
 ## Posterior predictive check --------------------------------------------------
 
@@ -39,11 +40,10 @@ save_pdf("fit_trankplot", model_id_MDLS2_ITS_shifted, function() trankplot(fit_M
 # this section, since both sides were shifted down by 1 consistently.
 
 pp_group <- interaction(idx$Mg$to_label(dat$Mg), idx$Mo$to_label(dat$Mo), sep = " ")
-(p_postpred <- plot_ppc_overlay(fit_MDLS2_shifted, dat, pp_group, xlim = c(0,150)))
-save_gg("postpred_density", model_id_MDLS2_ITS_shifted, p_postpred)
+p_postpred <- plot_ppc_overlay(fit_MDLS2v, dat, pp_group, xlim = c(NA,2000))
+save_gg("postpred_density", model_id, p_postpred)
 
 ### Contrast test statistics ----
 
-(p_ppc <- plot_ppc_season_contrast_stats(fit_MDLS2_shifted, dat))
-
-save_gg("postpred_stat", model_id_MDLS2_ITS_shifted, p_ppc)
+(p_ppc <- plot_ppc_season_contrast_stats(fit_MDLS2v, dat))
+save_gg("postpred_stat", model_id, p_ppc)

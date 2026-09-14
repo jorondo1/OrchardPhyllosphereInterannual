@@ -38,5 +38,5 @@ pc_full %>%
   summarise(n_neg = sum(value<=0), n = n()) %>%
   mutate(prop_neg = n_neg/n)
 
-save_report("fit_summary", "MDLb", fitb, pc_full, model_ppc1, model_name = "The Tamed Wildcard")
-save_gg("fit_contrasts_panel", "MDLb", p_contrasts_panel)
+save_report("fit_summary", model_id, fitb, pc_full, model_ppc1, model_name = "The Tamed Wildcard")
+save_gg("fit_contrasts_panel", model_id, p_contrasts_panel)

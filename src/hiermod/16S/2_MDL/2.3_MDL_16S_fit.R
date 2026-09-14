@@ -23,12 +23,12 @@ fitb <- ulam(
   chains = 6, cores = 6, iter = 10000,
   control = list(adapt_delta = 0.99)
 )
-save_fit("fit", "MDLb", fitb)
+save_fit("fit", model_id, fitb)
 
 precis(fitb, depth = 2 )
 
-save_pdf("fit_traceplot", "MDLb", function() traceplot(fitb))
-save_pdf("fit_trankplot", "MDLb", function() trankplot(fitb))
+save_pdf("fit_traceplot", model_id, function() traceplot(fitb))
+save_pdf("fit_trankplot", model_id, function() trankplot(fitb))
 
 ## Posterior predictive check --------------------------------------------------
 # Overlay the real data with data simulated from the posterior distribution.
@@ -44,7 +44,7 @@ pb_postpred <- plot_ppc_overlay(fitb, dat, idx$Mg$to_label(dat$Mg),
 # Not bad!
 # Conventional has a hump around 800-900 which the model doesn't see.
 
-save_gg("postpred_density", "MDLb", pb_postpred)
+save_gg("postpred_density", model_id, pb_postpred)
 
 
 ### By location (marginal shape) ----
@@ -118,7 +118,7 @@ p_postpred_ridges <- pp_joined %>%
   labs(x = "Diversity", y = "Location", fill = "Management",
        caption = "Ridges = posterior predictive density; points = observed data (jittered)"); p_postpred_ridges
 
-save_gg("postpred_ridges", "MDL", p_postpred_ridges)
+save_gg("postpred_ridges", model_id, p_postpred_ridges)
 
 ### Contrast test statistics ----
 # Model 2 is a clean 2-group (Mg) split, so plot_ppc_contrast_stat() (not
@@ -138,4 +138,4 @@ p_ppc_mad_contrast    <- plot_ppc_contrast_stat(fitb, dat, dat$Mg, mad, "dispers
 # Median is spot on at the peak; others are ok but slightly tailed, has to do with variance
 (p_ppc <- p_ppc_median_contrast / p_ppc_mean_contrast / p_ppc_mad_contrast +
     plot_layout(guides = 'collect'))
-save_gg("postpred_stat", "MDLb", p_ppc)
+save_gg("postpred_stat", model_id, p_ppc)

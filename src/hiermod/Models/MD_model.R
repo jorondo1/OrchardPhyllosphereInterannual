@@ -26,6 +26,8 @@ model_MD_ITS <- alist(
 # Same for 16S because no calibration so far
 model_MD_16S <- model_MD_ITS
 
+model_id_MD <- "MD"
+
 # total_var -> mean[,1:2]: a single shared scalar sigma (no per-group or pooling variance)
 means_MD <- function(post){
   total_var <- as.vector(post$sigma)^2
@@ -46,6 +48,8 @@ model_MDv_ITS <- alist(
 )
 
 model_MDv_16S <- model_MDv_ITS
+
+model_id_MDv <- "MDv"
 
 # total_var -> mean[,1:2]: sigma[Mg] differs by group, so each
 # group gets its own total_var.
