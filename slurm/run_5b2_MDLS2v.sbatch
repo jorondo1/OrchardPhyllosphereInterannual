@@ -13,7 +13,6 @@ set -euo pipefail
 export REPO=/net/nfs-bio/jbod2/def-ilafores/analysis/orchardPhyllosphere2
 export SCRIPT=$REPO/src/hiermod/16S/5b_MDLS2v/5b.2_MDLS2v_16S_calibration.R
 cd "$REPO"
-git pull
 
 # >>> FILL IN: however you load R + cmdstanr's toolchain on this cluster <<<
 # e.g. module load StdEnv/2023 gcc r/4.4   -- or `source activate <env>`
