@@ -6,7 +6,7 @@
 #   ps_raw_*  - straight from DADA2, nothing removed
 #   ps_filt_* - taxonomy-filtered, rare ASVs dropped, low-depth samples dropped
 
-pacman::p_load(tidyverse, phyloseq, magrittr, vegan)
+pacman::p_load(tidyverse, phyloseq, magrittr, vegan, mgx.tools)
 
 # Paths -----------------------------------------------------------------
 
