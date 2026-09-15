@@ -1,12 +1,26 @@
 # MODEL 1 (MD, constant variance) + MODEL 2 (MDv, Management-specific
-# variance), 16S: same models as ITS, on 16S's own data. No formal SBC/
-# prior-PC here -- both models are simple enough (no pooling, no
-# hierarchical structure) that it wasn't judged necessary.
+# variance), 16S: same models as ITS, on 16S's own data.
+#
+# Formal prior-PC/SBC added for MD specifically: SBC on every later model in
+# this family (MDLS2v, MDLS2vz, MDL, MDS2) found loga[]'s posterior
+# systematically shrunk toward its prior mean (rank-fraction well below
+# 0.5), and that bias persisted identically after removing Location
+# entirely (MDS2) -- ruling out any random-effect cardinality issue as the
+# cause. MD is the floor test: just loga[Mg] and a single SHARED sigma (no
+# per-group variance at all, so there's no sigma[Mg] left to entangle with
+# loga group-wise). If the bias shows up even here, it's a base-level
+# loga-prior/lognormal-likelihood shrinkage effect, present from the very
+# first model onward. loga/sigma priors patched to this investigation's
+# established 16S values (dnorm(5,2)/dexp(2)) rather than the original,
+# never-validated ITS import (dnorm(2,2)/dexp(1)) -- scoped to this script's
+# own `model_MD` only, not 1.3's real-data fit.
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MD_model.R') # model_MD_16S, model_MDv_16S, sim_div_M(), means_MD(), means_MDv()
+source('src/hiermod/Models/MD_model.R') # model_MD_16S, model_MDv_16S, sim_div_M(), sim_div_MD(), means_MD(), means_MDv(), simulate_from_priors_MD()
 model_MD  <- model_MD_16S
+model_MD$prior_loga  <- quote(loga[Mg] ~ dnorm(5,2))
+model_MD$prior_sigma <- quote(sigma ~ dexp(2))
 model_MDv <- model_MDv_16S
 
 hiermod_out_dir <- "out/hiermod/16S_1_lognormal_MD"
@@ -148,8 +162,119 @@ p_MDv_sim_contrast <- contrast_plot_panels(pc_MDv_sim, quant = c(0, 1), group_pa
 save_report("sim_summary", model_id_MDv, fit_MDv_sim, pc_MDv_sim, model_MDv, model_name = "The Loose Cannon")
 save_gg("sim_contrast_density", model_id_MDv, p_MDv_sim_contrast, width = 8, height = 4)
 
-### Prior predictive check -------------------------------------------------------
-# TODO: not yet done for this model. Same pattern as MDLb (prior_predictive_spaghetti(), predictive_checks.R).
+## MD -- formal calibration (loga-shrinkage floor test) =======================
+# Fresh recovery fit under the patched (5,2)/(2) priors -- fit_MD_sim above
+# used model_MD before the patch, and was fit via sim_div_M()'s mean_/cv_
+# convention rather than a direct loga/sigma true value, so it isn't reused
+# here.
 
-### Simulation-based calibration (SBC) --------------------------------------------
-# TODO: not yet done for this model. See MDLb (2.3_MDL_fit.R) for the run_sbc()/save_sbc_report() pattern.
+true_conv <- 180
+true_org  <- 120
+true_sigma_MD <- cv_to_sigma(0.65) # single shared CV, in between MDL's own 0.5/0.8
+
+set.seed(20260911)
+
+dat_sim_MD <- sim_div_MD(Mg = rbern(250) + 1, loga = log(c(true_conv, true_org)), sigma = true_sigma_MD)
+
+fit_MD_cal <- ulam(
+  model_MD,
+  data = as.list(dat_sim_MD),
+  chains = 6, cores = 6, iter = 5000)
+precis(fit_MD_cal, depth = 2)
+
+post_MD_cal <- extract.samples(fit_MD_cal)
+
+(param_recovery_MD <- check_recovery(
+  true = list(loga1 = log(true_conv), loga2 = log(true_org), sigma = true_sigma_MD),
+  post_draws = list(loga1 = post_MD_cal$loga[,1], loga2 = post_MD_cal$loga[,2], sigma = post_MD_cal$sigma)
+))
+
+### loga x sigma funnel check ----------------------------------------------
+# sigma is a single SHARED scalar here (no per-Mg split at all), the
+# cleanest possible check of whether loga trades off against the residual
+# scale even with no group-specific variance to entangle with.
+
+p_funnel_MD <- function(){
+  par(mfrow = c(1,2))
+  plot(post_MD_cal$sigma, post_MD_cal$loga[,1],
+       xlab = "sigma (shared)", ylab = "loga[1] (Conventional)", pch = 16, col = scales::alpha("black", 0.15))
+  plot(post_MD_cal$sigma, post_MD_cal$loga[,2],
+       xlab = "sigma (shared)", ylab = "loga[2] (Organic)", pch = 16, col = scales::alpha("black", 0.15))
+  par(mfrow = c(1,1))
+}
+save_pdf("loga_sigma_funnel", model_id_MD, p_funnel_MD)
+
+### Prior predictive check -------------------------------------------------------
+
+n_prior <- 1000
+extracted_prior_MD <- extract.prior(fit_MD_cal, n = n_prior)
+
+prior_pred_MD <- map_dfr(seq_len(n_prior), function(i){
+  simulate_from_priors_MD(draw_true(extracted_prior_MD, i))
+}, .id = "draw")
+
+summary(prior_pred_MD$Dv) # judge on median/IQR, not mean/SD
+
+p_prior_pc_MD <- prior_predictive_spaghetti(
+  prior_pred_MD, value_col = "Dv", upper_q = 0.99, model = model_MD,
+  title = "Prior predictive check: loga[Mg] ~ dnorm(5,2)", observed = dat_sim_MD$Dv); p_prior_pc_MD
+
+save_gg("sim_prior_PC", model_id_MD, p_prior_pc_MD)
+
+### Simulation-based calibration (SBC), via the SBC package --------------------
+# The floor test: does loga[] still show the ~0.15-0.35 rank-fraction skew
+# found in every other model in this family, even with no random effects,
+# no Season/Tree/Year, and a single shared (not per-group) sigma?
+source('src/utils/sbc_backend_ulam.R')
+library(SBC)
+future::plan(future::multisession)
+
+generate_one_MD <- function(){
+  true_params <- suppressMessages(suppressWarnings(draw_true(extract.prior(fit_MD_cal, n = 1, refresh = 0), 1)))[
+    c("loga", "sigma")]
+  dat <- simulate_from_priors_MD(true_params)
+  list(variables = true_params, generated = as.list(dat[, c("Dv", "Mg")]))
+}
+
+dq_MD <- derived_quantities(
+  median_contrast = exp(loga[2]) - exp(loga[1]),
+  mean_contrast   = exp(loga[2] + sigma^2/2) - exp(loga[1] + sigma^2/2)
+)
+
+n_sbc  <- 100
+n_iter <- 10000
+
+datasets_path_MD <- file.path(hiermod_out_dir, "sbc_datasets_MD.rds")
+if (file.exists(datasets_path_MD)) {
+  datasets_MD <- readRDS(datasets_path_MD)
+} else {
+  datasets_MD <- generate_datasets(SBC_generator_function(generate_one_MD), n_sbc)
+  saveRDS(datasets_MD, datasets_path_MD, compress = "xz")
+}
+
+backend_MD <- SBC_backend_ulam(model_MD, iter = n_iter, refresh = 0,
+                                control = list(adapt_delta = 0.99))
+
+sbc_MD <- compute_SBC(
+  datasets_MD, backend_MD, dquants = dq_MD,
+  cache_mode = "results", cache_location = file.path(hiermod_out_dir, "sbc_cache_MD"),
+  globals = c("SBC_fit.SBC_backend_ulam", "SBC_fit_to_draws_matrix.ulam",
+              "SBC_fit_to_diagnostics.ulam"))
+
+p_sbc_rank  <- plot_rank_hist(sbc_MD)
+p_sbc_ecdf  <- plot_ecdf_diff(sbc_MD)
+p_sbc_cover <- plot_coverage(sbc_MD)
+
+sbc_step <- paste0(model_id_MD, "_", n_sbc, "sbc_iter")
+save_gg("SBC_rank_hist", sbc_step, p_sbc_rank, width = 9, height = 7)
+save_gg("SBC_ecdf_diff", sbc_step, p_sbc_ecdf, width = 9, height = 7)
+save_gg("SBC_coverage",  sbc_step, p_sbc_cover, width = 9, height = 7)
+
+(sbc_diag_summary_MD <- sbc_MD$backend_diagnostics %>%
+   dplyr::summarise(total_divergent = sum(n_divergent), total_max_treedepth = sum(n_max_treedepth),
+                     total_low_ebfmi = sum(n_low_ebfmi), n_replicates = dplyr::n()))
+
+sbc_MD$stats |>
+  dplyr::filter(variable %in% c("loga[1]", "loga[2]")) |>
+  dplyr::group_by(variable) |>
+  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))

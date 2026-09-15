@@ -28,6 +28,19 @@ model_MD_16S <- model_MD_ITS
 
 model_id_MD <- "MD"
 
+# Direct loga/sigma parameterization (loga IS the model's own log-median,
+# sigma IS its own likelihood sdlog) -- unlike sim_div_M()'s mean_/cv_
+# round-trip above (kept as-is for the existing effect-size sanity check),
+# this matches the convention used by every later model's own
+# simulate_from_priors_X()/SBC setup, for direct comparability.
+sim_div_MD <- function(Mg, loga, sigma){
+  data.frame(Mg, Dv = rlnorm(length(Mg), meanlog = loga[Mg], sdlog = sigma))
+}
+
+simulate_from_priors_MD <- function(true_params, N_samples = 250){
+  sim_div_MD(Mg = rbern(N_samples) + 1, loga = true_params$loga, sigma = true_params$sigma)
+}
+
 # total_var -> mean[,1:2]: a single shared scalar sigma (no per-group or pooling variance)
 means_MD <- function(post){
   total_var <- as.vector(post$sigma)^2

@@ -57,9 +57,7 @@ post_sim <- extract.samples(fit_sim)
     sigma1 = true_sigma[1], sigma2 = true_sigma[2]),
   post_draws = list(
     loga1 = post_sim$loga[,1], loga2 = post_sim$loga[,2],
-    sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2])
-)
-)
+    sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2])))
 ### Contrast recovery -------------
 
 cr <- contrast_recovery(
@@ -93,6 +91,28 @@ p_prior_pc <- prior_predictive_spaghetti(
   title = "Prior predictive check", observed = dat_sim$Dv_shifted); p_prior_pc
 
 save_gg("sim_prior_PC", model_id, p_prior_pc)
+
+## loga x sigma[Mg]/sigma_tr funnel check ------------------------------------
+# SBC on the real 100-replicate run found loga[]'s miscalibration is just as
+# severe here (no Location at all) as it was in MDLS2v (Location present) --
+# ruling out Location's low cardinality as the driver. sigma[Mg] is now the
+# only remaining scale parameter loga could be entangled with in the same
+# likelihood term (Dv ~ dlnorm(mu, sigma[Mg])); sigma_tr checked too since it
+# showed a secondary correlation with the treedepth blowups.
+
+p_funnel <- function(){
+  par(mfrow = c(2,2))
+  plot(post_sim$sigma[,1], post_sim$loga[,1],
+       xlab = "sigma[1] (Conventional)", ylab = "loga[1] (Conventional)", pch = 16, col = scales::alpha("black", 0.15))
+  plot(post_sim$sigma[,2], post_sim$loga[,2],
+       xlab = "sigma[2] (Organic)", ylab = "loga[2] (Organic)", pch = 16, col = scales::alpha("black", 0.15))
+  plot(post_sim$sigma_tr, post_sim$loga[,1],
+       xlab = "sigma_tr", ylab = "loga[1] (Conventional)", pch = 16, col = scales::alpha("black", 0.15))
+  plot(post_sim$sigma_tr, post_sim$loga[,2],
+       xlab = "sigma_tr", ylab = "loga[2] (Organic)", pch = 16, col = scales::alpha("black", 0.15))
+  par(mfrow = c(1,1))
+}
+save_pdf("loga_sigma_funnel", model_id, p_funnel)
 
 ## Simulation-based calibration (SBC), via the SBC package -----------------------
 # Same template as MDL's/MDLS2v's own calibration. yr[Yr]/tr[Tr] stay out
@@ -140,7 +160,7 @@ backend_MDS2 <- SBC_backend_ulam(model, iter = n_iter, refresh = 0,
                                  control = list(adapt_delta = 0.99))
 
 sbc_MDS2 <- compute_SBC(
-  datasets_MDS2, backend_MDS2, dquants = dq_MDS2,
+  datasets_MDS2, backend_MDS2, dquants = dq_MDS2, 
   cache_mode = "results", cache_location = file.path(hiermod_out_dir, "sbc_cache_MDS2"),
   globals = c("SBC_fit.SBC_backend_ulam", "SBC_fit_to_draws_matrix.ulam",
               "SBC_fit_to_diagnostics.ulam"))
