@@ -1,0 +1,21 @@
+SBC health report -- MD
+Generated: 2026-09-15 08:55:49
+n_sbc = 100, n_iter = 10000
+
+-- Backend diagnostics (sampling health) --
+  divergences:     0 total
+  max treedepth:   0 total (worst single replicate: 0)
+  low E-BFMI fits: 0 total
+  max Rhat:        1.006 (0/100 fits > 1.01)
+  min ESS bulk:    391
+  min ESS tail:    424
+
+-- Rank-fraction calibration (expected 0.5, SE = 0.0289 at n=100) --
+  variable              mean_frac   med_frac        z  flag
+  loga[1]                   0.524      0.568     0.83  ok
+  loga[2]                   0.524      0.567     0.83  ok
+  mean_contrast             0.501      0.475     0.03  ok
+  median_contrast           0.499      0.490    -0.02  ok
+  sigma                     0.544      0.537     1.52  ok
+
+Overall: OK

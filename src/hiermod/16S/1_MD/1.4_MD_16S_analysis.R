@@ -3,24 +3,15 @@
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
 source('src/hiermod/Models/MD_model.R') # model_MD_16S/model_MDv_16S, means_MD/means_MDv
+
 model_MD  <- model_MD_16S
 model_MDv <- model_MDv_16S
+
+# Updated priors (see MDv calibration)
+model_MDv$prior_sigma <- quote(sigma[Mg] ~ dhalfnorm(0,1))
 hiermod_out_dir <- "out/hiermod/16S_1_lognormal_MD"
 
-fit_MD  <- readRDS(file.path(hiermod_out_dir, "fit_MD.rds"))
 fit_MDv <- readRDS(file.path(hiermod_out_dir, "fit_MDv.rds"))
-
-## MD -- Posterior contrast ---------------------------------------------------
-# Back-transform loga/sigma posterior draws to a raw-scale group contrast
-
-pf_MD <- post_full(fit_MD, means_MD)
-pc_MD <- compute_contrasts(pf_MD, keep = "mean", group_levels = idx$Mg$levels)
-save_report("fit_summary", model_id_MD, fit_MD, pc_MD, model_MD, model_name = "The Bare Bones")
-
-p_MD_contrast <- contrast_plot_panels(pc_MD, quant = c(0, 1), group_pal = Management_palette) +
-  labs(x = 'Mean Hill number of order 1'); p_MD_contrast
-
-save_gg("fit_contrast_density", model_id_MD, p_MD_contrast, width = 8, height = 4)
 
 ## MDv -- Posterior contrast ---------------------------------------------------
 

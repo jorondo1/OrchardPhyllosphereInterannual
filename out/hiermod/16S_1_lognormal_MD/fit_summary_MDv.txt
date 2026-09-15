@@ -7,21 +7,21 @@ $linear_model
 mu <- loga[Mg]
 
 $prior_loga
-loga[Mg] ~ dnorm(2, 2)
+loga[Mg] ~ dnorm(5, 2)
 
 $prior_sigma
-sigma[Mg] ~ dexp(1)
+sigma[Mg] ~ dhalfnorm(0, 1)
 
 
 
 ==== precis: fit_MDv ====
 
-          mean    sd  5.5% 94.5% rhat ess_bulk
-loga[1]  4.603 0.099 4.445 4.761    1 38307.41
-loga[2]  3.316 0.122 3.122 3.509    1 39529.56
-sigma[1] 1.194 0.070 1.088 1.311    1 38683.82
-sigma[2] 1.205 0.087 1.074 1.353    1 38458.24
+          mean    sd  5.5% 94.5% rhat ess_bulk ess_ratio
+loga[1]  4.609 0.100 4.450 4.770    1 34710.69     1.157
+loga[2]  3.328 0.120 3.137 3.520    1 33933.71     1.131
+sigma[1] 1.193 0.070 1.086 1.309    1 36770.22     1.226
+sigma[2] 1.203 0.086 1.075 1.347    1 35615.22     1.187
 
 
 ==== posterior contrast ====
-mean -- mean: -147.78  median: -145.576  89% PI: [ -196.829 , -106.127 ]  89% HPDI: [ -191.165 , -101.992 ]
+mean -- mean: -148.301  median: -146.038  89% PI: [ -197.775 , -105.852 ]  89% HPDI: [ -192.494 , -102.09 ]

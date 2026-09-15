@@ -23,8 +23,16 @@ model_MD_ITS <- alist(
   prior_sigma  = sigma ~ dexp(1)
 )
 
-# Same for 16S because no calibration so far
+# 16S variant, patched to the 16S investigation's own starting point
+# (dnorm(5,2)/dexp(2), not the never-validated ITS import above) -- this
+# reflects where the calibration investigation STARTED, not what it
+# concluded (MD needed no correction; MDv's dexp(2) here is known
+# miscalibrated -- see 1.2_MDv_16S_calibration.R -- consumers needing the
+# learned dhalfnorm(0,1) apply it as a local override, same as every
+# calibration script already does).
 model_MD_16S <- model_MD_ITS
+model_MD_16S$prior_loga  <- quote(loga[Mg] ~ dnorm(5,2))
+model_MD_16S$prior_sigma <- quote(sigma ~ dexp(2))
 
 model_id_MD <- "MD"
 
@@ -78,6 +86,8 @@ model_MDv_ITS <- alist(
 )
 
 model_MDv_16S <- model_MDv_ITS
+model_MDv_16S$prior_loga  <- quote(loga[Mg] ~ dnorm(5,2))
+model_MDv_16S$prior_sigma <- quote(sigma[Mg] ~ dexp(2))
 
 model_id_MDv <- "MDv"
 

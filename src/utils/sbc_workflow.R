@@ -102,7 +102,7 @@ make_sbc_generator <- function(fit, simulate_fn, keep, gen_cols,
   extra_args <- list(...)
   
   generator <- function(){
-    library(rethinking); library(tidyverse) # future::multisession workers start fresh -- not auto-attached
+    library(rethinking); library(tidyverse) # future::multisession workers start fresh (not auto-attached)
     true_params <- suppressMessages(suppressWarnings(
       draw_true(extract.prior(fit, n = 1, refresh = 0), 1)))[keep]
     dat <- do.call(simulate_fn, c(list(true_params), extra_args))
@@ -231,7 +231,7 @@ save_sbc_health_report <- function(model_id, sbc_result, n_sbc, n_iter, variable
   overall <- if (any(rank_summary$flag == "MISCALIBRATED")) "MISCALIBRATED" else "OK"
   lines <- c(lines, "", sprintf("Overall: %s", overall))
   
-  out_path <- file.path(hiermod_out_dir, paste0("sbc_health_", model_id, ".txt"))
+  out_path <- file.path(hiermod_out_dir, paste0("sbc_health_", model_id, "_",n_sbc,"iter.txt"))
   writeLines(lines, out_path)
   message("SBC health report written to ", out_path)
   invisible(rank_summary)

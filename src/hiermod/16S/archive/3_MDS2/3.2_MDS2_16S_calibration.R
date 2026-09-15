@@ -95,8 +95,9 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga x sigma[Mg]/sigma_tr funnel check ------------------------------------
+
 # SBC on the real 100-replicate run found loga[]'s miscalibration is just as
-# severe here (no Location at all) as it was in MDLS2v (Location present) --
+# severe here (no Location at all) as it was in MDLS2v (Location present),
 # ruling out Location's low cardinality as the driver. sigma[Mg] is now the
 # only remaining scale parameter loga could be entangled with in the same
 # likelihood term (Dv ~ dlnorm(mu, sigma[Mg])); sigma_tr checked too since it
