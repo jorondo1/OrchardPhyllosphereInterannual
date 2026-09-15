@@ -124,6 +124,7 @@ library(SBC)
 future::plan(future::multisession)
 
 generate_one_MDS2 <- function(){
+  library(rethinking); library(tidyverse) # future::multisession workers start fresh -- not auto-attached
   true_params <- suppressMessages(suppressWarnings(draw_true(extract.prior(fit_sim, n = 1, refresh = 0), 1)))[
     c("loga", "s_conv", "gap_shift", "sigma", "sigma_tr")]
   dat <- simulate_from_priors_MDS2(true_params, shift = 1)
@@ -152,7 +153,15 @@ datasets_path_MDS2 <- file.path(hiermod_out_dir, "sbc_datasets_MDS2.rds")
 if (file.exists(datasets_path_MDS2)) {
   datasets_MDS2 <- readRDS(datasets_path_MDS2)
 } else {
-  datasets_MDS2 <- generate_datasets(SBC_generator_function(generate_one_MDS2), n_sbc)
+  # future.chunk.size activates generate_datasets()'s built-in
+  # future.apply::future_replicate() path (default is Inf = sequential).
+  # future.globals must be named explicitly -- auto-detection (TRUE) can't
+  # trace into this closure from inside the SBC package's own internals.
+  datasets_MDS2 <- generate_datasets(
+    SBC_generator_function(
+      generate_one_MDS2, future.chunk.size = default_chunk_size(n_sbc),
+      future.globals = c("draw_true", "fit_sim", "simulate_from_priors_MDS2", "sim_div_MDS2")),
+    n_sbc)
   saveRDS(datasets_MDS2, datasets_path_MDS2, compress = "xz")
 }
 

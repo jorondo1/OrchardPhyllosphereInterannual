@@ -131,6 +131,7 @@ library(SBC)
 future::plan(future::multisession)
 
 generate_one_MDL <- function(){
+  library(rethinking); library(tidyverse) # future::multisession workers start fresh -- not auto-attached
   true_params <- suppressMessages(suppressWarnings(draw_true(extract.prior(fit_sim, n = 1, refresh = 0), 1)))[
     c("loga", "sigma", "sigma_loc")]
   dat <- simulate_from_priors_MDL(true_params)
@@ -152,7 +153,15 @@ datasets_path_MDL <- file.path(hiermod_out_dir, "sbc_datasets_MDL.rds")
 if (file.exists(datasets_path_MDL)) {
   datasets_MDL <- readRDS(datasets_path_MDL)
 } else {
-  datasets_MDL <- generate_datasets(SBC_generator_function(generate_one_MDL), n_sbc)
+  # future.chunk.size activates generate_datasets()'s built-in
+  # future.apply::future_replicate() path (default is Inf = sequential).
+  # future.globals must be named explicitly -- auto-detection (TRUE) can't
+  # trace into this closure from inside the SBC package's own internals.
+  datasets_MDL <- generate_datasets(
+    SBC_generator_function(
+      generate_one_MDL, future.chunk.size = default_chunk_size(n_sbc),
+      future.globals = c("draw_true", "fit_sim", "simulate_from_priors_MDL", "sim_div_MDL")),
+    n_sbc)
   saveRDS(datasets_MDL, datasets_path_MDL, compress = "xz")
 }
 

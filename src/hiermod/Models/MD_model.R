@@ -41,13 +41,22 @@ simulate_from_priors_MD <- function(true_params, N_samples = 250){
   sim_div_MD(Mg = rbern(N_samples) + 1, loga = true_params$loga, sigma = true_params$sigma)
 }
 
-# total_var -> mean[,1:2]: a single shared scalar sigma (no per-group or pooling variance)
+# total_var -> mean[,1:2]: a single shared scalar sigma (no per-group or pooling variance).
+# median added (lognormal_mean with total_var=0, same identity used by
+# every later model) so compute_contrasts(keep=c("mean","median")) works
+# uniformly across the whole model family.
 means_MD <- function(post){
   total_var <- as.vector(post$sigma)^2
-  list(mean = cbind(
-    lognormal_mean(post$loga[,1], total_var),
-    lognormal_mean(post$loga[,2], total_var)
-  ))
+  list(
+    mean = cbind(
+      lognormal_mean(post$loga[,1], total_var),
+      lognormal_mean(post$loga[,2], total_var)
+    ),
+    median = cbind(
+      lognormal_mean(post$loga[,1], 0),
+      lognormal_mean(post$loga[,2], 0)
+    )
+  )
 }
 
 ## MODEL 2 -- Allow Management-specific variance (heteroscedasticity)
@@ -64,11 +73,26 @@ model_MDv_16S <- model_MDv_ITS
 
 model_id_MDv <- "MDv"
 
+# Direct loga/sigma[Mg] parameterization, same rationale as sim_div_MD() above.
+sim_div_MDv <- function(Mg, loga, sigma){
+  data.frame(Mg, Dv = rlnorm(length(Mg), meanlog = loga[Mg], sdlog = sigma[Mg]))
+}
+
+simulate_from_priors_MDv <- function(true_params, N_samples = 250){
+  sim_div_MDv(Mg = rbern(N_samples) + 1, loga = true_params$loga, sigma = true_params$sigma)
+}
+
 # total_var -> mean[,1:2]: sigma[Mg] differs by group, so each
-# group gets its own total_var.
+# group gets its own total_var. median added, same reason as means_MD().
 means_MDv <- function(post){
-  list(mean = cbind(
-    lognormal_mean(post$loga[,1], post$sigma[,1]^2),
-    lognormal_mean(post$loga[,2], post$sigma[,2]^2)
-  ))
+  list(
+    mean = cbind(
+      lognormal_mean(post$loga[,1], post$sigma[,1]^2),
+      lognormal_mean(post$loga[,2], post$sigma[,2]^2)
+    ),
+    median = cbind(
+      lognormal_mean(post$loga[,1], 0),
+      lognormal_mean(post$loga[,2], 0)
+    )
+  )
 }
