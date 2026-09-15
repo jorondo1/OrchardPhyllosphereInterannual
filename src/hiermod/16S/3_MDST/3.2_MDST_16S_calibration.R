@@ -36,6 +36,7 @@ true_sigma_tr <- 0.3
 
 set.seed(20260911)
 
+# Simulator
 dat_sim <- sim_div_MDST(
   N_samples = 240,
   loga = log(c(may_conv, may_org)),
@@ -44,10 +45,9 @@ dat_sim <- sim_div_MDST(
   sigma = true_sigma,
   sigma_tr = true_sigma_tr,
   shift = 1
-); head(dat_sim)
+)
 
-hist(dat_sim$Dv_shifted, breaks = 100)
-
+#Fit simulation
 fit_sim <- ulam(
   model,
   data = as.list(dat_sim),

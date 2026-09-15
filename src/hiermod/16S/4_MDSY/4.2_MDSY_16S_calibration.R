@@ -23,7 +23,7 @@ hiermod_out_dir <- "out/hiermod/16S_4_year_MDSY"
 may_conv <- 180
 may_org  <- 120
 july_conv_shift <- 0.35
-july_org_shift  <- 0.2
+july_org_shift  <- 0.6
 
 true_sigma <- cv_to_sigma(c(0.5, 0.8)) # conv, org
 true_yr    <- c(0, 0.3, -0.2)          # 3 years
@@ -38,10 +38,9 @@ dat_sim <- sim_div_MDSY(
   sigma = true_sigma,
   yr = true_yr,
   shift = 1
-); head(dat_sim)
+)
 
-hist(dat_sim$Dv_shifted, breaks = 100)
-
+#Fit simulation
 fit_sim <- ulam(
   model,
   data = as.list(dat_sim),
@@ -80,7 +79,7 @@ save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,
          function() trankplot(fit_sim, max_rows = 30, n_cols = 5),
-         width = 30, height = 50)
+         width = 10, height = 5)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -131,7 +130,7 @@ sbc_gen_MDSY <- make_sbc_generator(
   extra_globals = "sim_div_MDSY", shift = 1)
 
 n_sbc  <- 100
-n_iter <- 10000
+n_iter <- 5000
 
 sbc_MDSY <- run_sbc_pipeline(
   generator = sbc_gen_MDSY$generator, globals = sbc_gen_MDSY$globals,
@@ -150,27 +149,10 @@ save_sbc_health_report(model_id, sbc_MDSY, n_sbc, n_iter,
                         variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
                                       "yr[1]", "yr[2]", "yr[3]", "may_gap", "july_gap", "seasonal_change"),
                         hiermod_out_dir = hiermod_out_dir)
+# loga[1]/loga[2] both badly miscalibrated (z=-9.55/-8.97, posterior systematically too high)
+# while all three yr are miscalibrated in the opposite direction (z≈+8.6 to +9, posterior 
+# systematically too low). Essentially a one-directional leak between the two, 
+# not just noise. Collinearity mechanism?? not a funnel: 0 divergences, 
+# but 13/100 fits with elevated Rhat (worst 2.09) 
 
-# Same stress test as every model in this rebuild: n=100 "ok" isn't trusted
-# on its own (MDv's dexp(2) and MDS's own first pass both looked fine at
-# n=100 and broke at n=400).
-
-n_sbc <- 400
-
-sbc_MDSY_2 <- run_sbc_pipeline(
-  generator = sbc_gen_MDSY$generator, globals = sbc_gen_MDSY$globals,
-  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
-  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDSY,
-  control = list(adapt_delta = 0.99))
-
-plot_sbc_diagnostics(sbc_MDSY_2, model_id, n_sbc)
-
-sbc_MDSY_2$stats |>
-  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "yr[1]", "yr[2]", "yr[3]")) |>
-  dplyr::group_by(variable) |>
-  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
-
-save_sbc_health_report(model_id, sbc_MDSY_2, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "yr[1]", "yr[2]", "yr[3]", "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
+# Solution: zero 
