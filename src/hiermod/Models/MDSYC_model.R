@@ -80,6 +80,39 @@ means_MDSYC <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_dept
 # MDLSYC's own dq_MDLSYC.
 dq_MDSYC <- dq_MDSYz
 
+## Variance partition / Bayesian R2 -------------------------------------------
+# Adapted from the ITS lineage's own variance_partition_MDLSYC()
+# (MDLSYC_model.R), simplified: no Location/Tree variance components yet
+# (that's the still-separate MDST branch), and Year is fixed here, not
+# pooled, so it's part of "Explained" rather than its own variance slice.
+# Residual is sigma[Mg]^2 -- genuinely heteroscedastic by Management, unlike
+# the old lineage's single pooled/cell-level sigma -- weighted by each
+# group's share of the sample (mirrors the old cell_n/sum(cell_n) weighting).
+
+variance_partition_MDSYC <- function(post, dat){
+  loga_obs   <- post$loga[, dat$Mg]                                # n_draws x N
+  gamma      <- as.vector(post$s_conv) + outer(as.vector(post$gap_shift), dat$Mg - 1)
+  gamma_term <- sweep(gamma, 2, dat$Mo - 1, "*")
+  yr3        <- -(as.vector(post$yr1) + as.vector(post$yr2))
+  yr_obs     <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]           # n_draws x N
+  covariates <- outer(as.vector(post$b_deg), dat$deg_h_z) +
+    outer(as.vector(post$b_precip), dat$precip_72h_z) +
+    outer(as.vector(post$b_seq), dat$seq_depth_z)
+
+  fixed_mu  <- loga_obs + gamma_term + yr_obs + covariates
+  explained <- apply(fixed_mu, 1, var) # length n_draws
+
+  mg_n <- as.integer(table(factor(dat$Mg, levels = 1:2)))
+  residual_var <- as.vector((post$sigma^2) %*% (mg_n / sum(mg_n)))
+
+  total <- explained + residual_var
+
+  bind_rows(
+    tibble(statistic = "Variance partition", group = "Explained (fixed effects)", value = explained / total),
+    tibble(statistic = "Variance partition", group = "Residual",                  value = residual_var / total)
+  )
+}
+
 ## Data-generating function ---------------------------------------------------
 # Same balanced Mg x Mo x Year design as sim_div_MDSYz(), plus three
 # independent standard-normal covariate draws per row (tests whether

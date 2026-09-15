@@ -1,0 +1,65 @@
+==== model: Radagast the Grower ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$main_model
+mu <- loga[Mg] + gamma * (Mo - 1) + yr_eff + b_deg * deg_h_z + 
+    b_precip * precip_72h_z + b_seq * seq_depth_z
+
+$gamma_def
+gamma <- s_conv + gap_shift * (Mg - 1)
+
+$prior_loga
+loga[Mg] ~ dnorm(5, 2)
+
+$prior_s
+s_conv ~ dnorm(0, 1)
+
+$prior_gs
+gap_shift ~ dnorm(0, 1)
+
+$pr_sigma
+sigma[Mg] ~ dhalfnorm(0, 1)
+
+$yr_eff_def
+yr_eff <- yr1 * (Yr == 1) + yr2 * (Yr == 2) - (yr1 + yr2) * (Yr == 
+    3)
+
+$prior_yr1
+yr1 ~ dnorm(0, 1)
+
+$prior_yr2
+yr2 ~ dnorm(0, 1)
+
+$prior_deg
+b_deg ~ dnorm(0, 1)
+
+$prior_precip
+b_precip ~ dnorm(0, 1)
+
+$prior_seq
+b_seq ~ dnorm(0, 1)
+
+
+
+==== precis: fit_MDSYC ====
+
+            mean    sd   5.5%  94.5% rhat ess_bulk ess_ratio
+loga[1]    4.569 0.123  4.372  4.764    1 17647.44     0.588
+loga[2]    2.724 0.191  2.423  3.033    1 19510.61     0.650
+s_conv    -0.120 0.197 -0.432  0.195    1 16550.02     0.552
+gap_shift  1.161 0.259  0.748  1.575    1 23545.12     0.785
+sigma[1]   0.822 0.050  0.747  0.905    1 29950.07     0.998
+sigma[2]   1.138 0.084  1.013  1.279    1 27047.54     0.902
+yr1       -0.303 0.113 -0.484 -0.122    1 20202.56     0.673
+yr2        0.400 0.091  0.255  0.547    1 24595.65     0.820
+b_deg     -0.504 0.126 -0.705 -0.304    1 14999.89     0.500
+b_precip  -0.346 0.090 -0.491 -0.201    1 21713.28     0.724
+b_seq     -0.214 0.071 -0.326 -0.102    1 26050.68     0.868
+
+
+==== posterior contrast ====
+May mean -- mean: -106.622  median: -105.475  89% PI: [ -135.929 , -81.177 ]  89% HPDI: [ -133.816 , -79.602 ]
+July mean -- mean: -36.575  median: -37.277  89% PI: [ -69.56 , -1.058 ]  89% HPDI: [ -69.642 , -1.153 ]
+Change in management contrast, from May to July -- mean: 70.047  median: 69.62  89% PI: [ 30.308 , 111.473 ]  89% HPDI: [ 29.997 , 110.976 ]

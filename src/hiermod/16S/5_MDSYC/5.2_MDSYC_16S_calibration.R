@@ -47,9 +47,7 @@ dat_sim <- sim_div_MDSYC(
   b_precip = true_b_precip,
   b_seq = true_b_seq,
   shift = 1
-); head(dat_sim)
-
-hist(dat_sim$Dv_shifted, breaks = 100)
+)
 
 fit_sim <- ulam(
   model,
@@ -93,7 +91,7 @@ save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,
          function() trankplot(fit_sim, max_rows = 30, n_cols = 5),
-         width = 30, height = 50)
+         width = 10, height = 14)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -157,11 +155,12 @@ sbc_MDSYC$stats |>
   dplyr::group_by(variable) |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
-save_sbc_health_report(model_id, sbc_MDSYC, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "yr1", "yr2", "b_deg", "b_precip", "b_seq",
-                                      "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
+save_sbc_health_report(
+  model_id, sbc_MDSYC, n_sbc, n_iter,
+  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
+                "yr1", "yr2", "b_deg", "b_precip", "b_seq",
+                "may_gap", "july_gap", "seasonal_change"),
+  hiermod_out_dir = hiermod_out_dir)
 
 # Same stress test as every model in this rebuild before trusting an "ok"
 # result at n=100.
@@ -182,7 +181,7 @@ sbc_MDSYC_2$stats |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
 save_sbc_health_report(model_id, sbc_MDSYC_2, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "yr1", "yr2", "b_deg", "b_precip", "b_seq",
-                                      "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
+                       variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
+                                     "yr1", "yr2", "b_deg", "b_precip", "b_seq",
+                                     "may_gap", "july_gap", "seasonal_change"),
+                       hiermod_out_dir = hiermod_out_dir)
