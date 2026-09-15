@@ -70,7 +70,7 @@ cr <- contrast_recovery(
   fit_sim, means_MDSY, may_conv, may_org, july_conv_shift, july_org_shift, shift = 1)
 
 p_sim_contrast <- contrast_plot_panels(
-  cr$estimands, quant = c(0.01, 0.99), scales = 'free_y',
+  cr$estimands, quant = c(0.001, 0.999), scales = 'free_y',
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 

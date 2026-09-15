@@ -11,11 +11,9 @@
 # two stay independently comparable (same convention as MDLS2v/MDLS2vz).
 #
 # Stan's native sum_to_zero_vector isn't supported by this rethinking::ulam()
-# version (confirmed when Location hit this same problem -- see
-# src/hiermod/Models/archive/MDLS2vz_model.R's own header for the two
-# approaches that didn't work). What does work: N-1 free scalar parameters,
+# version. What does work: N-1 free scalar parameters,
 # with the Nth level's effect computed per-row as the negative sum of the
-# others via plain arithmetic -- guarantees sum=0 exactly, no vector/array
+# others via plain arithmetic. guarantees sum=0 exactly, no vector/array
 # construct involved. For Year (3 levels, one fewer than Location's 4):
 # yr1/yr2 free, yr3 implied as -(yr1+yr2).
 #

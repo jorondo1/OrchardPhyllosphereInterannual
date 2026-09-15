@@ -24,7 +24,7 @@ hiermod_out_dir <- "out/hiermod/16S_4_year_MDSY"
 may_conv <- 180
 may_org  <- 120
 july_conv_shift <- 0.35
-july_org_shift  <- 0.2
+july_org_shift  <- 0.6
 
 true_sigma <- cv_to_sigma(c(0.5, 0.8)) # conv, org
 true_yr1   <- 0.1
@@ -67,6 +67,7 @@ post_sim <- extract.samples(fit_sim)
     s_conv = post_sim$s_conv, gap_shift = post_sim$gap_shift,
     sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2],
     yr1 = post_sim$yr1, yr2 = post_sim$yr2, yr3 = -(post_sim$yr1 + post_sim$yr2))))
+save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Elrond the Ageless")
 
 ### Contrast recovery -------------
 
@@ -74,16 +75,15 @@ cr <- contrast_recovery(
   fit_sim, means_MDSYz, may_conv, may_org, july_conv_shift, july_org_shift, shift = 1)
 
 p_sim_contrast <- contrast_plot_panels(
-  cr$estimands, quant = c(0.01, 0.99), scales = 'free_y',
+  cr$estimands, quant = c(0.001, 0.999), scales = 'free_y',
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Elrond the Ageless")
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,
          function() trankplot(fit_sim, max_rows = 30, n_cols = 5),
-         width = 30, height = 50)
+         width = 10, height = 5)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -147,10 +147,12 @@ sbc_MDSYz$stats |>
   dplyr::group_by(variable) |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
-save_sbc_health_report(model_id, sbc_MDSYz, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "yr1", "yr2", "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
+save_sbc_health_report(
+  model_id, sbc_MDSYz, n_sbc, n_iter,
+  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
+                "yr1", "yr2", "may_gap", "july_gap", "seasonal_change"),
+  hiermod_out_dir = hiermod_out_dir)
+
 
 # Same stress test as every model in this rebuild before trusting an "ok"
 # result at n=100.
@@ -171,6 +173,6 @@ sbc_MDSYz_2$stats |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
 save_sbc_health_report(model_id, sbc_MDSYz_2, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "yr1", "yr2", "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
+                       variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
+                                     "yr1", "yr2", "may_gap", "july_gap", "seasonal_change"),
+                       hiermod_out_dir = hiermod_out_dir)
