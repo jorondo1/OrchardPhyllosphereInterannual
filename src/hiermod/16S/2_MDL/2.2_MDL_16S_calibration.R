@@ -42,15 +42,12 @@ post_sim <- extract.samples(fit_sim)
 
 ### Fixed effect + sigma recovery ---------
 
-check_recovery(
-  true = c(loga1 = log(conv), loga2 = log(org)),
-  post_draws = list(loga1 = post_sim$loga[,1], loga2 = post_sim$loga[,2])
-)
-
-check_recovery(
-  true = list(sigma1 = true_sigma[1], sigma2 = true_sigma[2]),
-  post_draws = list(sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2])
-)
+(coef_recovery<- check_recovery(
+  true = list(loga1 = log(conv), loga2 = log(org),
+              sigma1 = true_sigma[1], sigma2 = true_sigma[2]),
+  post_draws = list(loga1 = post_sim$loga[,1], loga2 = post_sim$loga[,2],
+                    sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2])
+))
 
 ### Contrast recovery -------------
 # means_MDL() already returns both mean and median. Median needs no
@@ -75,10 +72,10 @@ p_sim_contrast <- contrast_plot_panels(
   pc_sim, quant = c(0.005, 0.99), group_pal = Management_palette,
   true_vals = true_vals); p_sim_contrast
 
-save_report("sim_summary", model_id, fit_sim, pc_sim, model, model_name = "The Wildcard")
+save_report("sim_summary", model_id, recovery = coef_recovery,fit_sim, pc_sim, model, model_name = "The Wildcard")
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
-save_pdf("sim_traceplot", model_id, function() traceplot(fit_sim))
+#save_pdf("sim_traceplot", model_id, function() traceplot(fit_sim))
 save_pdf("sim_trankplot", model_id, function() trankplot(fit_sim))
 
 ## Prior predictive check ---------------------------------------------------
@@ -117,7 +114,8 @@ p_funnel <- function(){
 }
 save_pdf("loga_sigmaloc_funnel", model_id, p_funnel)
 
-## Simulation-based calibration (SBC), via the SBC package -----------------------
+## Simulation-based calibration (SBC) ---------------------------
+
 # Checks whether loga[]/sigma_loc's SBC miscalibration found in MDLS2v (and
 # still present after the sum-to-zero fix in MDLS2vz) already shows up in
 # the simplest model that includes Location at all -- MDL has no
@@ -148,7 +146,7 @@ dq_MDL <- derived_quantities(
 )
 
 n_sbc  <- 100
-n_iter <- 10000
+n_iter <- 5000
 
 datasets_path_MDL <- file.path(hiermod_out_dir, "sbc_datasets_MDL.rds")
 if (file.exists(datasets_path_MDL)) {
