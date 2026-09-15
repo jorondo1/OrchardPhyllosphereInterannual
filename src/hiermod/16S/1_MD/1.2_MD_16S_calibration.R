@@ -93,7 +93,7 @@ p_MD_cal_contrast <- contrast_plot_panels(
   pc_MD_cal, quant = c(0.005, 0.99), group_pal = Management_palette,
   true_vals = true_vals_MD); p_MD_cal_contrast
 
-save_report("sim_summary", model_id_MD, recovery = param_recovery_MD, fit_MD_cal, pc_MD_cal, model_MD, model_name = "The Bare Bones")
+save_report("sim_summary", model_id_MD, recovery = param_recovery_MD, fit_MD_cal, pc_MD_cal, model_MD, model_name = "Samwise the Steadfast")
 save_gg("sim_contrast_density", model_id_MD, p_MD_cal_contrast)
 
 ## MD -- formal calibration (loga-shrinkage floor test) =======================

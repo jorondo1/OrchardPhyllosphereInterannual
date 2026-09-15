@@ -86,7 +86,7 @@ p_MDv_sim_contrast <- contrast_plot_panels(
   pc_MDv_sim, quant = c(0, 1), group_pal = Management_palette, true_vals = true_vals_hetero) +
   labs(subtitle = "Group-specific variance recovers the true contrast"); p_MDv_sim_contrast
 
-save_report("sim_summary", model_id_MDv, recovery = param_recovery_MDv, fit_MDv_sim, pc_MDv_sim, model_MDv, model_name = "The Loose Cannon")
+save_report("sim_summary", model_id_MDv, recovery = param_recovery_MDv, fit_MDv_sim, pc_MDv_sim, model_MDv, model_name = "Gollum the Two-Faced")
 save_gg("sim_contrast_density", model_id_MDv, p_MDv_sim_contrast, width = 8, height = 4)
 
 ## MDv -- formal calibration (per-group sigma isolation test) ================

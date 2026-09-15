@@ -1,0 +1,44 @@
+# MODEL 2 (MDS), 16S, SHIFTED (Hill_1 - 1): real fit and PPC.
+# model_MDS_16S already carries its own validated priors (see MDS_model.R),
+# no local override needed here (unlike MDv's fit script, whose file
+# default is deliberately left at the pre-calibration starting point).
+
+hiermod_marker <- "16S"
+source('src/hiermod/0_SETUP.R')
+source('src/hiermod/Models/MDS_model.R') # model_MDS_16S, means_MDS()
+
+hiermod_out_dir <- "out/hiermod/16S_2_interaction_MDS"
+
+## Model fit ----------------------------------------------------------------
+
+dat_MDS <- list(
+  Dv = div$Hill_1 - 1, # subtract the floor because Dv must be (0, Inf)-support to match the likelihood
+  Mg = idx$Mg$to_index(div$Management),
+  Mo = idx$Mo$to_index(div$Time)
+)
+
+fit_MDS <- ulam(
+  model_MDS_16S,
+  data = dat_MDS,
+  chains = 6, cores = 6, iter = 10000,
+  control = list(adapt_delta = 0.99)
+)
+save_fit("fit", model_id_MDS, fit_MDS)
+saveRDS(dat_MDS, file.path(hiermod_out_dir, "dat_MDS.rds"))
+
+precis(fit_MDS, depth = 2)
+save_pdf("fit_trankplot", model_id_MDS, 
+         function() trankplot(fit_MDS, n_cols = 4, max_rows = 10))
+
+## Posterior predictive check --------------------------------------------------
+
+### Overall, by Management x Season cell ----
+
+pp_group <- interaction(idx$Mg$to_label(dat_MDS$Mg), idx$Mo$to_label(dat_MDS$Mo), sep = " ")
+p_postpred <- plot_ppc_overlay(fit_MDS, dat_MDS, pp_group, xlim = c(NA, 2000))
+save_gg("postpred_density", model_id_MDS, p_postpred)
+
+### Contrast test statistics ----
+
+(p_ppc <- plot_ppc_season_contrast_stats(fit_MDS, dat_MDS))
+save_gg("postpred_stat", model_id_MDS, p_ppc)

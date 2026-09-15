@@ -190,7 +190,7 @@ plot_ppc_season_contrast_stats <- function(fit, dat, n = 1000){
   p_change <- bayesplot::ppc_stat(dat$Dv, yrep, stat = change_stat) +
     labs(title = "PPC: Seasonal change in gap")
 
-  p_may / p_july / p_change
+  p_may / p_july / p_change + plot_layout(guides = 'collect')
 }
 
 # ---- Model comparison --------------------------------------------------

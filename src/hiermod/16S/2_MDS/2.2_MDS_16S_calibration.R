@@ -74,12 +74,12 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Strider")
+save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Strider the Unrooted")
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,
-         function() trankplot(fit_sim, max_rows = 30, n_cols = 5),
-         width = 30, height = 50)
+         function() trankplot(fit_sim, max_rows = 30, n_cols = 3),
+         width = 10, height = 15)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -99,9 +99,8 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga/gamma x sigma[Mg] funnel check ---------------------------------------
-# No sigma_tr/sigma_loc here to entangle with (Model 1's own validated
-# sigma[Mg] is unchanged) -- but s_conv/gap_shift are new parameters sharing
-# the same likelihood term, so check them against sigma[Mg] too.
+# s_conv/gap_shift are new parameters sharing the same likelihood term, 
+# so check them against sigma[Mg] too.
 
 p_funnel <- function(){
   par(mfrow = c(2,2))
@@ -125,8 +124,8 @@ sbc_gen_MDS <- make_sbc_generator(
   gen_cols = c("Dv", "Mg", "Mo"),
   extra_globals = "sim_div_MDS", shift = 1)
 
-n_sbc  <- 100
-n_iter <- 10000
+n_sbc  <- 400 # straight up might as well 
+n_iter <- 5000
 
 sbc_MDS <- run_sbc_pipeline(
   generator = sbc_gen_MDS$generator, globals = sbc_gen_MDS$globals,
@@ -142,30 +141,6 @@ sbc_MDS$stats |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
 save_sbc_health_report(model_id, sbc_MDS, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
-
-# n=100 looked ok at this same stage for MDv too, before flipping to
-# MISCALIBRATED at n=400 -- same stress test before trusting an "ok" result
-# here.
-
-n_sbc <- 400
-
-sbc_MDS_2 <- run_sbc_pipeline(
-  generator = sbc_gen_MDS$generator, globals = sbc_gen_MDS$globals,
-  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
-  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDS,
-  control = list(adapt_delta = 0.99))
-
-plot_sbc_diagnostics(sbc_MDS_2, model_id, n_sbc)
-
-sbc_MDS_2$stats |>
-  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "s_conv", "gap_shift")) |>
-  dplyr::group_by(variable) |>
-  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
-
-save_sbc_health_report(model_id, sbc_MDS_2, n_sbc, n_iter,
                         variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
                                       "may_gap", "july_gap", "seasonal_change"),
                         hiermod_out_dir = hiermod_out_dir)
