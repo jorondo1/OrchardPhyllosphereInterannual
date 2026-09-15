@@ -21,7 +21,7 @@ contrast_from_means <- function(post, true_params, means_fn){
 post_full <- function(fit, means_fn = NULL, ...){
   post <- extract.samples(fit)
   if (!is.null(means_fn)) post <- c(post, means_fn(post, ...))
-
+  
   purrr::imap(post, function(x, name){
     x <- as.matrix(x)
     colnames(x) <- if (ncol(x) == 1) name else paste0(name, "_", seq_len(ncol(x)))
@@ -37,11 +37,11 @@ post_full <- function(fit, means_fn = NULL, ...){
 compute_contrasts <- function(pf, keep = NULL, labels = NULL, group_levels = c("1", "2")){
   if (is.null(keep))   keep   <- names(pf)
   if (is.null(labels)) labels <- character(0)
-
+  
   stat_tibble <- function(name){
     x <- as.matrix(pf[[name]])
     n_cat <- ncol(x)
-
+    
     if (n_cat == 2){
       bind_rows(
         tibble(statistic = name, group = group_levels[1], value = x[,1]),
@@ -55,12 +55,12 @@ compute_contrasts <- function(pf, keep = NULL, labels = NULL, group_levels = c("
         tibble(statistic = name, group = colnames(x)[i], value = x[,i]))
     }
   }
-
+  
   long <- map_dfr(keep, stat_tibble)
-
+  
   display <- function(nm) unname(ifelse(nm %in% names(labels), labels[nm], nm))
   level_order <- unique(c(intersect(names(labels), keep), setdiff(keep, names(labels))))
-
+  
   long %>%
     mutate(statistic = display(statistic)) %>%
     mutate(statistic = factor(statistic, levels = display(level_order)))
@@ -102,9 +102,9 @@ report_contrasts_full <- function(pc_full){
   filtered <- pc_full %>% filter(group %in% c("Contrast", "Population"))
   if (nrow(filtered) == 0) {
     return(tibble(statistic = factor(character(0), levels = levels(pc_full$statistic)),
-                   group = character(0), mean = numeric(0), median = numeric(0),
-                   PI89_lower = numeric(0), PI89_upper = numeric(0),
-                   HPDI_lower = numeric(0), HPDI_upper = numeric(0)))
+                  group = character(0), mean = numeric(0), median = numeric(0),
+                  PI89_lower = numeric(0), PI89_upper = numeric(0),
+                  HPDI_lower = numeric(0), HPDI_upper = numeric(0)))
   }
   filtered %>%
     group_by(statistic, group) %>%
@@ -127,29 +127,29 @@ contrast_plot_panels <- function(
     pc_full, quant, group_pal, scales = "free",
     true_vals = NULL, true_vals_label = "True value",
     legend_title = "Posteriors (population mean/median)"){
-
+  
   if(length(quant)!=2){
-      stop("quant is not a two-value numeric vector.")
+    stop("quant is not a two-value numeric vector.")
   }
   if(sum(quant<=1)!=2 | sum(quant>=0)!=2) {
     stop("quant values must be in [0,1]; lower and upper desired quantiles, e.g. c(0.005, 0.995)")
-    }
-
+  }
+  
   trimmed <- pc_full %>%
     group_by(statistic) %>%
     filter(value >= quantile(value, quant[1]), value <= quantile(value, quant[2])) %>%
     ungroup()
-
+  
   prop_dropped <- 100 * (1 - nrow(trimmed) / nrow(pc_full))
-
+  
   labels <- report_contrasts_full(pc_full) %>%
     mutate(label = paste0(
       group, " median: ", round(median,2), " ",
       "\n89% PI: [", round(PI89_lower,2), ", ", round(PI89_upper,2), "]",
       "\n89% HPDI: [", round(HPDI_lower,2), ", ", round(HPDI_upper,2), "]"))
-
+  
   refactor_statistic <- function(df) df %>% mutate(statistic = factor(statistic, levels = levels(pc_full$statistic)))
-
+  
   
   trimmed %>%
     ggplot(aes(x = value, fill = group, colour = group)) +
@@ -172,7 +172,7 @@ contrast_plot_panels <- function(
     facet_wrap(~statistic, scales = scales, ncol = 1) +
     scale_fill_manual(values = group_pal) +
     scale_colour_manual(values = group_pal) +
-   # scale_linetype_manual(name = NULL, values = linetype_vals) +
+    # scale_linetype_manual(name = NULL, values = linetype_vals) +
     theme(legend.position = "bottom") +
     labs(x = "Species diversity", y = NULL,
          fill = legend_title, colour = legend_title,
@@ -192,28 +192,45 @@ variance_component_panels <- function(pc_full, quant, palette, sd_stats = charac
   if (sum(quant <= 1) != 2 | sum(quant >= 0) != 2) {
     stop("quant values must be in [0,1]; lower and upper desired quantiles, e.g. c(0.005, 0.995)")
   }
-
+  
   trimmed <- pc_full %>%
     group_by(statistic) %>%
     filter(value >= quantile(value, quant[1]), value <= quantile(value, quant[2])) %>%
     ungroup()
-
+  
   prop_dropped <- 100 * (1 - nrow(trimmed) / nrow(pc_full))
-
+  
+  labels <- report_contrasts_full(pc_full) %>%
+    mutate(label = paste0(
+      group, " median: ", round(median,2), " ",
+      "\n89% PI: [", round(PI89_lower,2), ", ", round(PI89_upper,2), "]",
+      "\n89% HPDI: [", round(HPDI_lower,2), ", ", round(HPDI_upper,2), "]"))
+  
   panels <- trimmed %>%
     group_split(statistic) %>%
     purrr::map(function(df){
       stat_name <- as.character(df$statistic[[1]])
       pal_here  <- palette[intersect(names(palette), unique(df$group))]
+      # variance_component_panels() builds one standalone ggplot per
+      # statistic (no shared facet_wrap the way contrast_plot_panels() has,
+      # which is what lets ITS single geom_text(data=labels) auto-route by
+      # facet) -- so `labels` (spanning every statistic) has to be filtered
+      # down to this panel's own statistic before plotting, or every panel
+      # ends up with every other panel's text stacked on top of its own.
+      labels_here <- labels %>% filter(statistic == stat_name)
+
       p <- df %>%
         ggplot(aes(x = value, fill = group, colour = group)) +
         geom_density(alpha = 0.5, linewidth = 0.2) +
         geom_vline(xintercept = 0, colour = "grey50") +
+        geom_text(data = labels_here, aes(label = label), x = Inf, y = Inf,
+                  hjust = 1.05, vjust = 1.3, size = 2.8, colour = "grey20",
+                  inherit.aes = FALSE, family = "mono") +
         scale_fill_manual(values = pal_here) +
         scale_colour_manual(values = pal_here) +
         theme(legend.position = "right") +
         labs(x = NULL, y = NULL, title = stat_name, fill = NULL, colour = NULL)
-
+      
       # Dashed per-group mean line: a non-centered product (e.g. b[Lo]*
       # sigma_loc) is often skewed, so its peak sits off from its mean.
       # Skipped for SD panels (sigma_loc, etc.), which have no group-specific
@@ -221,16 +238,21 @@ variance_component_panels <- function(pc_full, quant, palette, sd_stats = charac
       if (!stat_name %in% sd_stats) {
         means_here <- df %>% group_by(group) %>% summarise(m = mean(value), .groups = "drop")
         p <- p + geom_vline(data = means_here, aes(xintercept = m, colour = group),
-                             linetype = "dashed", linewidth = 0.5, show.legend = FALSE)
+                            linetype = "dashed", linewidth = 0.5, show.legend = FALSE)
       }
       p
     })
-
-  patchwork::wrap_plots(panels, ncol = 1) +
-    patchwork::plot_annotation(caption = paste0(
-      "Each panel cropped independently to its own ", 100*quant[1], "th-", 100*quant[2],
-      "th percentile range. ~", signif(prop_dropped, 3), "% of draws overall fall outside ",
-      "their panel's range and are not shown."))
+  
+  final_plot <- patchwork::wrap_plots(panels, ncol = 1)
+  
+  if(sum(quant)<1) {
+    final_plot <- final_plot +
+      patchwork::plot_annotation(caption = paste0(
+        "Each panel cropped independently to its own ", 100*quant[1], "th-", 100*quant[2],
+        "th percentile range. ~", signif(prop_dropped, 3), "% of draws overall fall outside ",
+        "their panel's range and are not shown."))
+  }
+  return(final_plot)
 }
 
 # ---- Parameter-recovery contrast tables (model 4 onward) -------------------
@@ -239,26 +261,26 @@ variance_component_panels <- function(pc_full, quant, palette, sd_stats = charac
 # estimand set used by every model since Model 4. Bundles what every
 # validation script's "Contrast recovery" section was retyping by hand.
 contrast_recovery <- function(fit, means_fn, may_conv, may_org,
-                               july_conv_shift, july_org_shift, shift = 0){
+                              july_conv_shift, july_org_shift, shift = 0){
   pf <- post_full(fit, means_fn, shift = shift)
   m  <- pf$median
-
+  
   estimands <- estimand_rows(list(
     "Median May gap (Organic - Conventional)"    = m$median_3 - m$median_1,
     "Median July gap (Organic - Conventional)"   = m$median_4 - m$median_2,
     "Seasonal change in median gap (July - May)" = (m$median_4 - m$median_2) - (m$median_3 - m$median_1)
   ))
-
+  
   may_gap  <- may_org - may_conv
   july_gap <- may_org * exp(july_conv_shift + july_org_shift) - may_conv * exp(july_conv_shift)
-
+  
   true_estimands <- tribble(
     ~statistic,                                    ~value,
     "Median May gap (Organic - Conventional)",     may_gap,
     "Median July gap (Organic - Conventional)",    july_gap,
     "Seasonal change in median gap (July - May)",  july_gap - may_gap,
   )
-
+  
   list(estimands = estimands, true_estimands = true_estimands)
 }
 
@@ -270,7 +292,7 @@ contrast_recovery <- function(fit, means_fn, may_conv, may_org,
 # vars. labels: optional name -> display-string map.
 posterior_cor_table <- function(vars, pairs, labels = character(0)){
   display <- function(nm) unname(ifelse(nm %in% names(labels), labels[nm], nm))
-
+  
   purrr::map_dfr(pairs, function(p){
     ct <- suppressWarnings(cor.test(vars[[p[1]]], vars[[p[2]]], method = "spearman"))
     tibble(

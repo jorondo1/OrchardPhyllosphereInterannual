@@ -49,3 +49,4 @@ p_contrast_median <- contrast_plot_panels(
   legend_title = "Posteriors (population medians)"); p_contrast_median
 
 save_gg("fit_contrast_median", model_id_MDST, p_contrast_median)
+

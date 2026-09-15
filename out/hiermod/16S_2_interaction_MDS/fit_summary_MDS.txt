@@ -1,4 +1,4 @@
-==== model: Strider ====
+==== model: Strider the Unrooted ====
 
 $likelihood
 Dv ~ dlnorm(mu, sigma[Mg])

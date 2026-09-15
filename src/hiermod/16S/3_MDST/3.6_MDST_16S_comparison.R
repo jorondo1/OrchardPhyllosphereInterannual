@@ -4,11 +4,22 @@
 #
 # Same pattern as the archived 5.6_MDLS2_16S_comparison.R: needs real
 # posterior log-lik from both models, so only makes sense once a real fit
-# exists, not during calibration. Refits both models fresh at much lower
-# iter than the reported fits (log_lik = TRUE, not persisted to disk --
-# log_lik draws are massive) since PSIS needs far fewer draws than the
-# reported contrasts do -- deliberately NOT reusing fit_MDS.rds/fit_MDST.rds
-# (those were fit without log_lik).
+# exists, not during calibration. Refits both models fresh (log_lik = TRUE,
+# not persisted to disk -- log_lik draws are massive) -- deliberately NOT
+# reusing fit_MDS.rds/fit_MDST.rds (those were fit without log_lik).
+#
+# iter was originally 2000 (PSIS usually needs far fewer draws than the
+# reported contrasts do) but that reproduced 5.6_MDLS2's own exact failure:
+# Pareto k > 0.7 for 242/242 points on BOTH models, some > 1 -- a complete
+# PSIS breakdown, not a few influential points. Both models failing
+# identically (not just the one with per-tree latents) argues against
+# "weakly-identified tree offsets" as the cause and toward plain
+# draw-count fragility instead, so bumped to match the real fits' own iter
+# before concluding PSIS just doesn't work here the way it didn't in 5.6.
+# If Pareto k is still bad at this iter, stop trusting PSIS for this model
+# family/sample size -- fall back to comparing MDS vs MDST's own real-data
+# interval widths on `seasonal_change` (3.4's own estimand) plus sigma_tr's
+# posterior magnitude (3.3) as the evidence for Tree's value instead.
 #
 # Unlike that archived comparison (which had to hand-patch one model into a
 # reduced version), MDS and MDST already exist as two clean, independently
@@ -31,7 +42,7 @@ dat_MDST <- list(
 fit_MDS_cmp <- ulam(
   model_MDS_16S,
   data = dat_MDST, # extra Tr column is simply unused by MDS's own formula
-  chains = 6, cores = 6, iter = 2000,
+  chains = 6, cores = 6, iter = 10000,
   control = list(adapt_delta = 0.99),
   log_lik = TRUE
 )
@@ -39,7 +50,7 @@ fit_MDS_cmp <- ulam(
 fit_MDST_cmp <- ulam(
   model_MDST_16S,
   data = dat_MDST,
-  chains = 6, cores = 6, iter = 2000,
+  chains = 6, cores = 6, iter = 10000,
   control = list(adapt_delta = 0.99),
   log_lik = TRUE
 )

@@ -28,7 +28,7 @@ pc_estimands_means <- estimand_panels(
 save_report("fit_summary", model_id_MDS, fit_MDS, pc_estimands_means, model_MDS_16S, model_name = "Strider the Unrooted")
 
 p_contrast_mean <- contrast_plot_panels(
-  pc_estimands_means, quant = c(0.005, 0.995), scales = 'free_y',
+  pc_estimands_means, quant = c(0.001, 0.999), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population means)"); p_contrast_mean
 
@@ -43,7 +43,7 @@ pc_estimands_medians <- estimand_panels(
 )
 
 p_contrast_median <- contrast_plot_panels(
-  pc_estimands_medians, quant = c(0.01, 0.995), scales = 'free_y',
+  pc_estimands_medians, quant = c(0.001, 0.999), scales = 'free_y',
   group_pal = Management_palette,
   legend_title = "Posteriors (population medians)"); p_contrast_median
 
@@ -59,6 +59,6 @@ pc_sigma <- compute_contrasts(pf, keep = "sigma", group_levels = idx$Mg$levels)
 p_sigma <- contrast_plot_panels(
   pc_sigma, quant = c(0.005, 0.995), group_pal = Management_palette,
   legend_title = "Posteriors (residual SD, log scale)") +
-  labs(x = "sigma[Mg]")
+  labs(x = "sigma[Mg]"); p_sigma
 
 save_gg("fit_sigma_posterior", model_id_MDS, p_sigma)

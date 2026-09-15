@@ -8,6 +8,9 @@ source('src/hiermod/Models/MDST_model.R') # model_MDST_16S, means_MDST()
 
 hiermod_out_dir <- "out/hiermod/16S_3_tree_MDST"
 
+model_MDST_16S_tight <- model_MDST_16S
+#model_MDST_16S_tight$pr_sigma_tr <- quote(sigma_tr ~ dlnorm(log(0.15), 0.5))
+
 ## Model fit ----------------------------------------------------------------
 
 dat_MDST <- list(
@@ -27,7 +30,14 @@ save_fit("fit", model_id_MDST, fit_MDST)
 saveRDS(dat_MDST, file.path(hiermod_out_dir, "dat_MDST.rds"))
 
 precis(fit_MDST, depth = 2)
-save_pdf("fit_trankplot", model_id_MDST, function() trankplot(fit_MDST, n_cols = 4, max_rows = 10))
+save_pdf("fit_trankplot", model_id_MDST, 
+         function() trankplot(fit_MDST, n_cols = 8, max_rows = 30),
+         width = 30, height = 50)
+
+# num_divergent/num_max_treedepth/ebfmi per chain directly:
+attr(fit_MDST, "cstanfit")$diagnostic_summary(
+  diagnostics = c("divergences", "treedepth", "ebfmi"), quiet = TRUE)
+# ebfmi should be comfortably >0.3
 
 ## Posterior predictive check --------------------------------------------------
 
@@ -60,8 +70,8 @@ pc_sigma_tr <- bind_rows(
 ) %>% mutate(statistic = factor(statistic, levels = c("sigma", "sigma_tr")))
 
 p_sigma_tr <- variance_component_panels(
-  pc_sigma_tr, quant = c(0.005, 0.995),
+  pc_sigma_tr, quant = c(0, 1),
   palette = Management_palette, # already carries Population's colour
-  sd_stats = c("sigma", "sigma_tr"))
+  sd_stats = c("sigma", "sigma_tr")); p_sigma_tr
 
-save_gg("fit_variance_components", model_id_MDST, p_sigma_tr, width = 8, height = 6)
+save_gg("fit_variance_components", model_id_MDST, p_sigma_tr, width = 12, height = 9)

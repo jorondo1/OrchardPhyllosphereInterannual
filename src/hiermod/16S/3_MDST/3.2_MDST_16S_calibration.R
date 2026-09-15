@@ -2,18 +2,16 @@
 # interaction plus a Tree random effect (repeated measures: each tree
 # contributes one May row and one July row).
 #
-# Next step after Model 2 (MDS): MDS treated a tree's two rows as
-# independent draws, which overstates effective N and risks folding real
-# tree-to-tree variation into sigma[Mg]. Treebeard's whole point is to not
-# be hasty about that -- quantify how much of the picture is actually
-# tree-level heterogeneity before trusting a season/management contrast
-# that assumed independence it didn't have.
+# MDS treated a tree's two rows as independent draws, overstating effective N 
+# and risks sucking real tree-to-tree variation into sigma[Mg]. Here we quantify
+# how much of the variation is actually tree-level heterogeneity before trusting
+# a (potentially overconfident) season/management contrast.
 #
 # loga[Mg]/s_conv/gap_shift/sigma[Mg] priors are MDS's own validated answer,
 # hardcoded here as this model's starting point (see MDST_model.R header).
-# sigma_tr ~ dhalfnorm(0,1) is the one genuinely new hypothesis to validate
-# below -- same discipline as Model 1/2: n_sbc=100 first, then the n_sbc=400
-# stress test before trusting an "ok" result.
+
+# TO VALIDATE:
+# sigma_tr ~ dhalfnorm(0,1) is the one new assmuption SBC will check
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -109,7 +107,7 @@ save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga/gamma x sigma[Mg]/sigma_tr funnel check ------------------------------
 # sigma_tr is the new scale parameter sharing the same likelihood term as
-# loga/s_conv/gap_shift -- the exact kind of entanglement risk sigma[Mg]
+# loga/s_conv/gap_shift: the exact kind of entanglement risk sigma[Mg]
 # already turned out to have in Model 1.
 
 p_funnel <- function(){
@@ -130,12 +128,14 @@ p_funnel <- function(){
 }
 save_pdf("loga_sigma_funnel", model_id, p_funnel)
 
-## Simulation-based calibration (SBC), via the SBC package -----------------------
-# tr[Tr] stays out of `variables`/`keep` for the same reason as every other
-# per-level random-effect array in this family: the simulator draws a fresh
-# per-tree offset internally each replicate, so a prior draw of the array
-# isn't what generated that replicate's data. sigma_tr (the hyperparameter)
-# is kept and tracked.
+## Simulation-based calibration  -----------------------
+# tr[Tr] stays out of `variables`/`keep` because the simulator draws a fresh
+# per-tree offset internally at each replicate, it's not a predetermined quantity.
+# sigma_tr is tracked.
+
+# sigma_tr doesn't sit outside the likelihood like an independent nuisance 
+# parameter;it contributes to mu, scaling each tree's own z-score before the sum
+# is passed to the likelihood.
 
 sbc_gen_MDST <- make_sbc_generator(
   fit = fit_sim, simulate_fn = simulate_from_priors_MDST,
@@ -143,12 +143,14 @@ sbc_gen_MDST <- make_sbc_generator(
   gen_cols = c("Dv", "Mg", "Mo", "Tr"),
   extra_globals = "sim_div_MDST", shift = 1)
 
-n_sbc  <- 100
+n_sbc  <- 400
 n_iter <- 10000
 
 sbc_MDST <- run_sbc_pipeline(
-  generator = sbc_gen_MDST$generator, globals = sbc_gen_MDST$globals,
-  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
+  generator = sbc_gen_MDST$generator,
+  globals = sbc_gen_MDST$globals,
+  n_sbc = n_sbc,  n_iter = n_iter,
+  model = model, model_id = model_id,
   hiermod_out_dir = hiermod_out_dir, dquants = dq_MDST,
   control = list(adapt_delta = 0.99))
 
@@ -159,29 +161,86 @@ sbc_MDST$stats |>
   dplyr::group_by(variable) |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
-save_sbc_health_report(model_id, sbc_MDST, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
+save_sbc_health_report(
+  model_id, sbc_MDST, n_sbc, n_iter,
+  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
+                "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
+  hiermod_out_dir = hiermod_out_dir)
 
-# Same stress test Model 1/2 needed before trusting an "ok" n=100 result.
+# file.remove('out/hiermod/16S_3_tree_MDST/sbc_cache_MDST.rds')
 
-n_sbc <- 400
+# Miscalibrations on gap_shift and loga[2]!
+# tighten adapt_delta in case this is a funnel problem:
+model_id <- "MDST_999"
 
-sbc_MDST_2 <- run_sbc_pipeline(
-  generator = sbc_gen_MDST$generator, globals = sbc_gen_MDST$globals,
-  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
+sbc_MDST_999 <- run_sbc_pipeline(
+  generator = sbc_gen_MDST$generator,
+  globals = sbc_gen_MDST$globals,
+  n_sbc = n_sbc,  n_iter = n_iter,
+  model = model, model_id = model_id,
   hiermod_out_dir = hiermod_out_dir, dquants = dq_MDST,
-  control = list(adapt_delta = 0.99))
+  control = list(adapt_delta = 0.999))
 
-plot_sbc_diagnostics(sbc_MDST_2, model_id, n_sbc)
+plot_sbc_diagnostics(sbc_MDST_999, model_id, n_sbc)
 
-sbc_MDST_2$stats |>
+sbc_MDST_999$stats |>
   dplyr::filter(variable %in% c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma_tr")) |>
   dplyr::group_by(variable) |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
-save_sbc_health_report(model_id, sbc_MDST_2, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
+save_sbc_health_report(
+  model_id, sbc_MDST_999, n_sbc, n_iter,
+  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
+                "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
+  hiermod_out_dir = hiermod_out_dir)
+
+# doesn'T help, now both loga are miscalibrated / overconfident.
+# Divergences vanished, but treedepth usage nearly doubled and more fits now have bad Rhat
+# Not much we can do about this except drop the random effect
+# Let's tighten the sigma_tr prior (we can revert back to 0.99)
+
+## Calibration: tighter, more realistic sigma_tr prior -----------------------
+# half-normal's density is highest AT zero, so narrowing its scale only packs
+# MORE mass into the exact near-zero region that triggers the funnel --
+# log-normal has zero density at zero and can center on the real fit's own
+# ~0.15 magnitude instead.
+
+model_MDST_tight <- model
+model_MDST_tight$pr_sigma_tr <- quote(sigma_tr ~ dlnorm(log(0.15), 0.5))
+model_id <- "MDST_tight"
+
+n_sbc  <- 400
+
+fit_sim_tight <- ulam(
+  model_MDST_tight, data = as.list(dat_sim),
+  chains = 6, cores = 6, iter = 5000,
+  control = list(adapt_delta = 0.99))
+precis(fit_sim_tight, depth = 2)
+
+sbc_gen_MDST_tight <- make_sbc_generator(
+  fit = fit_sim_tight, simulate_fn = simulate_from_priors_MDST,
+  keep = c("loga", "s_conv", "gap_shift", "sigma", "sigma_tr"),
+  gen_cols = c("Dv", "Mg", "Mo", "Tr"),
+  extra_globals = "sim_div_MDST", shift = 1)
+
+sbc_MDST_tight <- run_sbc_pipeline(
+  generator = sbc_gen_MDST_tight$generator,
+  globals = sbc_gen_MDST_tight$globals,
+  n_sbc = n_sbc, n_iter = n_iter,
+  model = model_MDST_tight, model_id = model_id,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDST,
+  control = list(adapt_delta = 0.99))
+
+plot_sbc_diagnostics(sbc_MDST_tight, model_id, n_sbc)
+
+sbc_MDST_tight$stats |>
+  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma_tr")) |>
+  dplyr::group_by(variable) |>
+  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
+
+save_sbc_health_report(
+  model_id, sbc_MDST_tight, n_sbc, n_iter,
+  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
+                "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
+  hiermod_out_dir = hiermod_out_dir)
+
