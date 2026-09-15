@@ -6,7 +6,7 @@ source('src/utils/hiermod_core.R')
 source('src/utils/saver_functions.R')
 source('src/utils/postcontrast_helpers.R')
 source('src/utils/predictive_checks.R')
-source('src/utils/sbc_helpers.R')
+source('src/utils/sbc_workflow.R') # SBC-package-based workflow (draw_true/SBC_backend_ulam/make_sbc_generator/run_sbc_pipeline/plot_sbc_diagnostics/save_sbc_health_report)
 
 div_all <- read_rds('data/diversity_data.rds')
 div <- if (hiermod_marker == "ITS") div_all$Fungi$alpha else div_all$Bacteria$alpha

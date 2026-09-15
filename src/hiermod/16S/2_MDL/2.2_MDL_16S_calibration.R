@@ -83,7 +83,7 @@ save_pdf("sim_trankplot", model_id, function() trankplot(fit_sim))
 n_prior <- 10000
 prior <- extract.prior(fit_sim, n = n_prior)
 
-# draw_true() is shared (sbc_helpers.R) -- generic slice of any extract.prior()
+# draw_true() is shared (sbc_workflow.R) -- generic slice of any extract.prior()
 # output, no per-model rewrite needed.
 prior_pred <- map_dfr(seq_len(n_prior), function(i){
   simulate_from_priors_MDL(draw_true(prior, i))
@@ -126,66 +126,21 @@ save_pdf("loga_sigmaloc_funnel", model_id, p_funnel)
 # b[Lo] itself stays out of `variables` for the same reason as MDLS2v: the
 # simulator draws a fresh per-location offset internally, so a prior draw
 # of the array isn't what generated the data.
-source('src/utils/sbc_backend_ulam.R')
-library(SBC)
-future::plan(future::multisession)
-
-generate_one_MDL <- function(){
-  library(rethinking); library(tidyverse) # future::multisession workers start fresh -- not auto-attached
-  true_params <- suppressMessages(suppressWarnings(draw_true(extract.prior(fit_sim, n = 1, refresh = 0), 1)))[
-    c("loga", "sigma", "sigma_loc")]
-  dat <- simulate_from_priors_MDL(true_params)
-  list(variables = true_params, generated = as.list(dat[, c("Dv", "Mg", "Lo")]))
-}
-
-# median/mean contrast, matching means_MDL()'s own total_var construction.
-dq_MDL <- derived_quantities(
-  median_contrast = exp(loga[2]) - exp(loga[1]),
-  mean_contrast =
-    exp(loga[2] + (sigma[2]^2 + sigma_loc^2) / 2) -
-    exp(loga[1] + (sigma[1]^2 + sigma_loc^2) / 2)
-)
+sbc_gen_MDL <- make_sbc_generator(
+  fit = fit_sim, simulate_fn = simulate_from_priors_MDL,
+  keep = c("loga", "sigma", "sigma_loc"), gen_cols = c("Dv", "Mg", "Lo"),
+  extra_globals = "sim_div_MDL")
 
 n_sbc  <- 100
 n_iter <- 5000
 
-datasets_path_MDL <- file.path(hiermod_out_dir, "sbc_datasets_MDL.rds")
-if (file.exists(datasets_path_MDL)) {
-  datasets_MDL <- readRDS(datasets_path_MDL)
-} else {
-  # future.chunk.size activates generate_datasets()'s built-in
-  # future.apply::future_replicate() path (default is Inf = sequential).
-  # future.globals must be named explicitly -- auto-detection (TRUE) can't
-  # trace into this closure from inside the SBC package's own internals.
-  datasets_MDL <- generate_datasets(
-    SBC_generator_function(
-      generate_one_MDL, future.chunk.size = default_chunk_size(n_sbc),
-      future.globals = c("draw_true", "fit_sim", "simulate_from_priors_MDL", "sim_div_MDL")),
-    n_sbc)
-  saveRDS(datasets_MDL, datasets_path_MDL, compress = "xz")
-}
+sbc_MDL <- run_sbc_pipeline(
+  generator = sbc_gen_MDL$generator, globals = sbc_gen_MDL$globals,
+  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDL,
+  control = list(adapt_delta = 0.99))
 
-backend_MDL <- SBC_backend_ulam(model, iter = n_iter, refresh = 0,
-                                 control = list(adapt_delta = 0.99))
-
-sbc_MDL <- compute_SBC(
-  datasets_MDL, backend_MDL, dquants = dq_MDL,
-  cache_mode = "results", cache_location = file.path(hiermod_out_dir, "sbc_cache_MDL"),
-  globals = c("SBC_fit.SBC_backend_ulam", "SBC_fit_to_draws_matrix.ulam",
-              "SBC_fit_to_diagnostics.ulam"))
-
-p_sbc_rank  <- plot_rank_hist(sbc_MDL)
-p_sbc_ecdf  <- plot_ecdf_diff(sbc_MDL)
-p_sbc_cover <- plot_coverage(sbc_MDL)
-
-sbc_step <- paste0(model_id, "_", n_sbc, "sbc_iter")
-save_gg("SBC_rank_hist", sbc_step, p_sbc_rank, width = 9, height = 7)
-save_gg("SBC_ecdf_diff", sbc_step, p_sbc_ecdf, width = 9, height = 7)
-save_gg("SBC_coverage",  sbc_step, p_sbc_cover, width = 9, height = 7)
-
-(sbc_diag_summary <- sbc_MDL$backend_diagnostics %>%
-   dplyr::summarise(total_divergent = sum(n_divergent), total_max_treedepth = sum(n_max_treedepth),
-                     total_low_ebfmi = sum(n_low_ebfmi), n_replicates = dplyr::n()))
+plot_sbc_diagnostics(sbc_MDL, model_id, n_sbc)
 
 # The actual test: does loga show the same rank-fraction skew here as in
 # MDLS2v (~0.16, expected ~0.5)?
@@ -193,6 +148,11 @@ sbc_MDL$stats |>
   dplyr::filter(variable %in% c("loga[1]", "loga[2]")) |>
   dplyr::group_by(variable) |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
+
+save_sbc_health_report(model_id, sbc_MDL, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_loc",
+                                      "median_contrast", "mean_contrast"),
+                        hiermod_out_dir = hiermod_out_dir)
 
 # Saved as model_ppc1.rds for compatibility with 2.3_MDL_16S_fit.R's existing
 # readRDS() call -- rerun 2.3/2.4 against this if the fit itself needs updating.

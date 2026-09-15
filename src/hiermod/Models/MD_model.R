@@ -59,6 +59,14 @@ means_MD <- function(post){
   )
 }
 
+# SBC estimands -- median/mean contrast, matching means_MD()'s own
+# total_var convention (single shared sigma). Property of the model, not
+# any one calibration script -- every MD SBC section reuses this.
+dq_MD <- SBC::derived_quantities(
+  median_contrast = exp(loga[2]) - exp(loga[1]),
+  mean_contrast   = exp(loga[2] + sigma^2/2) - exp(loga[1] + sigma^2/2)
+)
+
 ## MODEL 2 -- Allow Management-specific variance (heteroscedasticity)
 # One variance per group: sigma[Mg] instead of a shared sigma.
 
@@ -96,3 +104,10 @@ means_MDv <- function(post){
     )
   )
 }
+
+# SBC estimands -- median/mean contrast, matching means_MDv()'s own
+# per-group total_var convention.
+dq_MDv <- SBC::derived_quantities(
+  median_contrast = exp(loga[2]) - exp(loga[1]),
+  mean_contrast   = exp(loga[2] + sigma[2]^2/2) - exp(loga[1] + sigma[1]^2/2)
+)

@@ -80,6 +80,22 @@ means_MDS2 <- function(post, shift = 0){
   )
 }
 
+# SBC estimands -- may_gap/july_gap/seasonal_change, matching means_MDS2()'s
+# own total_var convention (sigma[Mg]^2 + sigma_tr^2, no Location term).
+dq_MDS2 <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + (sigma[2]^2 + sigma_tr^2) / 2) -
+    exp(loga[1] + (sigma[1]^2 + sigma_tr^2) / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + (sigma[2]^2 + sigma_tr^2) / 2) -
+    exp(loga[1] + s_conv +             (sigma[1]^2 + sigma_tr^2) / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + (sigma[2]^2 + sigma_tr^2) / 2) -
+       exp(loga[1] + s_conv +             (sigma[1]^2 + sigma_tr^2) / 2)) -
+    (exp(loga[2] + (sigma[2]^2 + sigma_tr^2) / 2) -
+       exp(loga[1] + (sigma[1]^2 + sigma_tr^2) / 2))
+)
+
 ## Data-generating function ---------------------------------------------------
 # Tree is the study unit: each gets one Management + Year, and exactly one
 # May + one July row. No Location, so no Lo x Yr dropout grid needed

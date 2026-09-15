@@ -39,6 +39,19 @@ means_MDL <- function(post){
   )
 }
 
+# SBC estimands -- median/mean contrast, matching means_MDL()'s own
+# total_var convention (sigma[Mg]^2 + sigma_loc^2). Marker-agnostic: reused
+# by both the ITS and 16S Model 2 calibration scripts. NOTE this correctly
+# includes sigma_loc on the true side, unlike the old run_sbc() default
+# contrast_fn ITS's Model 2 SBC previously fell back to (which silently
+# dropped it) -- fixed as part of the SBC-package migration.
+dq_MDL <- SBC::derived_quantities(
+  median_contrast = exp(loga[2]) - exp(loga[1]),
+  mean_contrast =
+    exp(loga[2] + (sigma[2]^2 + sigma_loc^2) / 2) -
+    exp(loga[1] + (sigma[1]^2 + sigma_loc^2) / 2)
+)
+
 ## Model spec (first-tested, per marker) -----------------------------------
 
 model_MDL_ITS <- alist(

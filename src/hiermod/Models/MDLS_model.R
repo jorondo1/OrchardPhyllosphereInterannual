@@ -147,6 +147,26 @@ contrast_may_gap_MDLS <- function(post, true_params, means_fn){
   list(post_contrast = post_contrast, true_contrast = true_org_May - true_conv_May)
 }
 
+# SBC estimands -- may_gap/july_gap/seasonal_change (the old run_sbc()-era
+# contrast_may_gap_MDLS() above only ever checked may_gap despite this
+# model's own header advertising three estimands; added here as part of
+# the SBC-package migration). total_var is the SAME for both months within
+# a group (no cell-level split until Model 5) -- matches means_MDLS()'s
+# own convention.
+dq_MDLS <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + (sigma[2]^2 + sigma_loc^2 + sigma_tr^2) / 2) -
+    exp(loga[1] + (sigma[1]^2 + sigma_loc^2 + sigma_tr^2) / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + (sigma[2]^2 + sigma_loc^2 + sigma_tr^2) / 2) -
+    exp(loga[1] + s_conv +             (sigma[1]^2 + sigma_loc^2 + sigma_tr^2) / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + (sigma[2]^2 + sigma_loc^2 + sigma_tr^2) / 2) -
+       exp(loga[1] + s_conv +             (sigma[1]^2 + sigma_loc^2 + sigma_tr^2) / 2)) -
+    (exp(loga[2] + (sigma[2]^2 + sigma_loc^2 + sigma_tr^2) / 2) -
+       exp(loga[1] + (sigma[1]^2 + sigma_loc^2 + sigma_tr^2) / 2))
+)
+
 # yr[Yr] is a fixed dnorm(0,1) prior, not an estimated population scale
 # worth testing calibration of here.
 simulate_from_priors_MDLS <- function(true_params, N_samples = 250,

@@ -4,7 +4,7 @@
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDLS_model.R') # model_MDLS_ITS, means_MDLS(), sim_div_MDLS(), contrast_may_gap_MDLS(), simulate_from_priors_MDLS()
+source('src/hiermod/Models/MDLS_model.R') # model_MDLS_ITS, means_MDLS(), sim_div_MDLS(), contrast_may_gap_MDLS(), simulate_from_priors_MDLS(), dq_MDLS
 model <- model_MDLS_ITS
 
 hiermod_out_dir <- "out/hiermod/ITS_4_lognormal_MDLS"
@@ -136,31 +136,37 @@ tibble(
 
 # Nothing stands out (if anything, sigma is the biggest in non-extremes!)
 
-## Simulation-based calibration (SBC) --------------------------------------------
+## Simulation-based calibration (SBC), via the SBC package --------------------
+# dq_MDLS (MDLS_model.R) now checks all three estimands (may_gap/july_gap/
+# seasonal_change) -- the old run_sbc() call here only ever checked
+# may_gap via contrast_may_gap_MDLS(), despite this model's own header
+# above advertising three estimands.
+#
+# Heads up on cost: this model has 129 Tree-level parameters -- keeping
+# the script's own already-cost-aware n_sbc=100/iter=5000 rather than
+# MDLb's iter=10000.
 
-# contrast_may_gap_MDLS() is sourced from hiermod/Models/MDLS_model.R above --
-# needed because means_MDLS()'s `mean` has 4 columns, so run_sbc()'s default
-# contrast_from_means() (mean[,2]-mean[,1]) would silently compare
-# conv_July-conv_May against an unrelated "true" Mg gap.
+sbc_gen_MDLS <- make_sbc_generator(
+  fit = fit_sim, simulate_fn = simulate_from_priors_MDLS,
+  keep = c("loga", "s_conv", "gap_shift", "sigma", "sigma_loc", "sigma_tr"),
+  gen_cols = c("Dv", "Mg", "Lo", "Mo", "Yr", "Tr"),
+  extra_globals = "sim_div_MDLS")
 
-# Heads up on cost: this model has 129 Tree-level parameters, so n_sbc=100 at
-# iter=10000 (MDLb's setting) may be too slow to be worth it here.
+n_sbc  <- 100
+n_iter <- 5000
 
-sbc_MDLS <- run_sbc(
-  model_fit   = fit_sim,
-  means_fn    = means_MDLS,
-  contrast_fn = contrast_may_gap_MDLS,
-  simulate_fn = simulate_from_priors_MDLS,
-  n_sbc = 100, iter = 5000, n_parallel=4, chains=2, cores=2,
+sbc_MDLS <- run_sbc_pipeline(
+  generator = sbc_gen_MDLS$generator, globals = sbc_gen_MDLS$globals,
+  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDLS,
   control = list(adapt_delta = 0.99))
 
-sbc_out_MDLS <- save_sbc_report(sbc_MDLS, "MDLS_100sbc_iter")
-hist(sbc_out_MDLS$ranks, breaks = 30)
+plot_sbc_diagnostics(sbc_MDLS, model_id, n_sbc)
 
-# More concentrated in the middle (~60% in th emiddle 30% range).
-# U-shapes mean posterior is too narrow / overconfident, missing the true
-# value too often. Bells show underconfidence (posteriors are a bit too
-# wide) but that's ok.
+save_sbc_health_report(model_id, sbc_MDLS, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_loc", "sigma_tr",
+                                      "may_gap", "july_gap", "seasonal_change"),
+                        hiermod_out_dir = hiermod_out_dir)
 
 # Check aliasing, aka the collinearity counterpart for variances:
 cor( post_sim$sigma_tr, post_sim$sigma)

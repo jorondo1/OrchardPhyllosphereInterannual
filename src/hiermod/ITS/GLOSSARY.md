@@ -53,8 +53,9 @@ answers "what would the data look like," never "what is the parameter."
   Conventional." Distinct from any one parameter; an estimand is usually a
   *function* of several parameters (see "derived quantity" above).
 - **Contrast**: a difference between two group-level estimands, e.g.
-  `mean_org - mean_conv`. `compute_contrasts()`, `contrast_from_means()`,
-  `contrast_may_gap_MDLS2()` all produce these.
+  `mean_org - mean_conv`. `compute_contrasts()` (real/simulated fits) and
+  each model's own `derived_quantities()` (SBC, e.g. `dq_MDLS2` in
+  `MDLS2_model.R`) both produce these.
 - **Mean vs. median vs. mode (peak)**: three "typical value" summaries
   that coincide only for symmetric distributions.
   - *mode/peak*: the single most probable value (where a density plot is
@@ -212,15 +213,22 @@ answers "what would the data look like," never "what is the parameter."
   parameter value's *rank* among the resulting posterior draws is
   uniformly distributed across replicates. A properly calibrated model
   should show a flat rank histogram; a systematic U-shape/skew (not just
-  one noisy bin) signals a real calibration problem. `run_sbc()` /
-  `save_sbc_report()` (`sbc_helpers.R`). Distinct from divergence checking:
-  SBC is about calibration *across replicates in aggregate*, not a
-  per-replicate sampler-health check.
-- **KS test (Kolmogorov-Smirnov)**: the statistical test SBC's rank
-  histogram is checked against (`ks.test(ranks, "punif")`): are the rank
-  statistics consistent with a Uniform(0,1) distribution? A low p-value
-  means a real deviation from calibration, not just visual noise in one
-  bin.
+  one noisy bin) signals a real calibration problem. Run via the `SBC`
+  package (`src/utils/sbc_workflow.R`: `make_sbc_generator()`,
+  `run_sbc_pipeline()`, `plot_sbc_diagnostics()`, `save_sbc_health_report()`),
+  each model's `derived_quantities()` estimands defined in its own
+  `Models/*_model.R` file. Distinct from divergence checking: SBC is about
+  calibration *across replicates in aggregate*, not a per-replicate
+  sampler-health check.
+- **Rank-uniformity diagnostics**: what SBC's rank statistics are checked
+  against -- a rank histogram (direct, intuitive, but sensitive to bin
+  choice), an ECDF-difference plot with a simultaneous (DKW) band
+  (uniformity everywhere at once, localizes *where* a violation happens),
+  and central-interval coverage (does a reported X% interval actually
+  contain the truth X% of the time). All three are produced together by
+  `plot_sbc_diagnostics()`; `save_sbc_health_report()` also reports a
+  z-score for each tracked estimand's mean rank-fraction against its
+  expected value of 0.5.
 - **Parameter recovery (check)**: fitting the model to one dataset
   simulated from known, hand-picked "true" parameter values and checking
   that the posterior actually recovers something close to those true

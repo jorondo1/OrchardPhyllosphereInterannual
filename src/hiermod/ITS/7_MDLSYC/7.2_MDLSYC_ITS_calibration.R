@@ -5,7 +5,7 @@
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDLSYC_model.R') # model_MDLSYC_ITS, means_MDLSYC(), variance_partition_MDLSYC(), sim_div_MDLSYC(), contrast_may_gap_MDLSYC(), simulate_from_priors_MDLSYC()
+source('src/hiermod/Models/MDLSYC_model.R') # model_MDLSYC_ITS, means_MDLSYC(), variance_partition_MDLSYC(), sim_div_MDLSYC(), contrast_may_gap_MDLSYC(), simulate_from_priors_MDLSYC(), dq_MDLSYC
 model <- model_MDLSYC_ITS
 
 hiermod_out_dir <- "out/hiermod/ITS_7_lognormal_MDLSYC"
@@ -190,24 +190,37 @@ p_prior_pc <- prior_predictive_spaghetti(
 
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
-## Simulation-based calibration (SBC) --------------------------------------------
+## Simulation-based calibration (SBC), via the SBC package --------------------
 # No separate variance-budget-calibration pass here: `model`'s sigma priors
 # are already Model 6's calibrated rates (inherited from model_MDLSY_ITS),
 # since K stays at 4 (b_deg/b_precip/b_seq are additive mu-level fixed
-# effects, not new summed variance terms).
+# effects, not new summed variance terms). dq_MDLSYC (MDLSYC_model.R) now
+# checks all three estimands (may_gap/july_gap/seasonal_change). This SBC
+# draws the three covariates independently (rho_deg_season = rho_seq_mu = 0
+# defaults) -- tests recoverability, not calibration under the real
+# design's collinearity (see the Collinearity-aware parameter recovery
+# section above, and the methodology checklist).
 
-ncores <- 18
-nchains <- 2
-n_sbc = 100
-n_iter = 20000
+sbc_gen_MDLSYC <- make_sbc_generator(
+  fit = fit_sim, simulate_fn = simulate_from_priors_MDLSYC,
+  keep = c("loga", "s_conv", "gap_shift", "sigma", "sigma_loc", "sigma_tr", "sigma_yr", "cv",
+           "b_deg", "b_precip", "b_seq"),
+  gen_cols = c("Dv", "Mg", "Lo", "Mo", "Yr", "Tr", "Cv", "deg_h_z", "precip_72h_z", "seq_depth_z"),
+  extra_globals = "sim_div_MDLSYC", shift = 1)
 
-sbc_MDLSYC <- run_sbc(
-  model_fit   = fit_sim,
-  means_fn    = means_MDLSYC,
-  contrast_fn = contrast_may_gap_MDLSYC,
-  simulate_fn = function(true_params) simulate_from_priors_MDLSYC(true_params, shift = 1),
-  n_sbc = n_sbc, iter = n_iter,
-  n_parallel = ncores/nchains, chains = nchains, cores = nchains,
+n_sbc  <- 100
+n_iter <- 20000
+
+sbc_MDLSYC <- run_sbc_pipeline(
+  generator = sbc_gen_MDLSYC$generator, globals = sbc_gen_MDLSYC$globals,
+  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDLSYC,
   control = list(adapt_delta = 0.99))
 
-sbc_out_MDLSYC <- save_sbc_report(sbc_MDLSYC, paste0("MDLSYC_",n_sbc,"iter"))
+plot_sbc_diagnostics(sbc_MDLSYC, model_id, n_sbc)
+
+save_sbc_health_report(model_id, sbc_MDLSYC, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma[3]", "sigma[4]",
+                                      "sigma_loc", "sigma_tr", "sigma_yr", "b_deg", "b_precip", "b_seq",
+                                      "may_gap", "july_gap", "seasonal_change"),
+                        hiermod_out_dir = hiermod_out_dir)

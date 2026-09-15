@@ -50,6 +50,18 @@ means_MDLv <- function(post){
     ))
 }
 
+# SBC estimands -- median/mean contrast, matching means_MDLv()'s own
+# total_var convention: sigma_g^2 enters ONLY the Organic side, since
+# g[Lo]*sigma_g only ever multiplies (Mg-1). Written fresh here (unlike
+# MDL's dq_MDL, MDLv has no already-migrated 16S sibling to borrow from --
+# ITS-only model).
+dq_MDLv <- SBC::derived_quantities(
+  median_contrast = exp(loga[2]) - exp(loga[1]),
+  mean_contrast =
+    exp(loga[2] + (sigma[2]^2 + sigma_loc^2 + sigma_g^2) / 2) -
+    exp(loga[1] + (sigma[1]^2 + sigma_loc^2) / 2)
+)
+
 ## Data-generating function ---------------------------------------------------
 # Same skeleton as sim_div_MDL() (MDLb), plus one more term: loc_gap[Lo], a
 # per-Location deviation added *only* to the Organic linear predictor (via

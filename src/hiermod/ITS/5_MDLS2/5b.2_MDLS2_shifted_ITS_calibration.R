@@ -4,7 +4,7 @@
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDLS2_model.R') # model_MDLS2_ITS, means_MDLS2(), sim_div_MDLS2(), contrast_may_gap_MDLS2(), simulate_from_priors_MDLS2()
+source('src/hiermod/Models/MDLS2_model.R') # model_MDLS2_ITS, means_MDLS2(), sim_div_MDLS2(), contrast_may_gap_MDLS2(), simulate_from_priors_MDLS2(), dq_MDLS2
 model <- model_MDLS2_ITS
 
 hiermod_out_dir <- "out/hiermod/ITS_5_lognormal_MDLS2_shifted"
@@ -121,26 +121,29 @@ p_prior_pc <- prior_predictive_spaghetti(
 
 save_gg("sim_prior_PC", model_id_MDLS2_ITS_shifted, p_prior_pc)
 
-## Simulation-based calibration (SBC) --------------------------------------------
+## Simulation-based calibration (SBC), via the SBC package --------------------
+# dq_MDLS2 (hiermod/Models/MDLS2_model.R) needs no shift-awareness at all --
+# it's built from contrasts (org_May - conv_May etc.), and the shift
+# cancels. shift = 1 baked in as an extra fixed arg to simulate_fn.
 
-# contrast_may_gap_MDLS2() (hiermod/Models/MDLS2_model.R) needs no
-# shift-awareness at all -- it's a contrast (org_May - conv_May), and the
-# shift cancels. simulate_fn wraps simulate_from_priors_MDLS2() with shift = 1
-# baked in, since run_sbc() only ever calls it as simulate_fn(true_params).
+sbc_gen_MDLS2_shifted <- make_sbc_generator(
+  fit = fit_sim, simulate_fn = simulate_from_priors_MDLS2,
+  keep = c("loga", "s_conv", "gap_shift", "sigma", "sigma_loc", "sigma_tr"),
+  gen_cols = c("Dv", "Mg", "Lo", "Mo", "Yr", "Tr"),
+  extra_globals = "sim_div_MDLS2", shift = 1)
 
+n_sbc  <- 100
+n_iter <- 20000
 
-ncores <- 30
-nchains <- 2
-n_sbc = 100
-n_iter = 20000
-
-sbc_MDLS2_shifted <- run_sbc(
-  model_fit   = fit_sim,
-  means_fn    = means_MDLS2,
-  contrast_fn = contrast_may_gap_MDLS2,
-  simulate_fn = function(true_params) simulate_from_priors_MDLS2(true_params, shift = 1),
-  n_sbc = n_sbc, iter = n_iter,
-  n_parallel = ncores/nchains, chains = nchains, cores = nchains,
+sbc_MDLS2_shifted <- run_sbc_pipeline(
+  generator = sbc_gen_MDLS2_shifted$generator, globals = sbc_gen_MDLS2_shifted$globals,
+  n_sbc = n_sbc, model = model, model_id = model_id_MDLS2_ITS_shifted, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDLS2,
   control = list(adapt_delta = 0.99))
 
-sbc_out_MDLS2_shifted <- save_sbc_report(sbc_MDLS2_shifted, paste0("MDLS2_shifted_",n_sbc,"iter"))
+plot_sbc_diagnostics(sbc_MDLS2_shifted, model_id_MDLS2_ITS_shifted, n_sbc)
+
+save_sbc_health_report(model_id_MDLS2_ITS_shifted, sbc_MDLS2_shifted, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma[3]", "sigma[4]",
+                                      "sigma_loc", "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
+                        hiermod_out_dir = hiermod_out_dir)

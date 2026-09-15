@@ -131,6 +131,25 @@ contrast_may_gap_MDLS2 <- function(post, true_params, means_fn){
   list(post_contrast = post_contrast, true_contrast = true_org_May - true_conv_May)
 }
 
+# SBC estimands -- may_gap/july_gap/seasonal_change (the old run_sbc()-era
+# contrast_may_gap_MDLS2() above only ever checked may_gap despite this
+# model's own header advertising three estimands; added as part of the
+# SBC-package migration). Cell order (sigma[1..4]): conv_May, conv_July,
+# org_May, org_July -- matches sim_div_MDLS2()'s own convention.
+dq_MDLS2 <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + (sigma[3]^2 + sigma_loc^2 + sigma_tr^2) / 2) -
+    exp(loga[1] + (sigma[1]^2 + sigma_loc^2 + sigma_tr^2) / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + (sigma[4]^2 + sigma_loc^2 + sigma_tr^2) / 2) -
+    exp(loga[1] + s_conv +             (sigma[2]^2 + sigma_loc^2 + sigma_tr^2) / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + (sigma[4]^2 + sigma_loc^2 + sigma_tr^2) / 2) -
+       exp(loga[1] + s_conv +             (sigma[2]^2 + sigma_loc^2 + sigma_tr^2) / 2)) -
+    (exp(loga[2] + (sigma[3]^2 + sigma_loc^2 + sigma_tr^2) / 2) -
+       exp(loga[1] + (sigma[1]^2 + sigma_loc^2 + sigma_tr^2) / 2))
+)
+
 # shift = NULL (default): plain Model 5, no Dv_shifted column -- pass
 # shift = 1 to use this for the shifted variant instead (see
 # means_MDLS2()/sim_div_MDLS2()'s own shift= argument).

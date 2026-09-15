@@ -4,7 +4,7 @@
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDLS2_model.R') # model_MDLS2_ITS, means_MDLS2(), sim_div_MDLS2(), contrast_may_gap_MDLS2(), simulate_from_priors_MDLS2()
+source('src/hiermod/Models/MDLS2_model.R') # model_MDLS2_ITS, means_MDLS2(), sim_div_MDLS2(), contrast_may_gap_MDLS2(), simulate_from_priors_MDLS2(), dq_MDLS2
 model <- model_MDLS2_ITS
 
 hiermod_out_dir <- "out/hiermod/ITS_5_lognormal_MDLS2"
@@ -168,15 +168,32 @@ p_prior_pc <- prior_predictive_spaghetti(
 
 save_gg("sim_prior_PC", model_id_MDLS2_ITS, p_prior_pc)
 
-## Simulation-based calibration (SBC) --------------------------------------------
+## Simulation-based calibration (SBC), via the SBC package --------------------
+# dq_MDLS2 (MDLS2_model.R) now checks all three estimands (may_gap/
+# july_gap/seasonal_change) -- the old run_sbc() call here only ever
+# checked may_gap via contrast_may_gap_MDLS2().
 
-sbc_MDLS2 <- run_sbc(
-  model_fit   = fit_sim,
-  means_fn    = means_MDLS2,
-  contrast_fn = contrast_may_gap_MDLS2,
-  simulate_fn = simulate_from_priors_MDLS2,
-  n_sbc = 30, iter = 15000, n_parallel = 4, chains = 2, cores = 2,
+sbc_gen_MDLS2 <- make_sbc_generator(
+  fit = fit_sim, simulate_fn = simulate_from_priors_MDLS2,
+  keep = c("loga", "s_conv", "gap_shift", "sigma", "sigma_loc", "sigma_tr"),
+  gen_cols = c("Dv", "Mg", "Lo", "Mo", "Yr", "Tr"),
+  extra_globals = "sim_div_MDLS2")
+
+n_sbc  <- 30
+n_iter <- 15000
+
+sbc_MDLS2 <- run_sbc_pipeline(
+  generator = sbc_gen_MDLS2$generator, globals = sbc_gen_MDLS2$globals,
+  n_sbc = n_sbc, model = model, model_id = model_id_MDLS2_ITS, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDLS2,
   control = list(adapt_delta = 0.99))
 
-sbc_out_MDLS2 <- save_sbc_report(sbc_MDLS2, "MDLS2_30sbc_iter")
-hist(sbc_out_MDLS2$ranks, breaks = 30)
+# plot_sbc_diagnostics()/save_sbc_health_report() build the
+# "<model_id>_<n_sbc>sbc_iter" label themselves -- matches this script's
+# own historical "MDLS2_30sbc_iter" naming without double-appending it.
+plot_sbc_diagnostics(sbc_MDLS2, model_id_MDLS2_ITS, n_sbc)
+
+save_sbc_health_report(model_id_MDLS2_ITS, sbc_MDLS2, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma[3]", "sigma[4]",
+                                      "sigma_loc", "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
+                        hiermod_out_dir = hiermod_out_dir)

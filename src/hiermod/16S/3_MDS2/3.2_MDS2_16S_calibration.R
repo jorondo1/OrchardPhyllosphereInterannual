@@ -1,7 +1,9 @@
-# MODEL 3 (MDS2), 16S, SHIFTED (Hill_1 - 1): Management x Season, no
-# Location (see MDS2_model.R's header for why -- Location A/C being
-# single-management makes it unfixably confounded with Management, so 16S
-# drops it rather than continuing to patch around low cardinality).
+# 16S, SHIFTED (Hill_1 - 1): Management x Season
+
+# Location REMOVED because it is too confounded with Management
+# Willdo sensitivity test later on with an unconfounded (though less powerful)
+# subset.
+
 # sigma stays Management-only (no cell-level split yet). Parameter
 # recovery, prior-predictive check, and SBC via the SBC package -- same
 # template as MDL's own rewritten 2.2 script.
@@ -119,75 +121,29 @@ save_pdf("loga_sigma_funnel", model_id, p_funnel)
 # of `variables` for the same reason as those models: the simulator draws
 # fresh per-level offsets internally, so a prior draw of the array isn't
 # what generated the data.
-source('src/utils/sbc_backend_ulam.R')
-library(SBC)
-future::plan(future::multisession)
-
-generate_one_MDS2 <- function(){
-  library(rethinking); library(tidyverse) # future::multisession workers start fresh -- not auto-attached
-  true_params <- suppressMessages(suppressWarnings(draw_true(extract.prior(fit_sim, n = 1, refresh = 0), 1)))[
-    c("loga", "s_conv", "gap_shift", "sigma", "sigma_tr")]
-  dat <- simulate_from_priors_MDS2(true_params, shift = 1)
-  list(variables = true_params,
-       generated = as.list(dat[, c("Dv", "Mg", "Mo", "Yr", "Tr")]))
-}
-
-dq_MDS2 <- derived_quantities(
-  may_gap =
-    exp(loga[2] + (sigma[2]^2 + sigma_tr^2) / 2) -
-    exp(loga[1] + (sigma[1]^2 + sigma_tr^2) / 2),
-  july_gap =
-    exp(loga[2] + s_conv + gap_shift + (sigma[2]^2 + sigma_tr^2) / 2) -
-    exp(loga[1] + s_conv +             (sigma[1]^2 + sigma_tr^2) / 2),
-  seasonal_change =
-    (exp(loga[2] + s_conv + gap_shift + (sigma[2]^2 + sigma_tr^2) / 2) -
-       exp(loga[1] + s_conv +             (sigma[1]^2 + sigma_tr^2) / 2)) -
-    (exp(loga[2] + (sigma[2]^2 + sigma_tr^2) / 2) -
-       exp(loga[1] + (sigma[1]^2 + sigma_tr^2) / 2))
-)
+sbc_gen_MDS2 <- make_sbc_generator(
+  fit = fit_sim, simulate_fn = simulate_from_priors_MDS2,
+  keep = c("loga", "s_conv", "gap_shift", "sigma", "sigma_tr"),
+  gen_cols = c("Dv", "Mg", "Mo", "Yr", "Tr"),
+  extra_globals = "sim_div_MDS2", shift = 1)
 
 n_sbc  <- 100
 n_iter <- 10000
 
-datasets_path_MDS2 <- file.path(hiermod_out_dir, "sbc_datasets_MDS2.rds")
-if (file.exists(datasets_path_MDS2)) {
-  datasets_MDS2 <- readRDS(datasets_path_MDS2)
-} else {
-  # future.chunk.size activates generate_datasets()'s built-in
-  # future.apply::future_replicate() path (default is Inf = sequential).
-  # future.globals must be named explicitly -- auto-detection (TRUE) can't
-  # trace into this closure from inside the SBC package's own internals.
-  datasets_MDS2 <- generate_datasets(
-    SBC_generator_function(
-      generate_one_MDS2, future.chunk.size = default_chunk_size(n_sbc),
-      future.globals = c("draw_true", "fit_sim", "simulate_from_priors_MDS2", "sim_div_MDS2")),
-    n_sbc)
-  saveRDS(datasets_MDS2, datasets_path_MDS2, compress = "xz")
-}
+sbc_MDS2 <- run_sbc_pipeline(
+  generator = sbc_gen_MDS2$generator, globals = sbc_gen_MDS2$globals,
+  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDS2,
+  control = list(adapt_delta = 0.99))
 
-backend_MDS2 <- SBC_backend_ulam(model, iter = n_iter, refresh = 0,
-                                 control = list(adapt_delta = 0.99))
-
-sbc_MDS2 <- compute_SBC(
-  datasets_MDS2, backend_MDS2, dquants = dq_MDS2, 
-  cache_mode = "results", cache_location = file.path(hiermod_out_dir, "sbc_cache_MDS2"),
-  globals = c("SBC_fit.SBC_backend_ulam", "SBC_fit_to_draws_matrix.ulam",
-              "SBC_fit_to_diagnostics.ulam"))
-
-p_sbc_rank  <- plot_rank_hist(sbc_MDS2)
-p_sbc_ecdf  <- plot_ecdf_diff(sbc_MDS2)
-p_sbc_cover <- plot_coverage(sbc_MDS2)
-
-sbc_step <- paste0(model_id, "_", n_sbc, "sbc_iter")
-save_gg("SBC_rank_hist", sbc_step, p_sbc_rank, width = 9, height = 7)
-save_gg("SBC_ecdf_diff", sbc_step, p_sbc_ecdf, width = 9, height = 7)
-save_gg("SBC_coverage",  sbc_step, p_sbc_cover, width = 9, height = 7)
-
-(sbc_diag_summary <- sbc_MDS2$backend_diagnostics %>%
-    dplyr::summarise(total_divergent = sum(n_divergent), total_max_treedepth = sum(n_max_treedepth),
-                     total_low_ebfmi = sum(n_low_ebfmi), n_replicates = dplyr::n()))
+plot_sbc_diagnostics(sbc_MDS2, model_id, n_sbc)
 
 sbc_MDS2$stats |>
   dplyr::filter(variable %in% c("loga[1]", "loga[2]")) |>
   dplyr::group_by(variable) |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
+
+save_sbc_health_report(model_id, sbc_MDS2, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_tr",
+                                      "may_gap", "july_gap", "seasonal_change"),
+                        hiermod_out_dir = hiermod_out_dir)

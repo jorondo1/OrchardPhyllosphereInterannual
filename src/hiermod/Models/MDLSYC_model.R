@@ -184,6 +184,24 @@ contrast_may_gap_MDLSYC <- function(post, true_params, means_fn){
   list(post_contrast = post_contrast, true_contrast = true_org_May - true_conv_May)
 }
 
+# SBC estimands -- may_gap/july_gap/seasonal_change, structurally identical
+# to dq_MDLSY (MDLSY_model.R): b_deg/b_precip/b_seq/cv all cancel in the
+# org-conv contrast for the same reason contrast_may_gap_MDLSYC() above
+# doesn't need them either.
+dq_MDLSYC <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + (sigma[3]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+    exp(loga[1] + (sigma[1]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + (sigma[4]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+    exp(loga[1] + s_conv +             (sigma[2]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + (sigma[4]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+       exp(loga[1] + s_conv +             (sigma[2]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2)) -
+    (exp(loga[2] + (sigma[3]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+       exp(loga[1] + (sigma[1]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2))
+)
+
 # Prior simulator (SBC/prior-predictive glue). rho_deg_season/rho_seq_mu
 # pass through to sim_div_MDLSYC() (default 0, i.e. unchanged) so a future
 # full SBC re-run under realistic collinearity can reuse this unchanged.

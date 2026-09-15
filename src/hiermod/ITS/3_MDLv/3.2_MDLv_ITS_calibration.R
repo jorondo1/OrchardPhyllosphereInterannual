@@ -4,7 +4,7 @@
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDLv_model.R') # model_MDLv_ITS, means_MDLv(), mdlv_labels, sim_div_MDLv(), simulate_from_priors_MDLv()
+source('src/hiermod/Models/MDLv_model.R') # model_MDLv_ITS, means_MDLv(), mdlv_labels, sim_div_MDLv(), simulate_from_priors_MDLv(), dq_MDLv
 model <- model_MDLv_ITS
 
 hiermod_out_dir <- "out/hiermod/ITS_3_lognormal_MDLv"
@@ -83,14 +83,34 @@ save_gg("sim_prior_PC", model_id, p_prior_pc)
 # if this still looks implausible for Hill_1, tighten sigma_g further before
 # moving on -- same read as MDLb's own prior predictive check
 
-## Simulation-based calibration (SBC) --------------------------------------------
-# Same as MDLb's -- now also checks sigma_g recovery.
+## Simulation-based calibration (SBC), via the SBC package --------------------
+# dq_MDLv (MDLv_model.R) correctly includes sigma_g on the Organic side only
+# (matching means_MDLv()'s own total_var) -- the old run_sbc() call here had
+# no contrast_fn either, so it silently fell back to contrast_from_means()'s
+# default (drops sigma_loc AND sigma_g from the true side entirely).
 
-sbc_MDLv <- run_sbc(
-  model_fit   = fit_sim,
-  means_fn    = means_MDLv,
-  simulate_fn = simulate_from_priors_MDLv,
-  n_sbc = 100, iter = 4000, chains = 4, control = list(adapt_delta = 0.99))
+sbc_gen_MDLv <- make_sbc_generator(
+  fit = fit_sim, simulate_fn = simulate_from_priors_MDLv,
+  keep = c("loga", "sigma", "sigma_loc", "sigma_g"), gen_cols = c("Dv", "Mg", "Lo"),
+  extra_globals = "sim_div_MDLv")
 
-sbc_out_MDLv <- save_sbc_report(sbc_MDLv, model_id)
-hist(sbc_out_MDLv$ranks)
+n_sbc  <- 100
+n_iter <- 4000
+
+sbc_MDLv <- run_sbc_pipeline(
+  generator = sbc_gen_MDLv$generator, globals = sbc_gen_MDLv$globals,
+  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDLv,
+  control = list(adapt_delta = 0.99))
+
+plot_sbc_diagnostics(sbc_MDLv, model_id, n_sbc)
+
+sbc_MDLv$stats |>
+  dplyr::filter(variable %in% c("loga[1]", "loga[2]")) |>
+  dplyr::group_by(variable) |>
+  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
+
+save_sbc_health_report(model_id, sbc_MDLv, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_loc", "sigma_g",
+                                      "median_contrast", "mean_contrast"),
+                        hiermod_out_dir = hiermod_out_dir)

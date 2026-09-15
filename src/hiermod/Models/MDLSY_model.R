@@ -150,6 +150,24 @@ contrast_may_gap_MDLSY <- function(post, true_params, means_fn){
   list(post_contrast = post_contrast, true_contrast = true_org_May - true_conv_May)
 }
 
+# SBC estimands -- may_gap/july_gap/seasonal_change, same three contrasts
+# as MDLS2's own SBC, with sigma_yr^2 added into every total_var term
+# (matching means_MDLSY()'s own total_var). Cell order (sigma[1..4]):
+# conv_May, conv_July, org_May, org_July.
+dq_MDLSY <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + (sigma[3]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+    exp(loga[1] + (sigma[1]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + (sigma[4]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+    exp(loga[1] + s_conv +             (sigma[2]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + (sigma[4]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+       exp(loga[1] + s_conv +             (sigma[2]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2)) -
+    (exp(loga[2] + (sigma[3]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+       exp(loga[1] + (sigma[1]^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2))
+)
+
 # Prior simulator (SBC/prior-predictive glue).
 simulate_from_priors_MDLSY <- function(true_params, N_samples = 250,
                                  n_loc = 4, p_dropout = 0.1, shift = NULL){

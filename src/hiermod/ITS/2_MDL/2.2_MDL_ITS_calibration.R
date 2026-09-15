@@ -4,7 +4,7 @@
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDL_model.R') # model_MDL_ITS, means_MDL(), sim_div_MDL(), simulate_from_priors_MDL()
+source('src/hiermod/Models/MDL_model.R') # model_MDL_ITS, means_MDL(), sim_div_MDL(), simulate_from_priors_MDL(), dq_MDL
 model <- model_MDL_ITS
 
 hiermod_out_dir <- "out/hiermod/ITS_2_lognormal_MDL"
@@ -63,7 +63,7 @@ save_pdf("fit_pairs", "MDL", function()
 n_prior <- 1000
 prior <- extract.prior(fit_sim, n = n_prior)
 
-# draw_true() is shared (sbc_helpers.R) -- generic slice of any extract.prior()
+# draw_true() is shared (sbc_workflow.R) -- generic slice of any extract.prior()
 # output, no per-model rewrite needed. simulate_from_priors_MDL() is sourced
 # from hiermod/Models/MDL_model.R above.
 
@@ -172,24 +172,38 @@ pb_sim_contrast <- contrast_plot_panels(pc_b_sim, quant = c(0, 0.995), group_pal
 
 save_gg("sim_contrast_density", model_id, pb_sim_contrast)
 
-## Simulation-based calibration (SBC) --------------------------------------------
+## Simulation-based calibration (SBC), via the SBC package --------------------
+# dq_MDL (MDL_model.R) correctly includes sigma_loc on the true-side
+# variance -- fixes a gap in the old run_sbc() call here: it had no
+# contrast_fn, so it fell back to contrast_from_means()'s default, which
+# silently omits sigma_loc from the true side. SBC never actually tested
+# calibration of the full model before this migration, just a simplified
+# slice of it.
 
-# Does this model recover the contrast, without divergences, across many
-# datasets drawn from its own priors (not just the one simulation above)?
-# run_sbc() pulls "true" params via extract.prior() on fitb_sim itself (via
-# the shared draw_true()), so it always matches whatever priors model_ppc1
-# actually declares.
+sbc_gen_MDL <- make_sbc_generator(
+  fit = fitb_sim, simulate_fn = simulate_from_priors_MDL,
+  keep = c("loga", "sigma", "sigma_loc"), gen_cols = c("Dv", "Mg", "Lo"),
+  extra_globals = "sim_div_MDL")
 
-# We reuse simulate_from_priors_MDL() from before
-sbcb <- run_sbc(
-  model_fit = fitb_sim,  # model_ppc1's formula + priors, both from this one fit
-  means_fn = means_MDL,
-  simulate_fn = simulate_from_priors_MDL,
-  n_sbc = 100, iter = 10000, chains = 4,
+n_sbc  <- 100
+n_iter <- 10000
+
+sbc_MDL <- run_sbc_pipeline(
+  generator = sbc_gen_MDL$generator, globals = sbc_gen_MDL$globals,
+  n_sbc = n_sbc, model = model_ppc1, model_id = model_id, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDL,
   control = list(adapt_delta = 0.99))
 
-sbc_out <- save_sbc_report(sbcb, model_id)
-par(mfrow= c(1,1))
-hist(sbc_out$ranks)
+plot_sbc_diagnostics(sbc_MDL, model_id, n_sbc)
+
+sbc_MDL$stats |>
+  dplyr::filter(variable %in% c("loga[1]", "loga[2]")) |>
+  dplyr::group_by(variable) |>
+  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
+
+save_sbc_health_report(model_id, sbc_MDL, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_loc",
+                                      "median_contrast", "mean_contrast"),
+                        hiermod_out_dir = hiermod_out_dir)
 
 saveRDS(model_ppc1, file.path(hiermod_out_dir, "model_ppc1.rds"))

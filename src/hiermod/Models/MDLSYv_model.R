@@ -136,3 +136,23 @@ contrast_may_gap_MDLSYv <- function(post, true_params, means_fn){
   true_params$sigma <- true_sigma_from_ls(true_params)
   contrast_may_gap_MDLSY(post, true_params, means_fn)
 }
+
+# SBC estimands -- may_gap/july_gap/seasonal_change, same three contrasts
+# as MDLS2v's own SBC, with sigma_yr^2 added into every total_var term
+# (matching means_MDLSYv()'s own total_var). Cell sigmas inlined via the
+# log-linear ls0/ls_Mg/ls_Mo/ls_MgMo formula (derived_quantities() formulas
+# must be self-contained -- no calling sigma_cell()/true_sigma_from_ls()
+# from inside).
+dq_MDLSYv <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + (exp(ls0 + ls_Mg)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+    exp(loga[1] + (exp(ls0)^2         + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + (exp(ls0 + ls_Mg + ls_Mo + ls_MgMo)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+    exp(loga[1] + s_conv +             (exp(ls0 + ls_Mo)^2                 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + (exp(ls0 + ls_Mg + ls_Mo + ls_MgMo)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+       exp(loga[1] + s_conv +             (exp(ls0 + ls_Mo)^2                 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2)) -
+    (exp(loga[2] + (exp(ls0 + ls_Mg)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
+       exp(loga[1] + (exp(ls0)^2         + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2))
+)

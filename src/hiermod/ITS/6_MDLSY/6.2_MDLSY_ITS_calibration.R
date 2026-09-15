@@ -4,7 +4,7 @@
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDLSY_model.R') # model_MDLSY_ITS, means_MDLSY(), variance_partition_MDLSY(), sim_div_MDLSY(), contrast_may_gap_MDLSY(), simulate_from_priors_MDLSY()
+source('src/hiermod/Models/MDLSY_model.R') # model_MDLSY_ITS, means_MDLSY(), variance_partition_MDLSY(), sim_div_MDLSY(), contrast_may_gap_MDLSY(), simulate_from_priors_MDLSY(), dq_MDLSY
 model <- model_MDLSY_ITS
 
 hiermod_out_dir <- "out/hiermod/ITS_6_lognormal_MDLSY"
@@ -208,29 +208,34 @@ sigma_recovery_cal <- check_recovery(
                     sigma_yr = post_cal$sigma_yr)
 ); sigma_recovery_cal
 
-## Simulation-based calibration (SBC) --------------------------------------------
+## Simulation-based calibration (SBC), via the SBC package --------------------
+# dq_MDLSY (hiermod/Models/MDLSY_model.R) now checks all three estimands
+# (may_gap/july_gap/seasonal_change), needs no shift-awareness (contrasts
+# cancel the shift), and points at fit_cal (the VBC-recalibrated fit) --
+# SBC/the real fit only see model_vbc's patch if pointed at a fit made
+# after it, same as before.
 
-# contrast_may_gap_MDLSY() (hiermod/Models/MDLSY_model.R) -- same reasoning
-# as models 4/5's: run_sbc()'s default contrast_fn assumes a 2-column `mean`.
-# contrast_may_gap_MDLSY() needs no shift-awareness -- it's a contrast
-# (org_May - conv_May), and the shift cancels, same as
-# 5b.2_MDLS2_shifted_calibration.R.
+sbc_gen_MDLSY <- make_sbc_generator(
+  fit = fit_cal, simulate_fn = simulate_from_priors_MDLSY,
+  keep = c("loga", "s_conv", "gap_shift", "sigma", "sigma_loc", "sigma_tr", "sigma_yr", "cv"),
+  gen_cols = c("Dv", "Mg", "Lo", "Mo", "Yr", "Tr", "Cv"),
+  extra_globals = "sim_div_MDLSY", shift = 1)
 
-ncores <- 18
-nchains <- 2
-n_sbc = 100
-n_iter = 10000
+n_sbc  <- 100
+n_iter <- 10000
 
-sbc_MDLSY <- run_sbc(
-  model_fit   = fit_cal,
-  means_fn    = means_MDLSY,
-  contrast_fn = contrast_may_gap_MDLSY,
-  simulate_fn = function(true_params) simulate_from_priors_MDLSY(true_params, shift = 1),
-  n_sbc = n_sbc, iter = n_iter,
-  n_parallel = ncores/nchains, chains = nchains, cores = nchains,
+sbc_MDLSY <- run_sbc_pipeline(
+  generator = sbc_gen_MDLSY$generator, globals = sbc_gen_MDLSY$globals,
+  n_sbc = n_sbc, model = model_vbc, model_id = model_id, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDLSY,
   control = list(adapt_delta = 0.99))
 
-sbc_out_MDLSY <- save_sbc_report(sbc_MDLSY, paste0("MDLSY_",n_sbc,"iter"))
-hist(sbc_out_MDLSY$ranks, breaks = 30)
+plot_sbc_diagnostics(sbc_MDLSY, model_id, n_sbc)
+
+save_sbc_health_report(model_id, sbc_MDLSY, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma[3]", "sigma[4]",
+                                      "sigma_loc", "sigma_tr", "sigma_yr",
+                                      "may_gap", "july_gap", "seasonal_change"),
+                        hiermod_out_dir = hiermod_out_dir)
 
 saveRDS(model_vbc, file.path(hiermod_out_dir, "model_vbc.rds"))

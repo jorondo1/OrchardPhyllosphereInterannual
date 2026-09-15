@@ -121,73 +121,37 @@ save_gg("sim_prior_PC", model_id, p_prior_pc)
 #   ))
 
 ## Simulation-based calibration -----------------------
-# Same template as 5b.2_MDLS2v_16S_calibration.R
+# Same template as MDL's/MDS2's own calibration. simulate_from_priors_MDLSYv's
+# own call chain is THREE levels deep (simulate_from_priors_MDLSYv ->
+# true_sigma_from_ls -> sigma_cell, and separately -> sim_div_MDLSY),
+# unlike every other model's single-level simulate_from_priors_X ->
+# sim_div_X -- all three extra names need listing, confirmed empirically
+# (a 2-name list surfaced "could not find function sigma_cell" on the
+# worker during retrofit testing).
 
-source('src/utils/sbc_backend_ulam.R')
-library(SBC)
-future::plan(future::multisession)
-
-generate_one_MDLSYv <- function(){
-  true_params <- suppressMessages(suppressWarnings(
-    draw_true(extract.prior(fit_sim, n = 1, refresh = 0), 1)))[
-      c("loga", "s_conv", "gap_shift", "ls0", "ls_Mg", "ls_Mo", "ls_MgMo",
-        "sigma_loc", "sigma_tr", "sigma_yr", "cv")]
-  dat <- simulate_from_priors_MDLSYv(true_params, shift = 1)
-  list(variables = true_params,
-       generated = as.list(dat[, c("Dv", "Mg", "Lo", "Mo", "Yr", "Tr", "Cv")]))
-}
-
-# Same three contrasts as MDLS2v's own SBC (may_gap/july_gap/seasonal_change),
-# with sigma_yr^2 added into every total_var term.
-dq_MDLSYv <- derived_quantities(
-  may_gap =
-    exp(loga[2] + (exp(ls0 + ls_Mg)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
-    exp(loga[1] + (exp(ls0)^2         + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2),
-  july_gap =
-    exp(loga[2] + s_conv + gap_shift + (exp(ls0 + ls_Mg + ls_Mo + ls_MgMo)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
-    exp(loga[1] + s_conv +             (exp(ls0 + ls_Mo)^2                 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2),
-  seasonal_change =
-    (exp(loga[2] + s_conv + gap_shift + (exp(ls0 + ls_Mg + ls_Mo + ls_MgMo)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
-       exp(loga[1] + s_conv +             (exp(ls0 + ls_Mo)^2                 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2)) -
-    (exp(loga[2] + (exp(ls0 + ls_Mg)^2 + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2) -
-       exp(loga[1] + (exp(ls0)^2         + sigma_loc^2 + sigma_tr^2 + sigma_yr^2) / 2))
-)
+sbc_gen_MDLSYv <- make_sbc_generator(
+  fit = fit_sim, simulate_fn = simulate_from_priors_MDLSYv,
+  keep = c("loga", "s_conv", "gap_shift", "ls0", "ls_Mg", "ls_Mo", "ls_MgMo",
+           "sigma_loc", "sigma_tr", "sigma_yr", "cv"),
+  gen_cols = c("Dv", "Mg", "Lo", "Mo", "Yr", "Tr", "Cv"),
+  extra_globals = c("sim_div_MDLSY", "true_sigma_from_ls", "sigma_cell"), shift = 1)
 
 n_sbc  <- 100
 n_iter <- 10000
 
-# Dataset generation left serial -- see 5b.2's own comment for why
-# parallelizing it isn't worth chasing (future workers lack rethinking
-# and every custom function the generator's call chain touches). Cached
-# to disk instead, so re-running this script (e.g. after a crash further
-# down) doesn't redo it -- delete the file to force regeneration.
-datasets_path_MDLSYv <- file.path(hiermod_out_dir, "sbc_datasets_MDLSYv.rds")
-if (file.exists(datasets_path_MDLSYv)) {
-  datasets_MDLSYv <- readRDS(datasets_path_MDLSYv)
-} else {
-  datasets_MDLSYv <- generate_datasets(SBC_generator_function(generate_one_MDLSYv), n_sbc)
-  saveRDS(datasets_MDLSYv, datasets_path_MDLSYv, compress = "xz")
-}
+sbc_MDLSYv <- run_sbc_pipeline(
+  generator = sbc_gen_MDLSYv$generator, globals = sbc_gen_MDLSYv$globals,
+  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
+  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDLSYv,
+  control = list(adapt_delta = 0.99))
 
-backend_MDLSYv <- SBC_backend_ulam(
-  model, iter = n_iter,
-  refresh = 0, control = list(adapt_delta = 0.99))
-
-sbc_MDLSYv <- compute_SBC(
-  datasets_MDLSYv, backend_MDLSYv, dquants = dq_MDLSYv,
-  cache_mode = "results", cache_location = file.path(hiermod_out_dir, "sbc_cache_MDLSYv"),
-  globals = c("SBC_fit.SBC_backend_ulam", "SBC_fit_to_draws_matrix.ulam",
-              "SBC_fit_to_diagnostics.ulam"))
-
-p_sbc_rank  <- plot_rank_hist(sbc_MDLSYv)
-p_sbc_ecdf  <- plot_ecdf_diff(sbc_MDLSYv)
-p_sbc_cover <- plot_coverage(sbc_MDLSYv)
-
-sbc_step <- paste0(model_id, "_", n_sbc, "sbc_iter")
-save_gg("SBC_rank_hist", sbc_step, p_sbc_rank, width = 9, height = 7)
-save_gg("SBC_ecdf_diff", sbc_step, p_sbc_ecdf, width = 9, height = 7)
-save_gg("SBC_coverage",  sbc_step, p_sbc_cover, width = 9, height = 7)
+plot_sbc_diagnostics(sbc_MDLSYv, model_id, n_sbc)
 
 (sbc_diag_summary <- sbc_MDLSYv$backend_diagnostics %>%
     dplyr::summarise(total_divergent = sum(n_divergent), total_max_treedepth = sum(n_max_treedepth),
                      total_low_ebfmi = sum(n_low_ebfmi), n_replicates = dplyr::n()))
+
+save_sbc_health_report(model_id, sbc_MDLSYv, n_sbc, n_iter,
+                        variables = c("loga[1]", "loga[2]", "sigma_loc", "sigma_tr", "sigma_yr",
+                                      "may_gap", "july_gap", "seasonal_change"),
+                        hiermod_out_dir = hiermod_out_dir)
