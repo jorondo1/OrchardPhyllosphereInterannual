@@ -67,9 +67,9 @@ fit_sim <- ulam(
   control = list(adapt_delta = 0.99))
 precis(fit_sim, depth = 2)
 
-post_sim <- extract.samples(fit_sim)
 
 ### Fixed effect + sigma recovery ---------
+post_sim <- extract.samples(fit_sim)
 
 (param_recovery <- check_recovery(
   true = list(
@@ -105,7 +105,7 @@ save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,
          function() trankplot(fit_sim, max_rows = 30, n_cols = 5),
-         width = 30, height = 50)
+         width = 10, height = 12)
 
 ## Prior predictive check -------------------------------------------------------
 
@@ -120,27 +120,27 @@ summary(prior_pred$Dv_shifted) # judge on median/IQR, not mean/SD
 
 p_prior_pc <- prior_predictive_spaghetti(
   prior_pred, value_col = "Dv_shifted", upper_q = 0.99, model = model,
-  title = "Prior predictive check", observed = dat_sim$Dv_shifted); p_prior_pc
+  title = "Prior predictive check", observed = dat_sim$Dv_shifted)
 
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
-## loga/cultivar collinearity check -------------------------------------------
-# The check that actually matters: does the sum-to-zero construction keep
-# cv_1..cv_4 clear of loga, the way it did (eventually) for yr1/yr2?
+## Full pairwise parameter check -----------------------------------------------
+# Replaces the old hand-picked plot() grid (which spot-checked loga[1] only,
+# never loga[2], against a few chosen partners -- a panel-count shortcut,
+# not a principled choice, and this project has already seen miscalibration
+# land on loga[1] in one model and loga[2] in another). mcmc_pairs()
+# (plot_mcmc_pairs()/thin_for_pairs(), hiermod_core.R) gives every parameter
+# against every other in one grid, with any divergent transitions
+# highlighted directly on it. 13x13 is a lot of panels -- if it's too dense
+# to read in practice, worth trimming back to a representative subset, but
+# starting from the full grid rather than a hand-picked one.
 
-p_funnel <- function(){
-  par(mfrow = c(2,2))
-  plot(post_sim$cv_1, post_sim$loga[,1],
-       xlab = "cv_1 (Cortland)", ylab = "loga[1] (Conventional)", pch = 16, col = scales::alpha("black", 0.15))
-  plot(post_sim$cv_3, post_sim$loga[,1],
-       xlab = "cv_3 (Paulared)", ylab = "loga[1] (Conventional)", pch = 16, col = scales::alpha("black", 0.15))
-  plot(post_sim$sigma[,1], post_sim$loga[,1],
-       xlab = "sigma[1] (Conventional)", ylab = "loga[1] (Conventional)", pch = 16, col = scales::alpha("black", 0.15))
-  plot(post_sim$cv_1, post_sim$cv_4,
-       xlab = "cv_1 (Cortland)", ylab = "cv_4 (Honeycrisp)", pch = 16, col = scales::alpha("black", 0.15))
-  par(mfrow = c(1,1))
-}
-save_pdf("loga_sigma_funnel", model_id, p_funnel)
+pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "yr1", "yr2",
+                 "cv_1", "cv_3", "cv_4", "cv_5", "b_deg", "b_precip", "b_seq")
+
+save_pdf("mcmc_pairs", model_id,
+         function() print(plot_mcmc_pairs(fit_sim, variables = pairs_vars)),
+         width = 18, height = 18)
 
 ## Simulation-based calibration (SBC), via the SBC package -----------------------
 

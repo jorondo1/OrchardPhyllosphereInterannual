@@ -87,3 +87,25 @@ thin_for_pairs <- function(cs, variables, n_keep = 10000, max_chains = 2){
     np    = np[np$Chain %in% chain_idx & np$Iteration %in% keep_iter_labels, ]
   )
 }
+
+# Full pairwise diagnostic grid for a set of parameters from one ulam fit --
+# every parameter against every other in one call, instead of a hand-picked
+# grid of individual plot() calls (which is a pragmatic panel-count
+# shortcut, not a principled check: this project has already seen
+# miscalibration land on loga[1] in one model and loga[2] in another, so a
+# spot-check against only one of a pair of structurally-symmetric
+# parameters can miss an entanglement specific to the other). Divergent
+# transitions, if any, are highlighted directly on the grid via `np`, more
+# diagnostic than a plain scatterplot's marginal correlation alone.
+# `variables` must be exact Stan parameter names (as in a calibration
+# script's own SBC `variables=`, e.g. "loga[1]", "sigma[2]", "cv_1").
+# Returns the bayesplot grid object -- wrap in print() when passing to
+# save_pdf(), since that expects a drawing side effect, not an
+# auto-printed return value:
+#   save_pdf("mcmc_pairs", model_id, function()
+#     print(plot_mcmc_pairs(fit_sim, variables = c("loga[1]", "loga[2]", ...))))
+plot_mcmc_pairs <- function(fit, variables, n_keep = 10000, max_chains = 2){
+  cs <- attr(fit, "cstanfit")
+  thinned <- thin_for_pairs(cs, variables = variables, n_keep = n_keep, max_chains = max_chains)
+  bayesplot::mcmc_pairs(thinned$draws, np = thinned$np)
+}
