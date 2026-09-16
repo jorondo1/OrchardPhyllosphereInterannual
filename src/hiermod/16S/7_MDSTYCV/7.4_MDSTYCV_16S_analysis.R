@@ -75,18 +75,17 @@ cat("if this interval shrank further, Tree is explaining part of what looked lik
 ## Variance partition -----------------------------------------------------------
 # variance_partition_MDSTYCV() needs raw extract.samples() (plain matrices,
 # for the outer()/%*% arithmetic inside it) -- not `pf`, which post_full()
-# wraps into tibbles. Now includes a Tree share alongside Explained/Residual.
+# wraps into tibbles. Six groups now: Management x Season/Year/Covariates/
+# Cultivar (sequential fixed-effect decomposition) + Tree + Residual.
 
 post_raw <- extract.samples(fit_MDSTYCV)
 pc_varpart <- variance_partition_MDSTYCV(post_raw, dat_MDSTYCV)
 
-varpart_pal <- c(Variance_partition_palette, Tree = "#DD8452")
-
 p_varpart <- pc_varpart %>%
   ggplot(aes(x = value, fill = group, colour = group)) +
   geom_density(alpha = 0.5, linewidth = 0.2) +
-  scale_fill_manual(values = varpart_pal) +
-  scale_colour_manual(values = varpart_pal) +
+  scale_fill_manual(values = Variance_partition_palette) +
+  scale_colour_manual(values = Variance_partition_palette) +
   labs(x = "Fraction of total variance", y = NULL, fill = NULL, colour = NULL,
        title = "Variance partition (Bayesian R2)"); p_varpart
 

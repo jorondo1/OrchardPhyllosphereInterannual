@@ -22,6 +22,7 @@ model_MD_ITS <- alist(
   prior_loga   = loga[Mg] ~ dnorm(2, 2),
   prior_sigma  = sigma ~ dexp(1)
 )
+attr(model_MD_ITS, "name") <- "Samwise the Steadfast"
 
 # 16S variant, patched to the 16S investigation's own starting point
 # (dnorm(5,2)/dexp(2), not the never-validated ITS import above) -- this
@@ -85,6 +86,7 @@ model_MDv_ITS <- alist(
   prior_loga   = loga[Mg] ~ dnorm(2,2),
   prior_sigma  = sigma[Mg] ~ dexp(1)
 )
+attr(model_MDv_ITS, "name") <- "Gollum the Two-Faced"
 
 model_MDv_16S <- model_MDv_ITS
 model_MDv_16S$prior_loga  <- quote(loga[Mg] ~ dnorm(5,2))

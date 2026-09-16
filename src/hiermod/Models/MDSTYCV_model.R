@@ -38,6 +38,14 @@ model_MDSTYCV_16S$pr_sigma_tr <- quote(sigma_tr ~ dhalfnorm(0,1))
 attr(model_MDSTYCV_16S, "name") <- "Saruman the Fool"
 model_id_MDSTYCV <- "MDSTYCV"
 
+## ITS variant -----------------------------------------------------------------
+# Same rationale as MDS_ITS/MDST_ITS. tr[Tr]/sigma_tr carry over unchanged
+# -- same Tree factor (idx$Tr), same non-centered form, same CV-like
+# sigma_tr scale reasoning.
+model_MDSTYCV_ITS <- model_MDSTYCV_16S
+model_MDSTYCV_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
+attr(model_MDSTYCV_ITS, "name") <- "Saruman the Fool"
+
 ## means_MDSTYCV() -------------------------------------------------------------
 # Same as means_MDSYCV(), plus sigma_tr^2 folded into total_var -- matching
 # MDST's own means_MDST() convention (sigma[Mg]^2 + sigma_tr^2).
@@ -92,9 +100,11 @@ dq_MDSTYCV <- SBC::derived_quantities(
 ## variance_partition_MDSTYCV() --------------------------------------------------
 # Same as variance_partition_MDSYCV() plus a Tree share (sigma_tr^2/total),
 # folded into total the same way sigma_tr^2 was folded into total_var in
-# means_MDSTYCV() above. The direct answer to "was adding Tree worth it"
-# from a variance-explained standpoint -- see MDSTYCV_posterior_guide.html
-# section 7.
+# means_MDSTYCV() above. Tree is a random, not fixed, effect -- kept as its
+# own bucket rather than part of the sequential fixed-effects decomposition
+# (see variance_partition_MDSYC()'s own comment for that rationale). The
+# direct answer to "was adding Tree worth it" from a variance-explained
+# standpoint -- see MDSTYCV_posterior_guide.html section 7.
 
 variance_partition_MDSTYCV <- function(post, dat){
   loga_obs   <- post$loga[, dat$Mg]
@@ -111,8 +121,16 @@ variance_partition_MDSTYCV <- function(post, dat){
     outer(as.vector(post$b_precip), dat$precip_72h_z) +
     outer(as.vector(post$b_seq), dat$seq_depth_z)
 
-  fixed_mu  <- loga_obs + gamma_term + yr_obs + cv_obs + covariates
-  explained <- apply(fixed_mu, 1, var)
+  fixed_MgMo    <- loga_obs + gamma_term
+  fixed_MgMoY   <- fixed_MgMo + yr_obs
+  fixed_MgMoYCo <- fixed_MgMoY + covariates
+  fixed_full    <- fixed_MgMoYCo + cv_obs
+
+  var_MgMo  <- apply(fixed_MgMo,    1, var)
+  var_Y     <- apply(fixed_MgMoY,   1, var) - var_MgMo
+  var_Cov   <- apply(fixed_MgMoYCo, 1, var) - apply(fixed_MgMoY, 1, var)
+  var_Cv    <- apply(fixed_full,    1, var) - apply(fixed_MgMoYCo, 1, var)
+  explained <- apply(fixed_full,    1, var)
 
   sigma_tr_sq <- as.vector(post$sigma_tr)^2
 
@@ -122,9 +140,12 @@ variance_partition_MDSTYCV <- function(post, dat){
   total <- explained + sigma_tr_sq + residual_var
 
   bind_rows(
-    tibble(statistic = "Variance partition", group = "Explained (fixed effects)", value = explained / total),
-    tibble(statistic = "Variance partition", group = "Tree",                      value = sigma_tr_sq / total),
-    tibble(statistic = "Variance partition", group = "Residual",                  value = residual_var / total)
+    tibble(statistic = "Variance partition", group = "Management x Season", value = var_MgMo / total),
+    tibble(statistic = "Variance partition", group = "Year",                 value = var_Y / total),
+    tibble(statistic = "Variance partition", group = "Covariates",           value = var_Cov / total),
+    tibble(statistic = "Variance partition", group = "Cultivar",             value = var_Cv / total),
+    tibble(statistic = "Variance partition", group = "Tree",                 value = sigma_tr_sq / total),
+    tibble(statistic = "Variance partition", group = "Residual",             value = residual_var / total)
   )
 }
 

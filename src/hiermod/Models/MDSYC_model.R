@@ -40,6 +40,15 @@ model_MDSYC_16S$prior_seq    <- quote(b_seq    ~ dnorm(0,1))
 attr(model_MDSYC_16S, "name") <- "Radagast the Grower"
 model_id_MDSYC <- "MDSYC"
 
+## ITS variant -----------------------------------------------------------------
+# Same rationale as MDS_ITS. b_deg/b_precip/b_seq ~ dnorm(0,1) carry over
+# unchanged -- these are additive log-scale slopes on standardized (z-score)
+# covariates, not tied to Hill_1's own baseline scale, and the old ITS
+# lineage's own MDLSYC_model.R already used the identical dnorm(0,1) choice.
+model_MDSYC_ITS <- model_MDSYC_16S
+model_MDSYC_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
+attr(model_MDSYC_ITS, "name") <- "Radagast the Grower"
+
 ## Backtransform wrapper ------------------------------------------------------
 # Same 4-cell shape as means_MDSYz(), plus a covariate_offset term
 # (deg_h_z/precip_72h_z/seq_depth_z default to 0, i.e. this sample's own
@@ -83,12 +92,22 @@ dq_MDSYC <- dq_MDSYz
 
 ## Variance partition / Bayesian R2 -------------------------------------------
 # Adapted from the ITS lineage's own variance_partition_MDLSYC()
-# (MDLSYC_model.R), simplified: no Location/Tree variance components yet
-# (that's the still-separate MDST branch), and Year is fixed here, not
-# pooled, so it's part of "Explained" rather than its own variance slice.
-# Residual is sigma[Mg]^2 -- genuinely heteroscedastic by Management, unlike
-# the old lineage's single pooled/cell-level sigma -- weighted by each
-# group's share of the sample (mirrors the old cell_n/sum(cell_n) weighting).
+# (MDLSYC_model.R). Residual is sigma[Mg]^2 -- genuinely heteroscedastic by
+# Management, unlike the old lineage's single pooled/cell-level sigma --
+# weighted by each group's share of the sample (mirrors the old
+# cell_n/sum(cell_n) weighting).
+#
+# Fixed effects split by GROUP (Management x Season, Year, Covariates), not
+# lumped into one "Explained" bucket -- via a sequential (Type I)
+# decomposition: each group's share is the variance ADDED by including it,
+# in this model family's own build order (Mg x Season, Model 2 -> Year,
+# Model 4 -> Covariates, Model 5). This telescopes exactly to the same total
+# as the old lumped version (Var(A) + [Var(A+B)-Var(A)] + [Var(A+B+C)-
+# Var(A+B)] = Var(A+B+C)), so it's a genuine refinement, not a different
+# number -- order-dependent in principle if predictors are correlated
+# (close to orthogonal here by design), and an individual increment can
+# come out slightly negative if a later term happens to reduce a given
+# draw's cumulative variance.
 
 variance_partition_MDSYC <- function(post, dat){
   loga_obs   <- post$loga[, dat$Mg]                                # n_draws x N
@@ -100,8 +119,14 @@ variance_partition_MDSYC <- function(post, dat){
     outer(as.vector(post$b_precip), dat$precip_72h_z) +
     outer(as.vector(post$b_seq), dat$seq_depth_z)
 
-  fixed_mu  <- loga_obs + gamma_term + yr_obs + covariates
-  explained <- apply(fixed_mu, 1, var) # length n_draws
+  fixed_MgMo  <- loga_obs + gamma_term
+  fixed_MgMoY <- fixed_MgMo + yr_obs
+  fixed_full  <- fixed_MgMoY + covariates
+
+  var_MgMo  <- apply(fixed_MgMo,  1, var)
+  var_Y     <- apply(fixed_MgMoY, 1, var) - var_MgMo
+  var_Cov   <- apply(fixed_full,  1, var) - apply(fixed_MgMoY, 1, var)
+  explained <- apply(fixed_full,  1, var) # length n_draws, == var_MgMo+var_Y+var_Cov
 
   mg_n <- as.integer(table(factor(dat$Mg, levels = 1:2)))
   residual_var <- as.vector((post$sigma^2) %*% (mg_n / sum(mg_n)))
@@ -109,8 +134,10 @@ variance_partition_MDSYC <- function(post, dat){
   total <- explained + residual_var
 
   bind_rows(
-    tibble(statistic = "Variance partition", group = "Explained (fixed effects)", value = explained / total),
-    tibble(statistic = "Variance partition", group = "Residual",                  value = residual_var / total)
+    tibble(statistic = "Variance partition", group = "Management x Season", value = var_MgMo / total),
+    tibble(statistic = "Variance partition", group = "Year",                 value = var_Y / total),
+    tibble(statistic = "Variance partition", group = "Covariates",           value = var_Cov / total),
+    tibble(statistic = "Variance partition", group = "Residual",             value = residual_var / total)
   )
 }
 

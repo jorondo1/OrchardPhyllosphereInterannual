@@ -40,6 +40,17 @@ model_MDSYz_16S$prior_yr2 <- quote(yr2 ~ dnorm(0,1))
 attr(model_MDSYz_16S, "name") <- "Elrond the Ageless"
 model_id_MDSYz <- "MDSYz"
 
+## ITS variant -----------------------------------------------------------------
+# Referencing model_MDSYz_16S directly (not MDSY_16S) picks up the FULL,
+# already-fixed structure in one step -- sum-to-zero yr_eff_def, yr1/yr2
+# priors, everything -- so the naive/miscalibrated MDSY intermediate stage
+# (4.2_MDSY_16S_calibration.R's own floor test) doesn't need re-running for
+# ITS at all; that bug is already understood and fixed structurally, not a
+# per-Kingdom finding. Same loga-only override as MDS_ITS/MDST_ITS.
+model_MDSYz_ITS <- model_MDSYz_16S
+model_MDSYz_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
+attr(model_MDSYz_ITS, "name") <- "Elrond the Ageless"
+
 ## means_MDSYz()/dq_MDSYz -----------------------------------------------------
 # Identical to means_MDSY()/dq_MDSY -- Year still doesn't enter the reported
 # Mg x Mo estimand or its variance, sum-to-zero or not.

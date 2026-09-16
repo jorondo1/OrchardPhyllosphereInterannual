@@ -47,6 +47,14 @@ model_MDSYCV_16S$prior_cv5 <- quote(cv_5 ~ dnorm(0,1))
 attr(model_MDSYCV_16S, "name") <- "Bombadil the Eldest"
 model_id_MDSYCV <- "MDSYCV"
 
+## ITS variant -----------------------------------------------------------------
+# Same rationale as MDS_ITS. cv_1/cv_3/cv_4/cv_5 ~ dnorm(0,1) carry over
+# unchanged -- same Cultivar factor (idx$Cv, shared across Kingdoms), same
+# additive log-scale-offset reasoning as Year.
+model_MDSYCV_ITS <- model_MDSYCV_16S
+model_MDSYCV_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
+attr(model_MDSYCV_ITS, "name") <- "Bombadil the Eldest"
+
 ## means_MDSYCV()/dq_MDSYCV ----------------------------------------------------
 # Identical to means_MDSYC()/dq_MDSYC -- Cultivar, like Year, doesn't enter
 # the reported Mg x Mo estimand or its variance (assigned independently of
@@ -56,10 +64,12 @@ means_MDSYCV <- means_MDSYC
 dq_MDSYCV    <- dq_MDSYC
 
 ## variance_partition_MDSYCV() --------------------------------------------------
-# Same as variance_partition_MDSYC() plus cv_eff in the fixed-effects sum.
-# cv_derived (Liberty) computed the same way the model itself does; cv_mat's
-# columns are built directly in Cv's own 1..5 index order so dat$Cv can
-# index it with no remapping.
+# Same as variance_partition_MDSYC() plus Cultivar as its own group,
+# sequentially last (Model 6's own addition, after Covariates). cv_derived
+# (Liberty) computed the same way the model itself does; cv_mat's columns
+# are built directly in Cv's own 1..5 index order so dat$Cv can index it
+# with no remapping. See variance_partition_MDSYC()'s own comment for the
+# sequential-decomposition rationale/telescoping property.
 
 variance_partition_MDSYCV <- function(post, dat){
   loga_obs   <- post$loga[, dat$Mg]
@@ -76,8 +86,16 @@ variance_partition_MDSYCV <- function(post, dat){
     outer(as.vector(post$b_precip), dat$precip_72h_z) +
     outer(as.vector(post$b_seq), dat$seq_depth_z)
 
-  fixed_mu  <- loga_obs + gamma_term + yr_obs + cv_obs + covariates
-  explained <- apply(fixed_mu, 1, var)
+  fixed_MgMo    <- loga_obs + gamma_term
+  fixed_MgMoY   <- fixed_MgMo + yr_obs
+  fixed_MgMoYCo <- fixed_MgMoY + covariates
+  fixed_full    <- fixed_MgMoYCo + cv_obs
+
+  var_MgMo  <- apply(fixed_MgMo,    1, var)
+  var_Y     <- apply(fixed_MgMoY,   1, var) - var_MgMo
+  var_Cov   <- apply(fixed_MgMoYCo, 1, var) - apply(fixed_MgMoY, 1, var)
+  var_Cv    <- apply(fixed_full,    1, var) - apply(fixed_MgMoYCo, 1, var)
+  explained <- apply(fixed_full,    1, var)
 
   mg_n <- as.integer(table(factor(dat$Mg, levels = 1:2)))
   residual_var <- as.vector((post$sigma^2) %*% (mg_n / sum(mg_n)))
@@ -85,8 +103,11 @@ variance_partition_MDSYCV <- function(post, dat){
   total <- explained + residual_var
 
   bind_rows(
-    tibble(statistic = "Variance partition", group = "Explained (fixed effects)", value = explained / total),
-    tibble(statistic = "Variance partition", group = "Residual",                  value = residual_var / total)
+    tibble(statistic = "Variance partition", group = "Management x Season", value = var_MgMo / total),
+    tibble(statistic = "Variance partition", group = "Year",                 value = var_Y / total),
+    tibble(statistic = "Variance partition", group = "Covariates",           value = var_Cov / total),
+    tibble(statistic = "Variance partition", group = "Cultivar",             value = var_Cv / total),
+    tibble(statistic = "Variance partition", group = "Residual",             value = residual_var / total)
   )
 }
 

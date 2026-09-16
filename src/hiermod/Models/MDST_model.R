@@ -33,6 +33,14 @@ model_MDST_16S <- alist(
 attr(model_MDST_16S, "name") <- "Treebeard the Skeptic"
 model_id_MDST <- "MDST"
 
+## ITS variant -----------------------------------------------------------------
+# Same rationale as MDS_ITS (MDS_model.R): only loga[Mg] is scale-dependent
+# and gets ITS's own dnorm(2,2) starting point; sigma_tr ~ dhalfnorm(0,1)
+# carries over unchanged (a CV-like quantity, not baseline-dependent).
+model_MDST_ITS <- model_MDST_16S
+model_MDST_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
+attr(model_MDST_ITS, "name") <- "Treebeard the Skeptic"
+
 ## Backtransform wrapper ------------------------------------------------------
 # Same 4-cell shape as means_MDS(), total_var now includes sigma_tr^2
 # (matching MDS2's own total_var convention: sigma[Mg]^2 + sigma_tr^2).

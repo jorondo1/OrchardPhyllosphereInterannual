@@ -49,11 +49,21 @@ Management_palette <- c(idx$Mg$palette, Contrast = "#98494d", Population = "#895
 cov_labels <- c("Degree-hours", "Precipitation (72h)", "Seq. depth")
 cov_pal    <- setNames(scales::hue_pal()(3), cov_labels)
 
-# Variance-partition panel base palette (Model 5 (MDSYC) onward) --
-# Explained/Residual are shared by every model's own variance_partition_*()
-# plot; a model with an extra group (e.g. Model 7's Tree share) extends
-# this rather than repeating the two shared colours inline.
-Variance_partition_palette <- c("Explained (fixed effects)" = "#4C72B0", "Residual" = "grey50")
+# Variance-partition panel palette (Model 5 (MDSYC) onward) -- one colour
+# per fixed-effect group (variance_partition_*()'s own sequential
+# decomposition, see MDSYC_model.R), plus Tree (random effect, Model 7
+# only) and Residual. Shared across every model's own variance-partition
+# plot so the same group always gets the same colour; a model that doesn't
+# have a given group (e.g. Models 5/6 have no Tree) just never uses that
+# name.
+Variance_partition_palette <- c(
+  "Management x Season" = "#4C72B0",
+  "Year"                = "#55A868",
+  "Covariates"          = "#8172B2",
+  "Cultivar"            = "#CCB974",
+  "Tree"                = "#DD8452",
+  "Residual"            = "grey50"
+)
 
 # ---- Standardized control covariates (Model 7 (MDLSYC) onward) ----
 # deg_h_z/precip_72h_z are centered WITHIN each Season (mean-subtracted per

@@ -20,14 +20,29 @@ Running list for the 16S lognormal hierarchical modeling work.
   controlled for. Under within-Season covariate centering (current,
   MDSYC/MDSYCV/MDSTYCV real fits rerun 2026-09-16): May-mean approx -184 to
   -190, July-mean approx -22 to -24, seasonal-change-in-gap approx +161 to
-  +166 (89% PI excludes 0 in all three models). This is a smaller
-  correction than the earlier globally-centered result (approx -107) --
-  expected and correct: global centering let b_deg/b_precip absorb part of
-  the genuine between-season temperature/precipitation difference, which
-  now correctly flows into the season term instead (see the within-Season
-  centering entry below). Frame as revising the pre-covariate models' own
-  effect size (real sequencing-depth confound, see mechanism below), not
-  as two equally-valid alternative estimates.
+  +166 (89% PI excludes 0 in all three models). Frame as revising the
+  pre-covariate models' own effect size (real sequencing-depth confound,
+  see mechanism below), not as two equally-valid alternative estimates.
+  IMPORTANT, verified 2026-09-16: this Hill-scale number moved a lot
+  between the globally-centered (approx -107) and within-Season-centered
+  (approx -184 to -190) fits, but the underlying LOG-scale Management
+  contrast barely moved at all (MDSYC's own loga[2]-loga[1] at May: -1.845
+  globally centered vs -1.839 within-Season centered -- noise-level). The
+  Hill-scale shift is almost entirely a reference-point artifact: the
+  reported estimand evaluates deg_h_z/precip_72h_z at 0, and under global
+  centering 0 meant "the whole dataset's average" (July-dominated, not
+  representative of May's own much-cooler true average), so loga[Mg]'s
+  reported value had to absorb that extrapolation gap -- moving loga[1]
+  and loga[2] by nearly the SAME additive amount (+0.548/+0.554 between
+  the two fits). Because the reported contrast is exponentiated,
+  exp(a+c)-exp(b+c) = exp(c)*(exp(a)-exp(b)) -- an equal log-scale shift
+  c multiplies the Hill-scale gap by exp(c) (here approx 1.73, matching
+  the observed ratio almost exactly) without reflecting any real change
+  in the modeled Management effect. Reinforces the reporting-scale
+  recommendation below: the log/percent-scale Management effect is the
+  stable, baseline-independent number; the Hill-scale one is sensitive to
+  nuisance choices like the covariate reference point and should not be
+  read as "controlling for weather explained away most of the gap."
 - [ ] Mechanism, now confirmed not just suspected: Organic samples were
   sequenced significantly deeper than Conventional (Welch t=-4.95,
   p=1.6e-6, ~0.63 SD gap in seq_depth_z), b_seq's posterior is credibly

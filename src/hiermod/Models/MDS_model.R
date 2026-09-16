@@ -28,6 +28,21 @@ model_MDS_16S <- alist(
 attr(model_MDS_16S, "name") <- "Strider the Unrooted"
 model_id_MDS <- "MDS"
 
+## ITS variant -----------------------------------------------------------------
+# Built by referencing the 16S object directly and overriding only what's
+# genuinely scale-dependent: loga[Mg] ~ dnorm(2,2) is ITS's own already-
+# established Model 1 starting point (MD_ITS/MDv_ITS, MD_model.R), since
+# ITS's own Hill_1 values sit on a much smaller scale than 16S's (fungal
+# vs bacterial diversity). s_conv/gap_shift/sigma[Mg] carry over unchanged
+# from model_MDS_16S -- these are additive log-scale/CV-like quantities,
+# not tied to the raw Hill_1 baseline, so 16S's own validated dnorm(0,1)/
+# dhalfnorm(0,1) choices are a reasonable starting hypothesis here too.
+# A guess to start from, not a conclusion -- expect this to get refined as
+# real ITS SBC results come in, same as every 16S model in this family was.
+model_MDS_ITS <- model_MDS_16S
+model_MDS_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
+attr(model_MDS_ITS, "name") <- "Strider the Unrooted"
+
 ## Backtransform wrapper ------------------------------------------------------
 # Same 4-cell shape as means_MDS2(), minus the sigma_tr term (no Tree here).
 
