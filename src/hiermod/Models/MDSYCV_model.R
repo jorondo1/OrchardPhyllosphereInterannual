@@ -96,9 +96,20 @@ variance_partition_MDSYCV <- function(post, dat){
 # imbalance) -- tests whether cv_1..cv_4 are recoverable in principle, not
 # how identifiable they are under the real design's modest correlation with
 # Management.
+#
+# rho_deg_season/rho_precip_season/rho_seq_mg (all default 0, i.e. unchanged
+# original behaviour -- independent draws) optionally correlate deg_h_z/
+# precip_72h_z with Season and seq_depth_z with Management instead, at
+# approximately the given correlation -- a stress test for identifiability
+# under realistic collinearity, not just independent-covariate simulation.
+# Standard target-correlation construction: z = rho*scale(x) + sqrt(1-rho^2)*noise
+# (same template as the ITS lineage's own MDLSYC_model.R). Real data has all
+# three: cor(deg_h_z, Mo)=0.73, cor(precip_72h_z, Mo)=0.55,
+# cor(seq_depth_z, Mg)=0.31 -- see 6.5_MDSYCV_16S_collinearity_check.R.
 
 sim_div_MDSYCV <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
-                            cv_1, cv_3, cv_4, cv_5, b_deg, b_precip, b_seq, shift = NULL){
+                            cv_1, cv_3, cv_4, cv_5, b_deg, b_precip, b_seq, shift = NULL,
+                            rho_deg_season = 0, rho_precip_season = 0, rho_seq_mg = 0){
   n_unit <- N_samples %/% 2 # 2 rows/unit (May + July)
   yr_vec <- c(yr1, yr2, -(yr1 + yr2))
   cv_vec <- c(cv_1, -(cv_1 + cv_3 + cv_4 + cv_5), cv_3, cv_4, cv_5) # Cv index order: 1..5
@@ -111,9 +122,15 @@ sim_div_MDSYCV <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
   gamma <- s_conv + gap_shift*(dat$Mg - 1)
   mu_structural <- loga[dat$Mg] + gamma*(dat$Mo - 1) + yr_vec[dat$Yr] + cv_vec[dat$Cv]
 
-  dat$deg_h_z      <- rnorm(nrow(dat))
-  dat$precip_72h_z <- rnorm(nrow(dat))
-  dat$seq_depth_z  <- rnorm(nrow(dat))
+  season_z <- as.vector(scale(dat$Mo - 1))
+  dat$deg_h_z <- if (rho_deg_season == 0) rnorm(nrow(dat)) else
+    rho_deg_season * season_z + sqrt(1 - rho_deg_season^2) * rnorm(nrow(dat))
+  dat$precip_72h_z <- if (rho_precip_season == 0) rnorm(nrow(dat)) else
+    rho_precip_season * season_z + sqrt(1 - rho_precip_season^2) * rnorm(nrow(dat))
+
+  mg_z <- as.vector(scale(dat$Mg - 1))
+  dat$seq_depth_z <- if (rho_seq_mg == 0) rnorm(nrow(dat)) else
+    rho_seq_mg * mg_z + sqrt(1 - rho_seq_mg^2) * rnorm(nrow(dat))
 
   mu <- mu_structural + b_deg*dat$deg_h_z + b_precip*dat$precip_72h_z + b_seq*dat$seq_depth_z
 
@@ -122,7 +139,8 @@ sim_div_MDSYCV <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
   dat
 }
 
-simulate_from_priors_MDSYCV <- function(true_params, N_samples = 250, shift = NULL){
+simulate_from_priors_MDSYCV <- function(true_params, N_samples = 250, shift = NULL,
+                                         rho_deg_season = 0, rho_precip_season = 0, rho_seq_mg = 0){
   sim_div_MDSYCV(
     N_samples = N_samples,
     loga = true_params$loga,
@@ -138,6 +156,9 @@ simulate_from_priors_MDSYCV <- function(true_params, N_samples = 250, shift = NU
     b_deg = true_params$b_deg,
     b_precip = true_params$b_precip,
     b_seq = true_params$b_seq,
-    shift = shift
+    shift = shift,
+    rho_deg_season = rho_deg_season,
+    rho_precip_season = rho_precip_season,
+    rho_seq_mg = rho_seq_mg
   )
 }

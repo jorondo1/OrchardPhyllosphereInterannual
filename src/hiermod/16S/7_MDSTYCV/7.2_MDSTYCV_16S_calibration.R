@@ -111,14 +111,14 @@ cr <- contrast_recovery(
 p_sim_contrast <- contrast_plot_panels(
   cr$estimands, quant = c(0.01, 0.99), scales = 'free_y',
   group_pal = Management_palette,
-  true_vals = cr$true_estimands); p_sim_contrast
+  true_vals = cr$true_estimands)
 
 save_report("sim_summary", model_id, recovery = param_recovery, 
             fit_sim, cr$estimands, model, model_name = "Saruman the Fool")
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,
-         function() trankplot(fit_sim, max_rows = 30, n_cols = 5),
+         function() trankplot(fit_sim, max_rows = 50, n_cols = 10),
          width = 20, height = 30)
 
 ## Prior predictive check -------------------------------------------------------
@@ -145,10 +145,10 @@ save_gg("sim_prior_PC", model_id, p_prior_pc)
 # record of small loga leaks showing up in unexpected places.
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_tr",
-                 "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
-                 "b_deg", "b_precip", "b_seq")
-p_pairs <- plot_mcmc_pairs(fit_sim, variables = pairs_vars, n_keep = 250)
-save_gg("mcmc_pairs", model_id, p_pairs, width = 18, height = 18, type = "png")
+                "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
+                "b_deg", "b_precip", "b_seq")
+p_pairs <- plot_mcmc_pairs(fit_sim, variables = pairs_vars, n_keep = 1000)
+save_gg("mcmc_pairs", model_id, p_pairs, width = 15, height = 15, type = "png")
 
 ## Simulation-based calibration (SBC), via the SBC package -----------------------
 # tr[Tr] stays out of `keep` (cardinality scales with N_samples, simulator
@@ -162,8 +162,8 @@ sbc_gen_MDSTYCV <- make_sbc_generator(
   gen_cols = c("Dv", "Mg", "Mo", "Yr", "Cv", "Tr", "deg_h_z", "precip_72h_z", "seq_depth_z"),
   extra_globals = "sim_div_MDSTYCV", shift = 1)
 
-n_sbc  <- 100
-n_iter <- 10000
+n_sbc  <- 50
+n_iter <- 5000
 
 sbc_MDSTYCV <- run_sbc_pipeline(
   generator = sbc_gen_MDSTYCV$generator, globals = sbc_gen_MDSTYCV$globals,
@@ -173,23 +173,25 @@ sbc_MDSTYCV <- run_sbc_pipeline(
 
 plot_sbc_diagnostics(sbc_MDSTYCV, model_id, n_sbc)
 
-sbc_MDSTYCV$stats |>
-  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "sigma_tr", "cv_1", "cv_3", "cv_4", "cv_5")) |>
-  dplyr::group_by(variable) |>
-  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
+sbc_MDSTYCV$stats %>% 
+  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "sigma_tr", "cv_1", "cv_3", "cv_4", "cv_5")) %>% 
+  dplyr::group_by(variable) %>% 
+  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), 
+                   median_rank_frac = median(rank / max_rank))
 
-save_sbc_health_report(model_id, sbc_MDSTYCV, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "sigma_tr", "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
-                                      "b_deg", "b_precip", "b_seq",
-                                      "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
+save_sbc_health_report(
+  model_id, sbc_MDSTYCV, n_sbc, n_iter,
+  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
+                "sigma_tr", "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
+                "b_deg", "b_precip", "b_seq",
+                "may_gap", "july_gap", "seasonal_change"),
+  hiermod_out_dir = hiermod_out_dir)
 
 # Same stress test as every model in this rebuild before trusting an "ok"
 # result at n=100.
 
 n_sbc <- 400
-
+n_iter <- 10000
 sbc_MDSTYCV_2 <- run_sbc_pipeline(
   generator = sbc_gen_MDSTYCV$generator, globals = sbc_gen_MDSTYCV$globals,
   n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
@@ -198,17 +200,19 @@ sbc_MDSTYCV_2 <- run_sbc_pipeline(
 
 plot_sbc_diagnostics(sbc_MDSTYCV_2, model_id, n_sbc)
 
-sbc_MDSTYCV_2$stats |>
-  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "sigma_tr", "cv_1", "cv_3", "cv_4", "cv_5")) |>
-  dplyr::group_by(variable) |>
-  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
+sbc_MDSTYCV_2$stats %>% 
+  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "sigma_tr", "cv_1", "cv_3", "cv_4", "cv_5")) %>% 
+  dplyr::group_by(variable) %>% 
+  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), 
+                   median_rank_frac = median(rank / max_rank))
 
-save_sbc_health_report(model_id, sbc_MDSTYCV_2, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "sigma_tr", "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
-                                      "b_deg", "b_precip", "b_seq",
-                                      "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
+save_sbc_health_report(
+  model_id, sbc_MDSTYCV_2, n_sbc, n_iter,
+  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
+                "sigma_tr", "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
+                "b_deg", "b_precip", "b_seq",
+                "may_gap", "july_gap", "seasonal_change"),
+  hiermod_out_dir = hiermod_out_dir)
 
 ## Direct before/after comparison: does Cultivar help or hurt sigma_tr? -------
 # MDST's own standalone numbers (3.2_MDST_16S_calibration.R,
