@@ -1,0 +1,34 @@
+SBC health report -- MDSYCV
+Generated: 2026-09-16 17:48:36
+n_sbc = 500, n_iter = 10000
+
+-- Backend diagnostics (sampling health) --
+  divergences:     0 total
+  max treedepth:   131982 total (worst single replicate: 5000)
+  low E-BFMI fits: 0 total
+  max Rhat:        2.084 (14/500 fits > 1.01)
+  min ESS bulk:    1
+  min ESS tail:    11
+
+-- Rank-fraction calibration (expected 0.5, SE = 0.0129 at n=500) --
+  variable              mean_frac   med_frac        z  flag
+  b_deg                     0.500      0.502    -0.02  ok
+  b_precip                  0.504      0.531     0.27  ok
+  b_seq                     0.502      0.511     0.14  ok
+  cv_1                      0.514      0.521     1.08  ok
+  cv_3                      0.514      0.500     1.06  ok
+  cv_4                      0.497      0.491    -0.25  ok
+  cv_5                      0.468      0.452    -2.50  ok
+  gap_shift                 0.519      0.544     1.49  ok
+  july_gap                  0.512      0.501     0.90  ok
+  loga[1]                   0.483      0.477    -1.33  ok
+  loga[2]                   0.476      0.449    -1.85  ok
+  may_gap                   0.501      0.493     0.04  ok
+  s_conv                    0.501      0.498     0.06  ok
+  seasonal_change           0.518      0.529     1.36  ok
+  sigma[1]                  0.511      0.516     0.87  ok
+  sigma[2]                  0.498      0.516    -0.19  ok
+  yr1                       0.505      0.502     0.35  ok
+  yr2                       0.497      0.503    -0.26  ok
+
+Overall: OK

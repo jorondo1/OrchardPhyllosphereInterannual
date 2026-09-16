@@ -95,26 +95,31 @@ estimand_panels <- function(pairs, extra = NULL, group_levels = c("1", "2")){
   return(full)
 }
 
-# One summary row (mean/median/89% PI/HPDI) per statistic, from a
+# One summary row (mean/median/89% PI/HPDI/pd) per statistic, from a
 # compute_contrasts()-shaped tibble. Feeds both console/report text and
-# contrast_plot_panels()'s in-panel labels.
-report_contrasts_full <- function(pc_full){
-  filtered <- pc_full %>% filter(group %in% c("Contrast", "Population"))
-  if (nrow(filtered) == 0) {
-    return(tibble(statistic = factor(character(0), levels = levels(pc_full$statistic)),
-                  group = character(0), mean = numeric(0), median = numeric(0),
-                  PI89_lower = numeric(0), PI89_upper = numeric(0),
-                  HPDI_lower = numeric(0), HPDI_upper = numeric(0)))
-  }
+# contrast_plot_panels()'s in-panel labels (Contrast/Population rows only,
+# all_groups=FALSE default -- keeps in-panel text to the headline number).
+# all_groups=TRUE keeps every group (e.g. Conventional/Organic themselves,
+# not just their Contrast) -- used for the comprehensive results-report
+# kable (save_posterior_kable()), where the actual per-group posterior
+# quantities matter, not just their difference.
+# pd ("probability of direction", Makowski et al. 2019): the fraction of
+# posterior mass on the same side of 0 as the median -- e.g. pd=0.97 means
+# 97% of draws agree on the sign. Most informative for Contrast rows (a
+# raw, always-positive diversity quantity trivially has pd=1).
+report_contrasts_full <- function(pc_full, all_groups = FALSE){
+  filtered <- if (all_groups) pc_full else pc_full %>% filter(group %in% c("Contrast", "Population"))
+  
   filtered %>%
     group_by(statistic, group) %>%
     summarise(
       mean   = mean(value),
       median = median(value),
-      PI89_lower = PI(value)[1],
-      PI89_upper = PI(value)[2],
       HPDI_lower = HPDI(value)[1],
       HPDI_upper = HPDI(value)[2],
+      PI89_lower = PI(value)[1],
+      PI89_upper = PI(value)[2],
+      pd = max(mean(value > 0), mean(value < 0)),
       .groups = "drop"
     )
 }

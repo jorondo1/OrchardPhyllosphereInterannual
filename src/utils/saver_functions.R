@@ -118,22 +118,27 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
 }
 
 # Comprehensive posterior summary as a styled HTML table (kableExtra), one
-# row per statistic/group -- mean, median, 89% PI, 89% HPDI. Companion to
-# save_report(): that one is model+precis only (a fit's own diagnostic
+# row per statistic/group -- mean, median, 89% PI, 89% HPDI, pd. Companion
+# to save_report(): that one is model+precis only (a fit's own diagnostic
 # record); this is the "results report" -- every interpretable posterior a
-# reader might want a number for, not just the headline contrast. pc_full:
-# a compute_contrasts()/estimand_panels()-shaped statistic/group/value
+# reader might want a number for, including each group's own quantity
+# (all_groups=TRUE default), not just its Contrast. pc_full: a
+# compute_contrasts()/estimand_panels()-shaped statistic/group/value
 # tibble (bind_rows() together whatever the calling script already built,
 # e.g. compute_contrasts(pf, keep=...) + pc_estimands_means +
 # pc_estimands_medians -- see any *_16S_analysis.R script for the pattern).
-save_posterior_kable <- function(name, step, pc_full, dir = hiermod_out_dir, caption = NULL){
+save_posterior_kable <- function(name, step, pc_full, dir = hiermod_out_dir, caption = NULL, all_groups = TRUE){
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   path <- file.path(dir, paste0(name, "_", step, ".html"))
 
-  report_contrasts_full(pc_full) %>%
-    mutate(across(where(is.numeric), ~round(.x, 3))) %>%
-    kableExtra::kable("html", caption = caption %||% paste("Posterior summary:", step)) %>%
-    kableExtra::kable_styling(full_width = FALSE) %>%
+  report_contrasts_full(pc_full, all_groups = all_groups) %>%
+    mutate(across(where(is.numeric), ~round(.x, 2))) %>%
+    kableExtra::kable("html", caption = caption %||% paste0(
+      "Posterior summary: ", step,
+      ". pd = probability of direction (fraction of the posterior on the median's side of 0).")) %>%
+    kableExtra::kable_styling(
+      full_width = FALSE,
+      bootstrap_options = c('striped', 'hover')) %>%
     kableExtra::save_kable(file = path)
 
   invisible(path)
