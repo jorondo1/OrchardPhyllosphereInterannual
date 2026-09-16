@@ -154,6 +154,22 @@ contrast_plot_panels <- function(
   main_levels  <- setdiff(levels(pc_full$statistic), ratio_stats)
   ratio_levels <- intersect(levels(pc_full$statistic), ratio_stats)
 
+  # Unified legend across main_plot + ratio_plot (e.g. Contrast/Conventional/
+  # Organic + May/July fold difference, 5 entries): both plots map fill/
+  # colour to the SAME aesthetic (`group`) and the SAME scale (identical
+  # values=/limits=), which is what lets patchwork's guides="collect" merge
+  # them into one shared legend below the combined figure instead of two
+  # separate ones -- ratio_plot's own `statistic` column is repurposed into
+  # `group` for exactly this reason (every extra= row already has
+  # group="Contrast" uniformly, so `statistic` is what actually varies
+  # between "May fold difference"/"July fold difference" there).
+  # Only the groups ACTUALLY present in main_levels' own data go in (not
+  # every group_pal entry -- e.g. Management_palette's own "Population"
+  # entry is for other, unrelated panels and would otherwise leak in as an
+  # unused phantom legend category here).
+  main_groups <- trimmed %>% filter(statistic %in% main_levels) %>% pull(group) %>% unique()
+  combined_pal <- c(group_pal[intersect(names(group_pal), main_groups)], ratio_pal)
+
   main_plot <- trimmed %>%
     filter(statistic %in% main_levels) %>%
     ggplot(aes(x = value, fill = group, colour = group)) +
@@ -174,10 +190,9 @@ contrast_plot_panels <- function(
               hjust = 1.05, vjust = 1.3, size = 2.8, colour = "grey20",
               inherit.aes = FALSE, family = "mono") +
     facet_wrap(~statistic, scales = scales, ncol = 1) +
-    scale_fill_manual(values = group_pal) +
-    scale_colour_manual(values = group_pal) +
-    theme(legend.position = "bottom") +
-    labs(x = "Species diversity", y = NULL, fill = legend_title, colour = legend_title)
+    scale_fill_manual(values = combined_pal, limits = names(combined_pal), guide = "none") +
+    scale_colour_manual(values = combined_pal, limits = names(combined_pal), guide = "none") +
+    labs(x = "Effective number of ASVs", y = NULL)
 
   caption <- paste0(
     "Each panel cropped independently to its own ", 100*quant[1], "th-", 100*quant[2],
@@ -186,43 +201,54 @@ contrast_plot_panels <- function(
 
   if (length(ratio_levels) == 0) return(main_plot + labs(caption = caption))
 
-  # Ratio/fold-change statistics (ratio_stats=) sit on a fundamentally
-  # different scale than the rest -- centered on 1 (no change), not 0, and
-  # multiplicative rather than additive -- so sharing the main grid's common
-  # x-axis (scales="free_y" only frees the y-axis) would squash them
-  # illegibly against Hill-diversity-scale panels. But they're comparable
-  # in magnitude to EACH OTHER, so unlike that main grid they share ONE
-  # panel (overlaid densities, not faceted), coloured/legended by statistic
-  # (not by group -- every extra= row already has group="Contrast"
-  # uniformly, so statistic is what actually distinguishes e.g. "May fold
-  # change" from "July fold change" here) -- patchworked below the main grid.
-  #
-  # In-panel labels are one-liners (median + 89% HPDI only, no PI -- the
-  # full PI+HPDI breakdown stays in the text report via report_contrasts_full()/
-  # save_report(), untouched) so the figure stays light. Multiple geom_text
-  # rows at the same x=Inf,y=Inf with a FIXED vjust render exactly on top of
-  # each other (confirmed directly) -- vjust must increment per row for the
-  # 3 one-liners to stack instead of overlapping.
-  ratio_labels <- report_contrasts_full(pc_full) %>%
+  # Ratio/fold-change statistics: one-liner per statistic (median + 89%
+  # HPDI only, no PI -- full PI+HPDI breakdown stays in the text/kable
+  # report). Joined into ONE multi-line string via \n and drawn with a
+  # single annotate("text", ...) call, same x=Inf/y=Inf/hjust/vjust
+  # positioning as the main panel's own geom_text -- multiple separately-
+  # positioned geom_text rows at that same anchor render exactly on top of
+  # each other (confirmed directly), so one combined string, spaced by its
+  # own internal \n exactly like the main panel's own multi-line labels,
+  # is the reliable way to get evenly stacked lines here.
+  ratio_label_text <- report_contrasts_full(pc_full) %>%
     filter(statistic %in% ratio_levels) %>%
     arrange(statistic) %>%
-    mutate(label = paste0(statistic, " posterior median: ", round(median, 2),
-                          " (89% HPDI [", round(HPDI_lower, 2), ", ", round(HPDI_upper, 2), "])"),
-           vjust = 1.3 + 1.3 * (row_number() - 1))
+    mutate(line = paste0(statistic, " posterior median: ", round(median, 2),
+                         " (89% HPDI [", round(HPDI_lower, 2), ", ", round(HPDI_upper, 2), "])")) %>%
+    pull(line) %>%
+    paste(collapse = "\n")
+
+  # ratio_plot (last panel in the stack) carries the ONE unified legend, so
+  # it lands at the true bottom of the combined figure instead of between
+  # the two panels (patchwork stacks a plot's own legend right after
+  # itself, so whichever plot owns the legend must be the last one).
+  # main_plot's groups (Contrast/Conventional/Organic) have no rows in
+  # ratio_plot's own data, so scale_*_manual's limits= would otherwise draw
+  # them as blank/uncoloured swatches (a confirmed ggplot2 behaviour for
+  # legend levels absent from the plotted layer's data) -- a zero-height
+  # geom_area dummy layer gives those levels real (invisible) data so their
+  # legend keys pick up their real fill/colour.
+  # patchwork's guides="collect" was tried first but does NOT reliably
+  # merge two separately-built discrete scales into one guide even when
+  # values=/limits= are identical (confirmed directly -- it drew two full
+  # side-by-side legend blocks instead of one); this is simpler and
+  # guaranteed correct regardless of patchwork's own merging heuristics.
+  ratio_dummy <- tibble(group = main_groups, x = 1, y = 0)
 
   ratio_plot <- trimmed %>%
     filter(statistic %in% ratio_levels) %>%
-    mutate(statistic = droplevels(statistic)) %>%
-    ggplot(aes(x = value, fill = statistic, colour = statistic)) +
+    mutate(group = as.character(statistic)) %>%
+    ggplot(aes(x = value, fill = group, colour = group)) +
     geom_density(alpha = 0.5, linewidth = 0.2) +
+    geom_area(data = ratio_dummy, aes(x = x, y = y, fill = group, colour = group),
+              alpha = 0.5, linewidth = 0.2, inherit.aes = FALSE) +
     geom_vline(xintercept = 1, colour = "grey50") +
-    geom_text(data = ratio_labels, aes(label = label, vjust = vjust), x = Inf, y = Inf,
-              hjust = 1.05, size = 2.8, colour = "grey20",
-              inherit.aes = FALSE, family = "mono") +
-    scale_fill_manual(values = ratio_pal) +
-    scale_colour_manual(values = ratio_pal) +
+    annotate("text", x = Inf, y = Inf, label = ratio_label_text,
+             hjust = 1.05, vjust = 1.3, size = 2.8, colour = "grey20", family = "mono") +
+    scale_fill_manual(values = combined_pal, limits = names(combined_pal)) +
+    scale_colour_manual(values = combined_pal, limits = names(combined_pal)) +
     theme(legend.position = "bottom") +
-    labs(x = "Fold change", y = NULL, fill = NULL, colour = NULL)
+    labs(x = "Fold change", y = NULL, fill = legend_title, colour = legend_title)
 
   patchwork::wrap_plots(list(main_plot, ratio_plot), ncol = 1,
                          heights = c(length(main_levels), 1)) +

@@ -21,12 +21,11 @@ md <- pf$median
 pc_estimands_means <- estimand_panels(
   pairs = list(`May mean`  = list(m$mean_1, m$mean_3),
                `July mean` = list(m$mean_2, m$mean_4)),
-  extra = list(
-    "May fold change (Conventional / Organic)"  = m$mean_1 / m$mean_3,
-    "July fold change (Conventional / Organic)" = m$mean_2 / m$mean_4,
-    "Contrast between folds (May / July)"       = (m$mean_1 / m$mean_3) / (m$mean_2 / m$mean_4)
+  extra = setNames(
+    list(m$mean_1 / m$mean_3, m$mean_2 / m$mean_4),
+    names(Fold_change_palette)
   ),
-  group_levels = c("Conventional", "Organic")
+  group_levels = idx$Mg$levels
 )
 
 save_report("fit_summary", model_id_MDSYCV, fit_MDSYCV, model = model_MDSYCV_16S)
@@ -42,12 +41,11 @@ save_gg("fit_contrast_mean", model_id_MDSYCV, p_contrast_mean)
 pc_estimands_medians <- estimand_panels(
   pairs = list(`May median`  = list(md$median_1, md$median_3),
                `July median` = list(md$median_2, md$median_4)),
-  extra = list(
-    "May fold change (Conventional / Organic)"  = md$median_1 / md$median_3,
-    "July fold change (Conventional / Organic)" = md$median_2 / md$median_4,
-    "Contrast between folds (May / July)"       = (md$median_1 / md$median_3) / (md$median_2 / md$median_4)
+  extra = setNames(
+    list(md$median_1 / md$median_3, md$median_2 / md$median_4),
+    names(Fold_change_palette)
   ),
-  group_levels = c("Conventional", "Organic")
+  group_levels = idx$Mg$levels
 )
 
 p_contrast_median <- contrast_plot_panels(

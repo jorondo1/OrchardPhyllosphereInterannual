@@ -1,12 +1,12 @@
-# MODEL 2 (MDS), 16S, SHIFTED: posterior contrast, run against the saved fit.
-# No random-effect variance-component section (unlike archived MDLS2's own
-# 5.4) -- MDS has none yet -- but sigma[Mg] itself is still a modeled
+# MODEL 2 (MDS), ITS, SHIFTED: posterior contrast, run against the saved
+# fit. Mirrors 2.4_MDS_16S_analysis.R. No random-effect variance-component
+# section (MDS has none yet) -- but sigma[Mg] itself is still a modeled
 # variance component worth its own panel.
 
-hiermod_marker <- "16S"
+hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDS_model.R') # model_MDS_16S, means_MDS()
-hiermod_out_dir <- "out/hiermod/16S_2_interaction_MDS"
+source('src/hiermod/Models/MDS_model.R') # model_MDS_ITS, means_MDS()
+hiermod_out_dir <- "out/hiermod/ITS_2_interaction_MDS"
 
 fit_MDS <- readRDS(file.path(hiermod_out_dir, "fit_MDS.rds"))
 dat_MDS <- readRDS(file.path(hiermod_out_dir, "dat_MDS.rds"))
@@ -27,7 +27,7 @@ pc_estimands_means <- estimand_panels(
   group_levels = idx$Mg$levels
 )
 
-save_report("fit_summary", model_id_MDS, fit_MDS, model = model_MDS_16S)
+save_report("fit_summary", model_id_MDS, fit_MDS, model = model_MDS_ITS)
 
 p_contrast_mean <- contrast_plot_panels(
   pc_estimands_means, quant = c(0.001, 0.999), scales = 'free_y',
@@ -56,11 +56,6 @@ p_contrast_median <- contrast_plot_panels(
 save_gg("fit_contrast_median", model_id_MDS, p_contrast_median)
 
 ## Comprehensive posterior summary (results report) -----------------------------
-# Every interpretable posterior's own mean/median/89% PI/HPDI, not just the
-# headline contrast -- excludes per-tree tr[Tr] raw draws (too many, not
-# individually interpretable) and the generic "mean"/"median" 4-column
-# entries (already covered, more legibly, by pc_estimands_means/medians'
-# own May/July/Conventional/Organic labels).
 
 pc_all <- bind_rows(
   compute_contrasts(pf, keep = setdiff(names(pf), c("tr", "mean", "median")), group_levels = idx$Mg$levels),
@@ -68,9 +63,6 @@ pc_all <- bind_rows(
 save_posterior_kable("results_report", model_id_MDS, pc_all)
 
 ## Residual variance (sigma[Mg]) -------------------------------------------------
-# Not a random effect, but still a modeled variance component worth its own
-# panel: how much of the season/management picture is residual noise vs a
-# real effect, and whether Conventional/Organic actually differ in spread.
 
 pc_sigma <- compute_contrasts(pf, keep = "sigma", group_levels = idx$Mg$levels)
 

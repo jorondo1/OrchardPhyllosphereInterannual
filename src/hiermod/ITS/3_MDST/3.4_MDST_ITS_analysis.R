@@ -1,13 +1,16 @@
-# MODEL 3 (MDST, "Treebeard the Skeptic"), 16S, SHIFTED: posterior contrast,
-# run against the saved fit. Variance components (sigma[Mg], sigma_tr) are
-# already covered in 3.3's own fit script -- this one just mirrors 2.4's
-# Management x Season contrast reporting so the two models stay directly
-# comparable side by side.
+# MODEL 3 (MDST, "Treebeard the Skeptic"), ITS, SHIFTED: posterior
+# contrast, run against the saved fit. Mirrors 3.4_MDST_16S_analysis.R.
+# Variance components (sigma[Mg], sigma_tr) are already covered in 3.3's
+# own fit script -- this one just mirrors 2.4's Management x Season
+# contrast reporting so the two models stay directly comparable side by
+# side. See 3.3's own header for the SBC-miscalibration caveat on this
+# model -- a scaffolding step toward Model 7, not an independently
+# interpreted result.
 
-hiermod_marker <- "16S"
+hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDST_model.R') # model_MDST_16S, means_MDST()
-hiermod_out_dir <- "out/hiermod/16S_3_tree_MDST"
+source('src/hiermod/Models/MDST_model.R') # model_MDST_ITS, means_MDST()
+hiermod_out_dir <- "out/hiermod/ITS_3_tree_MDST"
 
 fit_MDST <- readRDS(file.path(hiermod_out_dir, "fit_MDST.rds"))
 dat_MDST <- readRDS(file.path(hiermod_out_dir, "dat_MDST.rds"))
@@ -28,7 +31,7 @@ pc_estimands_means <- estimand_panels(
   group_levels = idx$Mg$levels
 )
 
-save_report("fit_summary", model_id_MDST, fit_MDST, model = model_MDST_16S)
+save_report("fit_summary", model_id_MDST, fit_MDST, model = model_MDST_ITS)
 
 p_contrast_mean <- contrast_plot_panels(
   pc_estimands_means, quant = c(0.005, 0.995), scales = 'free_y',
@@ -57,14 +60,8 @@ p_contrast_median <- contrast_plot_panels(
 save_gg("fit_contrast_median", model_id_MDST, p_contrast_median)
 
 ## Comprehensive posterior summary (results report) -----------------------------
-# Every interpretable posterior's own mean/median/89% PI/HPDI, not just the
-# headline contrast -- excludes per-tree tr[Tr] raw draws (too many, not
-# individually interpretable) and the generic "mean"/"median" 4-column
-# entries (already covered, more legibly, by pc_estimands_means/medians'
-# own May/July/Conventional/Organic labels).
 
 pc_all <- bind_rows(
   compute_contrasts(pf, keep = setdiff(names(pf), c("tr", "mean", "median")), group_levels = idx$Mg$levels),
   pc_estimands_means, pc_estimands_medians)
 save_posterior_kable("results_report", model_id_MDST, pc_all)
-

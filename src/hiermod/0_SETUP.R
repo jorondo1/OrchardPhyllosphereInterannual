@@ -13,15 +13,7 @@ div <- if (hiermod_marker == "ITS") div_all$Fungi$alpha else div_all$Bacteria$al
 
 message("Make sure to define hiermod_out_dir <- out/hiermod/<...>")
 
-# ---- Category <-> index codebooks (see make_index() in hiermod_core.R) ----
-# Defined once, here. Every Mg/Lo/Tr/Cv conversion in every model script --
-# both building a model's data list (to_index) and recovering labels for
-# postpred checks (to_label) -- goes through these, so the index<->category
-# mapping can't drift between model scripts (it previously did once: one
-# model's data list had Conventional/Organic flipped relative to the rest).
-# palette= carries each index's own colour scheme -- see $palette/$palette_n()
-# in make_index() -- so scripts stop hand-building scales::hue_pal() palettes
-# inline (as every variance-component panel used to).
+# Category <-> index codebooks (make_index(), hiermod_core.R) -- shared here so the index<->category mapping can't drift between scripts.
 
 fill_loc  <- c("#5DB63B", "#2C9EE3", "gold", "#F8A11C")
 fill_cult <- c("#7DB16B", "#45818E", "#AB4F84", "#AE9FCB", "#99CFE1")
@@ -37,25 +29,14 @@ idx <- list(
   Yr = make_index(div$Year, levels = c("2022", "2023", "2024"))
 )
 
-# Colours -- Management_palette built FROM idx$Mg$palette (same hex values as
-# before) so every existing `group_pal = Management_palette` call site keeps
-# working unchanged; Contrast/Population are generic roles, not Management
-# levels, so they're layered on top rather than folded into idx$Mg itself.
+# Built from idx$Mg$palette; Contrast/Population are generic roles layered on top, not Management levels.
 Management_palette <- c(idx$Mg$palette, Contrast = "#98494d", Population = "#895a92")
 
-# Covariate effect panel labels/colours (Model 5 (MDSYC) onward) -- same
-# 3 labels/colours every fit script built inline for its own
-# fit_covariate_effects panel.
+# Covariate effect panel labels/colours (Model 5+).
 cov_labels <- c("Degree-hours", "Precipitation (72h)", "Seq. depth")
 cov_pal    <- setNames(scales::hue_pal()(3), cov_labels)
 
-# Variance-partition panel palette (Model 5 (MDSYC) onward) -- one colour
-# per fixed-effect group (variance_partition_*()'s own sequential
-# decomposition, see MDSYC_model.R), plus Tree (random effect, Model 7
-# only) and Residual. Shared across every model's own variance-partition
-# plot so the same group always gets the same colour; a model that doesn't
-# have a given group (e.g. Models 5/6 have no Tree) just never uses that
-# name.
+# Variance-partition panel colours (Model 5+, variance_partition_*()'s own sequential decomposition).
 Variance_partition_palette <- c(
   "Management x Season" = "#4C72B0",
   "Year"                = "#55A868",
@@ -65,49 +46,28 @@ Variance_partition_palette <- c(
   "Residual"            = "grey50"
 )
 
-# Fold-change panel palette (Model 2 onward) -- May/July each get their own
-# colour, "Contrast between folds" reuses Management_palette's own Contrast
-# colour (visually de-emphasized/consistent with every other "Contrast" row
-# elsewhere). Keyed by the exact statistic names contrast_plot_panels()'s
-# own ratio_stats= facet uses, same pattern as Variance_partition_palette.
+# Fold-change panel colours (Model 2+, contrast_plot_panels()'s ratio_stats=). Reference these names dynamically
+# (names(Fold_change_palette)) in each script's own extra= list rather than retyping them -- a mismatch here silently
+# breaks the combined ratio panel (it did once already).
 Fold_change_palette <- c(
-  "May fold change (Conventional / Organic)"  = "#CC8FBB",
-  "July fold change (Conventional / Organic)" = "#7AAB32",
-  "Contrast between folds (May / July)"       = Management_palette[["Contrast"]]
+  "May fold difference"  = "#CC8FBB",
+  "July fold difference" = "#7AAB32"
 )
 
-# ---- Standardized control covariates (Model 7 (MDLSYC) onward) ----
-# deg_h_z/precip_72h_z are centered WITHIN each Season (mean-subtracted per
-# Time level), not globally -- Season (Mo) is already a predictor, and
-# degree-hours/precipitation are strongly collinear with it in the real
-# data (r=0.735/0.547, see TODO.md). Global centering would let
-# gamma/s_conv/gap_shift (the May->July contrast terms) report the
-# seasonal shift net of the portion explained by b_deg/b_precip -- "the
-# seasonal change if temperature had been constant," which never happens
-# and isn't the estimand of interest. Within-Season centering makes each
-# covariate orthogonal to Mo by construction (so it still absorbs
-# day-to-day sampling-date weather jitter within a season), while the real
-# between-season temperature/precipitation difference flows entirely into
-# the season term, where it belongs. seq_depth_z below stays globally
-# centered on purpose: its correlation with Management is a technical
-# sequencing-depth artifact we want removed from the Management contrast,
-# not a substantive quantity to preserve.
-# *_season_mean are named vectors (keyed by Time level, not a single
-# scalar) so any script needing the raw scale back can invert the z-score
-# per season; *_sd is the pooled within-season residual SD.
-deg_h_season_mean      <- tapply(div$deg_h,      div$Time, mean)
-precip_72h_season_mean <- tapply(div$precip_72h, div$Time, mean)
+# deg_h_z is centered WITHIN Season (not globally) so the season term (s_conv/gap_shift) keeps the real, reliably
+# monotonic (July always warmer) weather-driven seasonal signal instead of it leaking into the covariate slope.
+# precip_72h_z is centered globally -- unlike temperature, precip has no reliable May-vs-July direction (e.g. 2022
+# reverses it), so within-season centering would just bake a given year's idiosyncratic rain pattern into the season
+# term instead of a real seasonal identity. seq_depth_z stays globally centered too -- its Management correlation is
+# a confound we want removed, not preserved.
+deg_h_season_mean <- tapply(div$deg_h, div$Time, mean)
 
-div$deg_h_z      <- (div$deg_h      - deg_h_season_mean[div$Time])
-div$precip_72h_z <- (div$precip_72h - precip_72h_season_mean[div$Time])
+div$deg_h_z <- (div$deg_h - deg_h_season_mean[div$Time])
+div$deg_h_z <- div$deg_h_z / sd(div$deg_h_z)
 
-deg_h_sd      <- sd(div$deg_h_z);      div$deg_h_z      <- div$deg_h_z      / deg_h_sd
-precip_72h_sd <- sd(div$precip_72h_z); div$precip_72h_z <- div$precip_72h_z / precip_72h_sd
+div$precip_72h_z <- (div$precip_72h - mean(div$precip_72h)) / sd(div$precip_72h)
 
-# Seq_depth (raw pre-rarefaction read count) is right-skewed and spans
-# ~20x (see MODEL_HISTORY.md Model 7) -- logged first so a linear slope
-# matches a saturating detection-effort effect, then standardized like the
-# weather covariates above.
+# Seq_depth logged first (right-skewed, ~20x range), then standardized.
 log_seq_depth   <- log(div$Seq_depth)
 div$seq_depth_z <- (log_seq_depth - mean(log_seq_depth)) / sd(log_seq_depth)
 

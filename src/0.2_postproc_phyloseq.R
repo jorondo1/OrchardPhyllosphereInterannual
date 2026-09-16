@@ -106,6 +106,7 @@ cat("\n--- Step 3: ASV filtering ---\n")
 
 tax_16S_filt <- tax_16S %>%
   filter(Kingdom == "Bacteria", Family != "Mitochondria")
+
 seqtab_16S_filt <- seqtab_16S[, colnames(seqtab_16S) %in% rownames(tax_16S_filt)]
 
 cat(sprintf("Total reads (bacteria only): %d\n", sum(seqtab_16S_filt)))

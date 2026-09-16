@@ -1,0 +1,36 @@
+==== model: Strider the Unrooted ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$main_model
+mu <- loga[Mg] + gamma * (Mo - 1)
+
+$gamma_def
+gamma <- s_conv + gap_shift * (Mg - 1)
+
+$prior_loga
+loga[Mg] ~ dnorm(2, 2)
+
+$prior_s
+s_conv ~ dnorm(0, 1)
+
+$prior_gs
+gap_shift ~ dnorm(0, 1)
+
+$pr_sigma
+sigma[Mg] ~ dhalfnorm(0, 1)
+
+attr(,"name")
+[1] "Strider the Unrooted"
+
+
+==== precis: fit_MDS ====
+
+            mean    sd   5.5%  94.5% rhat ess_bulk ess_ratio
+loga[1]    2.696 0.078  2.573  2.822    1 16943.91     0.565
+loga[2]    2.184 0.137  1.969  2.406    1 17840.38     0.595
+s_conv    -1.811 0.109 -1.987 -1.637    1 15876.81     0.529
+gap_shift  2.059 0.220  1.710  2.409    1 15580.67     0.519
+sigma[1]   0.669 0.040  0.608  0.735    1 23813.37     0.794
+sigma[2]   0.985 0.071  0.879  1.105    1 22460.61     0.749

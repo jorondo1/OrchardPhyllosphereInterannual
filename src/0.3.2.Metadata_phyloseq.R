@@ -63,6 +63,30 @@ meta_bact <- meta_out %>%
 meta_bact$Seq_depth <- rowSums(otu_table(ps_bact))[rownames(meta_bact)]
 meta_fung$Seq_depth <- rowSums(otu_table(ps_fung))[rownames(meta_fung)]
 
+# add centered/scaled covariates (hiermod models, src/hiermod/0_SETUP.R) -----
+# deg_h_z: centered WITHIN Time (July is reliably warmer than May every
+# year, a real seasonal identity worth keeping separate from the
+# covariate). precip_72h_z/seq_depth_z: centered globally -- precip has no
+# reliable May-vs-July direction (e.g. 2022 reverses it), and seq_depth's
+# Management correlation is a confound we want removed, not preserved.
+# Keep this logic in sync with 0_SETUP.R's own if it ever changes.
+
+add_centered_covariates <- function(dat){
+  deg_h_season_mean <- tapply(dat$deg_h, dat$Time, mean)
+  deg_h_z <- (dat$deg_h - deg_h_season_mean[dat$Time])
+  dat$deg_h_z <- deg_h_z / sd(deg_h_z)
+
+  dat$precip_72h_z <- (dat$precip_72h - mean(dat$precip_72h)) / sd(dat$precip_72h)
+
+  log_seq_depth   <- log(dat$Seq_depth)
+  dat$seq_depth_z <- (log_seq_depth - mean(log_seq_depth)) / sd(log_seq_depth)
+
+  dat
+}
+
+meta_bact <- add_centered_covariates(meta_bact)
+meta_fung <- add_centered_covariates(meta_fung)
+
 # build final objects ------------------------
 
 sample_data(ps_bact) <- meta_bact
