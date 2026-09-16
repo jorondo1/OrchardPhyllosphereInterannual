@@ -37,6 +37,7 @@ model_MDSYz_16S$prior_yr  <- NULL # drop MDSY's old yr[Yr] ~ dnorm(0,1)
 model_MDSYz_16S$prior_yr1 <- quote(yr1 ~ dnorm(0,1))
 model_MDSYz_16S$prior_yr2 <- quote(yr2 ~ dnorm(0,1))
 
+attr(model_MDSYz_16S, "name") <- "Elrond the Ageless"
 model_id_MDSYz <- "MDSYz"
 
 ## means_MDSYz()/dq_MDSYz -----------------------------------------------------

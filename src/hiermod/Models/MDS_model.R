@@ -25,6 +25,7 @@ model_MDS_16S <- alist(
   pr_sigma   = sigma[Mg] ~ dhalfnorm(0,1)
 )
 
+attr(model_MDS_16S, "name") <- "Strider the Unrooted"
 model_id_MDS <- "MDS"
 
 ## Backtransform wrapper ------------------------------------------------------

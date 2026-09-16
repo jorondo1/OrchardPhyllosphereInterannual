@@ -14,7 +14,7 @@ source('src/hiermod/Models/MDSY_model.R') # model_MDSY_16S, means_MDSY(), sim_di
 model <- model_MDSY_16S
 model_id <- model_id_MDSY
 
-hiermod_out_dir <- "out/hiermod/16S_4_year_MDSY"
+hiermod_out_dir <- "out/hiermod/16S_4_year_MDSY/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
 # Same baseline/gap values as MDS/MDST's own calibration, plus year_offset
@@ -74,7 +74,7 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Elrond the Ageless")
+save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model)
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,

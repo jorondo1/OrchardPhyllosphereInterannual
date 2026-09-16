@@ -37,6 +37,7 @@ model_MDSYC_16S$prior_deg    <- quote(b_deg    ~ dnorm(0,1))
 model_MDSYC_16S$prior_precip <- quote(b_precip ~ dnorm(0,1))
 model_MDSYC_16S$prior_seq    <- quote(b_seq    ~ dnorm(0,1))
 
+attr(model_MDSYC_16S, "name") <- "Radagast the Grower"
 model_id_MDSYC <- "MDSYC"
 
 ## Backtransform wrapper ------------------------------------------------------

@@ -12,7 +12,7 @@ source('src/hiermod/Models/MDSYz_model.R') # model_MDSYz_16S, means_MDSYz(), sim
 model <- model_MDSYz_16S
 model_id <- model_id_MDSYz
 
-hiermod_out_dir <- "out/hiermod/16S_4_year_MDSY"
+hiermod_out_dir <- "out/hiermod/16S_4_year_MDSY/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
 # Same baseline/gap values as MDSY's own calibration, so results stay
@@ -43,8 +43,6 @@ dat_sim <- sim_div_MDSYz(
   shift = 1
 ); head(dat_sim)
 
-hist(dat_sim$Dv_shifted, breaks = 100)
-
 fit_sim <- ulam(
   model,
   data = as.list(dat_sim),
@@ -67,7 +65,7 @@ post_sim <- extract.samples(fit_sim)
     s_conv = post_sim$s_conv, gap_shift = post_sim$gap_shift,
     sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2],
     yr1 = post_sim$yr1, yr2 = post_sim$yr2, yr3 = -(post_sim$yr1 + post_sim$yr2))))
-save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Elrond the Ageless")
+save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model)
 
 ### Contrast recovery -------------
 

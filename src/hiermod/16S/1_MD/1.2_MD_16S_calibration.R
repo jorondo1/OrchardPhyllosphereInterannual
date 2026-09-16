@@ -26,11 +26,8 @@ model_MD <- model_MD_16S
 model_MD$prior_loga  <- quote(loga[Mg] ~ dnorm(5,2))
 model_MD$prior_sigma <- quote(sigma ~ dexp(2))
 
-hiermod_out_dir <- "out/hiermod/16S_1_lognormal_MD"
+hiermod_out_dir <- "out/hiermod/16S_1_lognormal_MD/Calibration"
 
-# Explore raw outcome distribution
-hist(div$Hill_1, breaks = 30)
-mean(div$Hill_1)
 save_pdf("hill1_hist", "raw", function() hist(div$Hill_1, breaks = 30))
 
 ## MD -- Mean difference by Management, constant variance ====================
@@ -93,7 +90,7 @@ p_MD_cal_contrast <- contrast_plot_panels(
   pc_MD_cal, quant = c(0.005, 0.99), group_pal = Management_palette,
   true_vals = true_vals_MD); p_MD_cal_contrast
 
-save_report("sim_summary", model_id_MD, recovery = param_recovery_MD, fit_MD_cal, pc_MD_cal, model_MD, model_name = "Samwise the Steadfast")
+save_report("sim_summary", model_id_MD, recovery = param_recovery_MD, fit_MD_cal, pc_MD_cal, model_MD)
 save_gg("sim_contrast_density", model_id_MD, p_MD_cal_contrast)
 
 ## MD -- formal calibration (loga-shrinkage floor test) =======================

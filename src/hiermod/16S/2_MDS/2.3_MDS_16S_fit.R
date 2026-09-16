@@ -34,7 +34,7 @@ save_pdf("fit_trankplot", model_id_MDS,
 
 ### Overall, by Management x Season cell ----
 
-pp_group <- interaction(idx$Mg$to_label(dat_MDS$Mg), idx$Mo$to_label(dat_MDS$Mo), sep = " ")
+pp_group <- ppc_group(dat_MDS)
 p_postpred <- plot_ppc_overlay(fit_MDS, dat_MDS, pp_group, xlim = c(NA, 2000))
 save_gg("postpred_density", model_id_MDS, p_postpred)
 

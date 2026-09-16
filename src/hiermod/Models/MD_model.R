@@ -34,6 +34,7 @@ model_MD_16S <- model_MD_ITS
 model_MD_16S$prior_loga  <- quote(loga[Mg] ~ dnorm(5,2))
 model_MD_16S$prior_sigma <- quote(sigma ~ dexp(2))
 
+attr(model_MD_16S, "name") <- "Samwise the Steadfast"
 model_id_MD <- "MD"
 
 # Direct loga/sigma parameterization (loga IS the model's own log-median,
@@ -89,6 +90,7 @@ model_MDv_16S <- model_MDv_ITS
 model_MDv_16S$prior_loga  <- quote(loga[Mg] ~ dnorm(5,2))
 model_MDv_16S$prior_sigma <- quote(sigma[Mg] ~ dexp(2))
 
+attr(model_MDv_16S, "name") <- "Gollum the Two-Faced"
 model_id_MDv <- "MDv"
 
 # Direct loga/sigma[Mg] parameterization, same rationale as sim_div_MD() above.

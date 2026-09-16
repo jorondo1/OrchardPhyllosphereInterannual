@@ -43,15 +43,45 @@ idx <- list(
 # levels, so they're layered on top rather than folded into idx$Mg itself.
 Management_palette <- c(idx$Mg$palette, Contrast = "#98494d", Population = "#895a92")
 
-# ---- Standardized control covariates (Model 7 (MDLSYC) onward) ----
-# Keep the raw mean/sd as named scalars (not just baked into `div`) so any
-# script that needs to report/predict on the raw scale can invert the
-# z-score consistently, rather than re-deriving mean/sd locally.
-deg_h_mean      <- mean(div$deg_h);      deg_h_sd      <- sd(div$deg_h)
-precip_72h_mean <- mean(div$precip_72h); precip_72h_sd <- sd(div$precip_72h)
+# Covariate effect panel labels/colours (Model 5 (MDSYC) onward) -- same
+# 3 labels/colours every fit script built inline for its own
+# fit_covariate_effects panel.
+cov_labels <- c("Degree-hours", "Precipitation (72h)", "Seq. depth")
+cov_pal    <- setNames(scales::hue_pal()(3), cov_labels)
 
-div$deg_h_z      <- (div$deg_h      - deg_h_mean)      / deg_h_sd
-div$precip_72h_z <- (div$precip_72h - precip_72h_mean) / precip_72h_sd
+# Variance-partition panel base palette (Model 5 (MDSYC) onward) --
+# Explained/Residual are shared by every model's own variance_partition_*()
+# plot; a model with an extra group (e.g. Model 7's Tree share) extends
+# this rather than repeating the two shared colours inline.
+Variance_partition_palette <- c("Explained (fixed effects)" = "#4C72B0", "Residual" = "grey50")
+
+# ---- Standardized control covariates (Model 7 (MDLSYC) onward) ----
+# deg_h_z/precip_72h_z are centered WITHIN each Season (mean-subtracted per
+# Time level), not globally -- Season (Mo) is already a predictor, and
+# degree-hours/precipitation are strongly collinear with it in the real
+# data (r=0.735/0.547, see TODO.md). Global centering would let
+# gamma/s_conv/gap_shift (the May->July contrast terms) report the
+# seasonal shift net of the portion explained by b_deg/b_precip -- "the
+# seasonal change if temperature had been constant," which never happens
+# and isn't the estimand of interest. Within-Season centering makes each
+# covariate orthogonal to Mo by construction (so it still absorbs
+# day-to-day sampling-date weather jitter within a season), while the real
+# between-season temperature/precipitation difference flows entirely into
+# the season term, where it belongs. seq_depth_z below stays globally
+# centered on purpose: its correlation with Management is a technical
+# sequencing-depth artifact we want removed from the Management contrast,
+# not a substantive quantity to preserve.
+# *_season_mean are named vectors (keyed by Time level, not a single
+# scalar) so any script needing the raw scale back can invert the z-score
+# per season; *_sd is the pooled within-season residual SD.
+deg_h_season_mean      <- tapply(div$deg_h,      div$Time, mean)
+precip_72h_season_mean <- tapply(div$precip_72h, div$Time, mean)
+
+div$deg_h_z      <- (div$deg_h      - deg_h_season_mean[div$Time])
+div$precip_72h_z <- (div$precip_72h - precip_72h_season_mean[div$Time])
+
+deg_h_sd      <- sd(div$deg_h_z);      div$deg_h_z      <- div$deg_h_z      / deg_h_sd
+precip_72h_sd <- sd(div$precip_72h_z); div$precip_72h_z <- div$precip_72h_z / precip_72h_sd
 
 # Seq_depth (raw pre-rarefaction read count) is right-skewed and spans
 # ~20x (see MODEL_HISTORY.md Model 7) -- logged first so a linear slope

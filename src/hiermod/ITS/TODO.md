@@ -3,6 +3,45 @@
 Running list for the ITS lognormal hierarchical modeling work. Model
 reasoning lives in `MODEL_HISTORY.md`.
 
+## Conventions for the ITS rebuild
+
+The 16S lognormal model family was rebuilt from scratch, one addition at a
+time, each fully SBC-validated (n_sbc=100 then n_sbc=400) before moving on
+-- the same discipline applies here once the ITS rebuild starts (mirroring
+`src/hiermod/16S/1_MD` through `7_MDSTYCV`, not retrofitting the scripts
+below, which predate these conventions). Established along the way, apply
+from Model 1 onward:
+- Each model's `alist()` object gets a display name as an ATTRIBUTE, not a
+  list element (`ulam()` iterates every list element expecting a formula
+  quote() and errors on anything else -- same reason a fit's cstanfit
+  lives at `attr(fit, "cstanfit")` rather than a slot):
+  `attr(model_XXX_ITS, "name") <- "Some Tolkien Name"`, right next to the
+  model's own `model_id_XXX <- "XXX"` line. `save_report()` picks this up
+  automatically (`attr(model, "name")`); only pass `model_name=` when a
+  script genuinely reports two models at once.
+- Calibration-stage outputs (every `N.2*` script, plus any later
+  collinearity-style stress test) write to `<hiermod_out_dir>/Calibration`;
+  fit/analysis scripts (`N.3`/`N.4`/comparison scripts) keep writing
+  directly to `<hiermod_out_dir>`.
+- Once a model has multiple same-family effect panels (Year, covariates,
+  Cultivar, Tree, ...), combine them into one `patchwork`-stacked figure
+  (`p_year / p_covariates / p_cultivar`) instead of saving each separately.
+- Build contrast/effect tibbles via
+  `bind_rows(tibble(group = ..., value = ...), ...) %>% mutate(statistic = "...")`
+  instead of repeating `statistic = "..."` on every row.
+- `n_keep = 1000` as the standard `plot_mcmc_pairs()` thinning target, for
+  both calibration-stage and fit-stage pairs checks.
+- Break long calls (`save_report(...)`, `plot_mcmc_pairs(...)`) across
+  multiple lines for legibility rather than one long line.
+- No leftover interactive-only diagnostic calls (`hist(div$Hill_1, ...)`,
+  `hist(dat_sim$Dv_shifted, ...)`) left in calibration scripts.
+- Weather covariates (`deg_h_z`/`precip_72h_z`) centered WITHIN each Season
+  (mean-subtract per Time level, scale by the within-season residual SD),
+  not globally -- see `src/hiermod/16S/TODO.md`'s "Control variables"
+  section for the full reasoning. `seq_depth_z` stays globally centered
+  (its Management confound is a technical artifact to remove, not a
+  substantive effect to preserve).
+
 - [ ] Recalibrate the latest model for bacteria
 
 ## Model 7 (MDLSYC) - Control variables

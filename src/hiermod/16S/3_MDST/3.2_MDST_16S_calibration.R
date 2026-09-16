@@ -20,7 +20,7 @@ source('src/hiermod/Models/MDST_model.R') # model_MDST_16S, means_MDST(), sim_di
 model <- model_MDST_16S
 model_id <- model_id_MDST
 
-hiermod_out_dir <- "out/hiermod/16S_3_tree_MDST"
+hiermod_out_dir <- "out/hiermod/16S_3_tree_MDST/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
 # Same baseline/gap values as MDS/MDS2's own calibration, plus sigma_tr=0.3
@@ -81,7 +81,7 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Treebeard the Skeptic")
+save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model)
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,

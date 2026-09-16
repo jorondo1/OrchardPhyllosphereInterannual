@@ -36,6 +36,7 @@ model_MDSY_16S <- alist(
   prior_yr   = yr[Yr]    ~ dnorm(0,1)
 )
 
+attr(model_MDSY_16S, "name") <- "Elrond the Ageless"
 model_id_MDSY <- "MDSY"
 
 ## Backtransform wrapper ------------------------------------------------------

@@ -116,3 +116,10 @@ plot_mcmc_pairs <- function(fit, variables, n_keep = 500, max_chains = 2,
     thinned$draws, np = thinned$np,
     off_diag_args = list(size = point_size, alpha = point_alpha))
 }
+
+# Mg x Mo group label for PPC panels (plot_ppc_overlay() etc.) -- same
+# "Management Season" interaction label construction every fit script
+# built inline; relies on `idx` (built once in 0_SETUP.R) being in scope.
+ppc_group <- function(dat){
+  interaction(idx$Mg$to_label(dat$Mg), idx$Mo$to_label(dat$Mo), sep = " ")
+}

@@ -30,6 +30,7 @@ model_MDST_16S <- alist(
   pr_sigma_tr = sigma_tr  ~ dhalfnorm(0,1)
 )
 
+attr(model_MDST_16S, "name") <- "Treebeard the Skeptic"
 model_id_MDST <- "MDST"
 
 ## Backtransform wrapper ------------------------------------------------------

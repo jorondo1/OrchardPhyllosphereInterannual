@@ -39,7 +39,7 @@ save_pdf("fit_trankplot", model_id_MDSYCV,
 
 ### Overall, by Management x Season cell ----
 
-pp_group <- interaction(idx$Mg$to_label(dat_MDSYCV$Mg), idx$Mo$to_label(dat_MDSYCV$Mo), sep = " ")
+pp_group <- ppc_group(dat_MDSYCV)
 p_postpred <- plot_ppc_overlay(fit_MDSYCV, dat_MDSYCV, pp_group, xlim = c(NA, 2000)); p_postpred
 save_gg("postpred_density", model_id_MDSYCV, p_postpred)
 
@@ -55,31 +55,24 @@ pf <- post_full(fit_MDSYCV)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)
 
 pc_year <- bind_rows(
-  tibble(statistic = "Year effect (log scale)", group = idx$Yr$levels[1], value = pf$yr1$yr1),
-  tibble(statistic = "Year effect (log scale)", group = idx$Yr$levels[2], value = pf$yr2$yr2),
-  tibble(statistic = "Year effect (log scale)", group = idx$Yr$levels[3], value = yr3)
-)
+  tibble(group = idx$Yr$levels[1], value = pf$yr1$yr1),
+  tibble(group = idx$Yr$levels[2], value = pf$yr2$yr2),
+  tibble(group = idx$Yr$levels[3], value = yr3)
+) %>% mutate(statistic = "Year effect (log scale)")
 
 p_year <- variance_component_panels(
   pc_year, quant = c(0, 1), palette = idx$Yr$palette); p_year
 
-save_gg("fit_year_effects", model_id_MDSYCV, p_year, width = 8, height = 4)
-
 ## Covariate effects (b_deg, b_precip, b_seq) ----------------------------------
 
-cov_labels <- c("Degree-hours", "Precipitation (72h)", "Seq. depth")
-cov_pal <- setNames(scales::hue_pal()(3), cov_labels)
-
 pc_covariates <- bind_rows(
-  tibble(statistic = "Covariate effects (log scale)", group = cov_labels[1], value = pf$b_deg$b_deg),
-  tibble(statistic = "Covariate effects (log scale)", group = cov_labels[2], value = pf$b_precip$b_precip),
-  tibble(statistic = "Covariate effects (log scale)", group = cov_labels[3], value = pf$b_seq$b_seq)
-)
+  tibble(group = cov_labels[1], value = pf$b_deg$b_deg),
+  tibble(group = cov_labels[2], value = pf$b_precip$b_precip),
+  tibble(group = cov_labels[3], value = pf$b_seq$b_seq)
+) %>% mutate(statistic = "Covariate effects (log scale)")
 
 p_covariates <- variance_component_panels(
   pc_covariates, quant = c(0, 1), palette = cov_pal); p_covariates
-
-save_gg("fit_covariate_effects", model_id_MDSYCV, p_covariates, width = 8, height = 4)
 
 ## Cultivar effect (fixed, not pooled) -----------------------------------------
 # cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = -(cv_1+cv_3+cv_4+cv_5) by
@@ -89,17 +82,20 @@ save_gg("fit_covariate_effects", model_id_MDSYCV, p_covariates, width = 8, heigh
 cv_2 <- -(pf$cv_1$cv_1 + pf$cv_3$cv_3 + pf$cv_4$cv_4 + pf$cv_5$cv_5)
 
 pc_cultivar <- bind_rows(
-  tibble(statistic = "Cultivar effect (log scale)", group = idx$Cv$levels[1], value = pf$cv_1$cv_1),
-  tibble(statistic = "Cultivar effect (log scale)", group = idx$Cv$levels[2], value = cv_2),
-  tibble(statistic = "Cultivar effect (log scale)", group = idx$Cv$levels[3], value = pf$cv_3$cv_3),
-  tibble(statistic = "Cultivar effect (log scale)", group = idx$Cv$levels[4], value = pf$cv_4$cv_4),
-  tibble(statistic = "Cultivar effect (log scale)", group = idx$Cv$levels[5], value = pf$cv_5$cv_5)
-)
+  tibble(group = idx$Cv$levels[1], value = pf$cv_1$cv_1),
+  tibble(group = idx$Cv$levels[2], value = cv_2),
+  tibble(group = idx$Cv$levels[3], value = pf$cv_3$cv_3),
+  tibble(group = idx$Cv$levels[4], value = pf$cv_4$cv_4),
+  tibble(group = idx$Cv$levels[5], value = pf$cv_5$cv_5)
+) %>% mutate(statistic = "Cultivar effect (log scale)")
 
 p_cultivar <- variance_component_panels(
   pc_cultivar, quant = c(0, 1), palette = idx$Cv$palette); p_cultivar
 
-save_gg("fit_cultivar_effects", model_id_MDSYCV, p_cultivar, width = 8, height = 6)
+## Year/Covariate/Cultivar effects, combined -------------------------------------
+
+p_effects <- p_year / p_covariates / p_cultivar
+save_gg("fit_effects", model_id_MDSYCV, p_effects, width = 8, height = 14)
 
 ## Full pairwise parameter check ------------------------------------------------
 # Same rationale/settings as 6.2's own calibration-stage check -- PNG, not

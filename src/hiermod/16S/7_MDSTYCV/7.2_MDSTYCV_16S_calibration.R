@@ -28,7 +28,7 @@ source('src/hiermod/Models/MDSTYCV_model.R') # model_MDSTYCV_16S, means_MDSTYCV(
 model <- model_MDSTYCV_16S
 model_id <- model_id_MDSTYCV
 
-hiermod_out_dir <- "out/hiermod/16S_7_tree_full_MDSTYCV"
+hiermod_out_dir <- "out/hiermod/16S_7_tree_full_MDSTYCV/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
 # Same baseline/gap/year/cultivar/covariate values as MDSYCV's own
@@ -113,8 +113,8 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands)
 
-save_report("sim_summary", model_id, recovery = param_recovery, 
-            fit_sim, cr$estimands, model, model_name = "Saruman the Fool")
+save_report("sim_summary", model_id, recovery = param_recovery,
+            fit_sim, cr$estimands, model)
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,
@@ -214,7 +214,7 @@ save_sbc_health_report(
                 "may_gap", "july_gap", "seasonal_change"),
   hiermod_out_dir = hiermod_out_dir)
 
-## Direct before/after comparison: does Cultivar help or hurt sigma_tr? -------
+## Compare with MDST : does Cultivar help or hurt sigma_tr? -------
 # MDST's own standalone numbers (3.2_MDST_16S_calibration.R,
 # sbc_health_MDST_400iter.txt), same sigma_tr ~ dhalfnorm(0,1) prior, same
 # n_sbc=400 -- apples to apples, no prior change confounding the comparison.
@@ -232,6 +232,14 @@ cat(sprintf("  divergences:        %d  ->  %d\n", mdst_divergences, sum(mdstycv_
 cat(sprintf("  %% fits Rhat>1.01:   %.1f%%  ->  %.1f%%\n",
             100*mdst_pct_bad_rhat, 100*mean(mdstycv_dd$max_rhat > 1.01, na.rm = TRUE)))
 cat(sprintf("  max Rhat:           %.3f  ->  %.3f\n", mdst_max_rhat, max(mdstycv_dd$max_rhat, na.rm = TRUE)))
-cat("If these improved, Cultivar is explaining away some of what looked like\n")
-cat("unexplained tree-to-tree noise. If worse, Cultivar + Tree compound each\n")
-cat("other's known fragility instead.\n")
+# If these improved, Cultivar is explaining away some of what looked like
+# unexplained tree-to-tree noise. If worse, Cultivar + Tree compound each
+# other's known fragility instead.
+# divergences:        3218  ->  0
+# % fits Rhat>1.01:   18.5%  ->  17.8%
+# max Rhat:           2.119  ->  2.123
+
+# So cultivar didnt fix everything, butb the divergence drop is a really good sign
+# ECDF plots arent perfectly healthy but overall very good
+# Estimands are clean
+

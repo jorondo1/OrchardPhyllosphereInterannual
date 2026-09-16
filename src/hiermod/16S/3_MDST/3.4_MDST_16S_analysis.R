@@ -26,7 +26,7 @@ pc_estimands_means <- estimand_panels(
   group_levels = c("Conventional", "Organic")
 )
 
-save_report("fit_summary", model_id_MDST, fit_MDST, pc_estimands_means, model_MDST_16S, model_name = "Treebeard the Skeptic")
+save_report("fit_summary", model_id_MDST, fit_MDST, pc_estimands_means, model_MDST_16S)
 
 p_contrast_mean <- contrast_plot_panels(
   pc_estimands_means, quant = c(0.005, 0.995), scales = 'free_y',

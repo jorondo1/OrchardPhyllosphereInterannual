@@ -35,6 +35,7 @@ model_MDSTYCV_16S$main_model <- quote(
 model_MDSTYCV_16S$prior_tr    <- quote(tr[Tr]   ~ dnorm(0,1))
 model_MDSTYCV_16S$pr_sigma_tr <- quote(sigma_tr ~ dhalfnorm(0,1))
 
+attr(model_MDSTYCV_16S, "name") <- "Saruman the Fool"
 model_id_MDSTYCV <- "MDSTYCV"
 
 ## means_MDSTYCV() -------------------------------------------------------------
@@ -87,6 +88,45 @@ dq_MDSTYCV <- SBC::derived_quantities(
     (exp(loga[2] + (sigma[2]^2 + sigma_tr^2) / 2) -
        exp(loga[1] + (sigma[1]^2 + sigma_tr^2) / 2))
 )
+
+## variance_partition_MDSTYCV() --------------------------------------------------
+# Same as variance_partition_MDSYCV() plus a Tree share (sigma_tr^2/total),
+# folded into total the same way sigma_tr^2 was folded into total_var in
+# means_MDSTYCV() above. The direct answer to "was adding Tree worth it"
+# from a variance-explained standpoint -- see MDSTYCV_posterior_guide.html
+# section 7.
+
+variance_partition_MDSTYCV <- function(post, dat){
+  loga_obs   <- post$loga[, dat$Mg]
+  gamma      <- as.vector(post$s_conv) + outer(as.vector(post$gap_shift), dat$Mg - 1)
+  gamma_term <- sweep(gamma, 2, dat$Mo - 1, "*")
+  yr3        <- -(as.vector(post$yr1) + as.vector(post$yr2))
+  yr_obs     <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]
+
+  cv_derived <- -(as.vector(post$cv_1) + as.vector(post$cv_3) + as.vector(post$cv_4) + as.vector(post$cv_5))
+  cv_mat     <- cbind(post$cv_1, cv_derived, post$cv_3, post$cv_4, post$cv_5) # Cv index order: 1..5
+  cv_obs     <- cv_mat[, dat$Cv]
+
+  covariates <- outer(as.vector(post$b_deg), dat$deg_h_z) +
+    outer(as.vector(post$b_precip), dat$precip_72h_z) +
+    outer(as.vector(post$b_seq), dat$seq_depth_z)
+
+  fixed_mu  <- loga_obs + gamma_term + yr_obs + cv_obs + covariates
+  explained <- apply(fixed_mu, 1, var)
+
+  sigma_tr_sq <- as.vector(post$sigma_tr)^2
+
+  mg_n <- as.integer(table(factor(dat$Mg, levels = 1:2)))
+  residual_var <- as.vector((post$sigma^2) %*% (mg_n / sum(mg_n)))
+
+  total <- explained + sigma_tr_sq + residual_var
+
+  bind_rows(
+    tibble(statistic = "Variance partition", group = "Explained (fixed effects)", value = explained / total),
+    tibble(statistic = "Variance partition", group = "Tree",                      value = sigma_tr_sq / total),
+    tibble(statistic = "Variance partition", group = "Residual",                  value = residual_var / total)
+  )
+}
 
 ## Data-generating function ---------------------------------------------------
 # Tree is the study unit (as in sim_div_MDST()): each tree gets one

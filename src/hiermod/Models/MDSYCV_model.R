@@ -44,6 +44,7 @@ model_MDSYCV_16S$prior_cv3 <- quote(cv_3 ~ dnorm(0,1))
 model_MDSYCV_16S$prior_cv4 <- quote(cv_4 ~ dnorm(0,1))
 model_MDSYCV_16S$prior_cv5 <- quote(cv_5 ~ dnorm(0,1))
 
+attr(model_MDSYCV_16S, "name") <- "Bombadil the Eldest"
 model_id_MDSYCV <- "MDSYCV"
 
 ## means_MDSYCV()/dq_MDSYCV ----------------------------------------------------

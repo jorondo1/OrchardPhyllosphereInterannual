@@ -25,7 +25,7 @@ pc_estimands_means <- estimand_panels(
   group_levels = c("Conventional", "Organic")
 )
 
-save_report("fit_summary", model_id_MDS, fit_MDS, pc_estimands_means, model_MDS_16S, model_name = "Strider the Unrooted")
+save_report("fit_summary", model_id_MDS, fit_MDS, pc_estimands_means, model_MDS_16S)
 
 p_contrast_mean <- contrast_plot_panels(
   pc_estimands_means, quant = c(0.001, 0.999), scales = 'free_y',

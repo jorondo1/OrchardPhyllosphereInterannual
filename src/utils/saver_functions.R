@@ -50,9 +50,17 @@ save_pdf <- function(name, step, plot_call, width = 10, height = 8,
 # assembled in one place so nothing needs re-deriving to read the numbers
 # back later. post_counts: the long statistic/group/value tibble from
 # compute_contrasts()/estimand_panels()/estimand_rows() (not post_full()'s
-# raw list -- wrong shape); recovery: a check_recovery() tibble; model_name:
-# a display nickname, since deparse(substitute(model)) always prints the
-# literal string "model" (every call site names its variable that).
+# raw list -- wrong shape); recovery: a check_recovery() tibble. Header
+# name resolution: model_name= override > attr(model, "name") (set once
+# per model in its own model file, e.g.
+# attr(model_MD_16S, "name") <- "Samwise the Steadfast" -- an attribute,
+# not a list element, since ulam() iterates every element of its `model`
+# argument expecting a formula quote() and errors on anything else, same
+# reason fits carry cstanfit as attr(fit, "cstanfit") rather than a slot)
+# > deparse(substitute(model)) (always just prints "model" -- every call
+# site names its variable that -- so only a fallback for a model object
+# that hasn't been given a name yet). model_name= stays available for the
+# rare script that reports two models at once.
 save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
                         recovery = NULL, depth = 2, dir = hiermod_out_dir,
                         model_name = NULL){
@@ -63,7 +71,9 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
   on.exit({ sink(); close(con) })
 
   if (!is.null(model)) {
-    header <- if (!is.null(model_name)) model_name else deparse(substitute(model))
+    header <- if (!is.null(model_name)) model_name
+              else if (!is.null(attr(model, "name"))) attr(model, "name")
+              else deparse(substitute(model))
     cat("==== model:", header, "====\n\n")
     print(model)
     cat("\n\n")

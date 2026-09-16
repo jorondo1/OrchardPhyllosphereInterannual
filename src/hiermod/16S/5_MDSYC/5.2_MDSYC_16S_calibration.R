@@ -14,7 +14,7 @@ source('src/hiermod/Models/MDSYC_model.R') # model_MDSYC_16S, means_MDSYC(), sim
 model <- model_MDSYC_16S
 model_id <- model_id_MDSYC
 
-hiermod_out_dir <- "out/hiermod/16S_5_covariates_MDSYC"
+hiermod_out_dir <- "out/hiermod/16S_5_covariates_MDSYC/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
 # Same baseline/gap/year values as MDSYz's own calibration, plus modest
@@ -86,7 +86,7 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Radagast the Grower")
+save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model)
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,

@@ -26,7 +26,7 @@ pc_estimands_means <- estimand_panels(
   group_levels = c("Conventional", "Organic")
 )
 
-save_report("fit_summary", model_id_MDSYCV, fit_MDSYCV, pc_estimands_means, model_MDSYCV_16S, model_name = "Bombadil the Eldest")
+save_report("fit_summary", model_id_MDSYCV, fit_MDSYCV, pc_estimands_means, model_MDSYCV_16S)
 
 p_contrast_mean <- contrast_plot_panels(
   pc_estimands_means, quant = c(0.001, 0.999), scales = 'free_y',
@@ -82,8 +82,8 @@ pc_varpart <- variance_partition_MDSYCV(post_raw, dat_MDSYCV)
 p_varpart <- pc_varpart %>%
   ggplot(aes(x = value, fill = group, colour = group)) +
   geom_density(alpha = 0.5, linewidth = 0.2) +
-  scale_fill_manual(values = c("Explained (fixed effects)" = "#4C72B0", "Residual" = "grey50")) +
-  scale_colour_manual(values = c("Explained (fixed effects)" = "#4C72B0", "Residual" = "grey50")) +
+  scale_fill_manual(values = Variance_partition_palette) +
+  scale_colour_manual(values = Variance_partition_palette) +
   labs(x = "Fraction of total variance", y = NULL, fill = NULL, colour = NULL,
        title = "Variance partition (Bayesian R2)"); p_varpart
 

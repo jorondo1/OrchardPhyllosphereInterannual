@@ -17,7 +17,7 @@ source('src/hiermod/Models/MDS_model.R') # model_MDS_16S, means_MDS(), sim_div_M
 model <- model_MDS_16S
 model_id <- model_id_MDS
 
-hiermod_out_dir <- "out/hiermod/16S_2_interaction_MDS"
+hiermod_out_dir <- "out/hiermod/16S_2_interaction_MDS/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
 # Same baseline/gap values as MDS2's own calibration, so results stay
@@ -40,8 +40,6 @@ dat_sim <- sim_div_MDS(
   sigma = true_sigma,
   shift = 1
 ); head(dat_sim)
-
-hist(dat_sim$Dv_shifted, breaks = 100)
 
 fit_sim <- ulam(
   model,
@@ -74,7 +72,7 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Strider the Unrooted")
+save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model)
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,

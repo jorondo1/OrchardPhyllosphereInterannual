@@ -43,7 +43,7 @@ attr(fit_MDST, "cstanfit")$diagnostic_summary(
 
 ### Overall, by Management x Season cell ----
 
-pp_group <- interaction(idx$Mg$to_label(dat_MDST$Mg), idx$Mo$to_label(dat_MDST$Mo), sep = " ")
+pp_group <- ppc_group(dat_MDST)
 p_postpred <- plot_ppc_overlay(fit_MDST, dat_MDST, pp_group, xlim = c(NA, 2000))
 save_gg("postpred_density", model_id_MDST, p_postpred)
 

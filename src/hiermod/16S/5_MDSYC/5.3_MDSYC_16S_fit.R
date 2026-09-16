@@ -37,7 +37,7 @@ save_pdf("fit_trankplot", model_id_MDSYC,
 
 ### Overall, by Management x Season cell ----
 
-pp_group <- interaction(idx$Mg$to_label(dat_MDSYC$Mg), idx$Mo$to_label(dat_MDSYC$Mo), sep = " ")
+pp_group <- ppc_group(dat_MDSYC)
 p_postpred <- plot_ppc_overlay(fit_MDSYC, dat_MDSYC, pp_group, xlim = c(NA, 2000)); p_postpred
 save_gg("postpred_density", model_id_MDSYC, p_postpred)
 
@@ -53,10 +53,10 @@ pf <- post_full(fit_MDSYC)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)
 
 pc_year <- bind_rows(
-  tibble(statistic = "Year effect (log scale)", group = idx$Yr$levels[1], value = pf$yr1$yr1),
-  tibble(statistic = "Year effect (log scale)", group = idx$Yr$levels[2], value = pf$yr2$yr2),
-  tibble(statistic = "Year effect (log scale)", group = idx$Yr$levels[3], value = yr3)
-)
+  tibble(group = idx$Yr$levels[1], value = pf$yr1$yr1),
+  tibble(group = idx$Yr$levels[2], value = pf$yr2$yr2),
+  tibble(group = idx$Yr$levels[3], value = yr3)
+) %>% mutate(statistic = "Year effect (log scale)")
 
 p_year <- variance_component_panels(
   pc_year, quant = c(0, 1), palette = idx$Yr$palette); p_year
@@ -67,14 +67,11 @@ save_gg("fit_year_effects", model_id_MDSYC, p_year, width = 8, height = 4)
 # The new thing to actually look at this model for: are any of these
 # credibly away from 0, and in which direction?
 
-cov_labels <- c("Degree-hours", "Precipitation (72h)", "Seq. depth")
-cov_pal <- setNames(scales::hue_pal()(3), cov_labels)
-
 pc_covariates <- bind_rows(
-  tibble(statistic = "Covariate effects (log scale)", group = cov_labels[1], value = pf$b_deg$b_deg),
-  tibble(statistic = "Covariate effects (log scale)", group = cov_labels[2], value = pf$b_precip$b_precip),
-  tibble(statistic = "Covariate effects (log scale)", group = cov_labels[3], value = pf$b_seq$b_seq)
-)
+  tibble(group = cov_labels[1], value = pf$b_deg$b_deg),
+  tibble(group = cov_labels[2], value = pf$b_precip$b_precip),
+  tibble(group = cov_labels[3], value = pf$b_seq$b_seq)
+) %>% mutate(statistic = "Covariate effects (log scale)")
 
 p_covariates <- variance_component_panels(
   pc_covariates, quant = c(0, 1), palette = cov_pal); p_covariates

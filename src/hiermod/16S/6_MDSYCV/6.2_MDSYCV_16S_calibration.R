@@ -15,7 +15,7 @@ source('src/hiermod/Models/MDSYCV_model.R') # model_MDSYCV_16S, means_MDSYCV(), 
 model <- model_MDSYCV_16S
 model_id <- model_id_MDSYCV
 
-hiermod_out_dir <- "out/hiermod/16S_6_cultivar_MDSYCV"
+hiermod_out_dir <- "out/hiermod/16S_6_cultivar_MDSYCV/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
 # Same baseline/gap/year/covariate values as MDSYC's own calibration, plus
@@ -100,7 +100,7 @@ p_sim_contrast <- contrast_plot_panels(
   group_pal = Management_palette,
   true_vals = cr$true_estimands); p_sim_contrast
 
-save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model, model_name = "Bombadil the Eldest")
+save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model)
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
 
 save_pdf("sim_trankplot", model_id,

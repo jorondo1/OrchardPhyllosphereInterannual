@@ -18,7 +18,7 @@ source('src/hiermod/Models/MDSYCV_model.R') # model_MDSYCV_16S, means_MDSYCV(), 
 model <- model_MDSYCV_16S
 model_id <- "MDSYCV_collin"
 
-hiermod_out_dir <- "out/hiermod/16S_6_cultivar_MDSYCV"
+hiermod_out_dir <- "out/hiermod/16S_6_cultivar_MDSYCV/Calibration"
 
 ## Parameter recovery, under realistic collinearity ----------------------------
 # Same baseline/gap/year/cultivar/covariate values as 6.2's own calibration
@@ -157,10 +157,8 @@ save_sbc_health_report(model_id, sbc_collin, n_sbc, n_iter,
                                       "may_gap", "july_gap", "seasonal_change"),
                         hiermod_out_dir = hiermod_out_dir)
 
-# Compare this report against 6.2's own baseline (sbc_health_MDSYCV_400iter.txt,
-# independent-covariate draws) -- if b_deg/b_precip/s_conv/gap_shift/b_seq
-# newly show up flagged here but not there, that's the realistic-collinearity
-# cost this rebuild hasn't had to pay yet. If the health report looks the
-# same as the baseline, the real data's own collinearity isn't a practical
-# identifiability problem for this model, just a reporting-caveat one
-# (already documented in TODO.md/the posterior guides).
+# No divergences, rhats look good
+# Most importantly:
+# b_deg~s_convr=-0.61 doesn't translate into actual miscalibration:
+# b_deg, s_conv, and gap_shift all pass under when using sim data that
+# has the same kind of collinearity as our data
