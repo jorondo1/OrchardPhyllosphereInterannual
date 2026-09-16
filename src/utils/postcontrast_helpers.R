@@ -126,32 +126,36 @@ report_contrasts_full <- function(pc_full){
 contrast_plot_panels <- function(
     pc_full, quant, group_pal, scales = "free",
     true_vals = NULL, true_vals_label = "True value",
-    legend_title = "Posteriors (population mean/median)"){
-  
+    legend_title = "Posteriors (population mean/median)",
+    ratio_stats = character(0), ratio_pal = NULL){
+
   if(length(quant)!=2){
     stop("quant is not a two-value numeric vector.")
   }
   if(sum(quant<=1)!=2 | sum(quant>=0)!=2) {
     stop("quant values must be in [0,1]; lower and upper desired quantiles, e.g. c(0.005, 0.995)")
   }
-  
+
   trimmed <- pc_full %>%
     group_by(statistic) %>%
     filter(value >= quantile(value, quant[1]), value <= quantile(value, quant[2])) %>%
     ungroup()
-  
+
   prop_dropped <- 100 * (1 - nrow(trimmed) / nrow(pc_full))
-  
+
   labels <- report_contrasts_full(pc_full) %>%
     mutate(label = paste0(
       group, " median: ", round(median,2), " ",
       "\n89% PI: [", round(PI89_lower,2), ", ", round(PI89_upper,2), "]",
       "\n89% HPDI: [", round(HPDI_lower,2), ", ", round(HPDI_upper,2), "]"))
-  
+
   refactor_statistic <- function(df) df %>% mutate(statistic = factor(statistic, levels = levels(pc_full$statistic)))
-  
-  
-  trimmed %>%
+
+  main_levels  <- setdiff(levels(pc_full$statistic), ratio_stats)
+  ratio_levels <- intersect(levels(pc_full$statistic), ratio_stats)
+
+  main_plot <- trimmed %>%
+    filter(statistic %in% main_levels) %>%
     ggplot(aes(x = value, fill = group, colour = group)) +
     geom_density(alpha = 0.5, linewidth = 0.2) +
     geom_vline(xintercept = 0, colour = "grey50") +
@@ -166,20 +170,63 @@ contrast_plot_panels <- function(
       }
     }
     } +
-    geom_text(data = labels, aes(label = label), x = Inf, y = Inf,
+    geom_text(data = labels %>% filter(statistic %in% main_levels), aes(label = label), x = Inf, y = Inf,
               hjust = 1.05, vjust = 1.3, size = 2.8, colour = "grey20",
               inherit.aes = FALSE, family = "mono") +
     facet_wrap(~statistic, scales = scales, ncol = 1) +
     scale_fill_manual(values = group_pal) +
     scale_colour_manual(values = group_pal) +
-    # scale_linetype_manual(name = NULL, values = linetype_vals) +
     theme(legend.position = "bottom") +
-    labs(x = "Species diversity", y = NULL,
-         fill = legend_title, colour = legend_title,
-         caption = paste0(
-           "Each panel cropped independently to its own ", 100*quant[1], "th-", 100*quant[2],
-           "th percentile range. ~", signif(prop_dropped, 3), "% of draws overall fall outside ",
-           "their panel's range and are not shown."))
+    labs(x = "Species diversity", y = NULL, fill = legend_title, colour = legend_title)
+
+  caption <- paste0(
+    "Each panel cropped independently to its own ", 100*quant[1], "th-", 100*quant[2],
+    "th percentile range. ~", signif(prop_dropped, 3), "% of draws overall fall outside ",
+    "their panel's range and are not shown.")
+
+  if (length(ratio_levels) == 0) return(main_plot + labs(caption = caption))
+
+  # Ratio/fold-change statistics (ratio_stats=) sit on a fundamentally
+  # different scale than the rest -- centered on 1 (no change), not 0, and
+  # multiplicative rather than additive -- so sharing the main grid's common
+  # x-axis (scales="free_y" only frees the y-axis) would squash them
+  # illegibly against Hill-diversity-scale panels. But they're comparable
+  # in magnitude to EACH OTHER, so unlike that main grid they share ONE
+  # panel (overlaid densities, not faceted), coloured/legended by statistic
+  # (not by group -- every extra= row already has group="Contrast"
+  # uniformly, so statistic is what actually distinguishes e.g. "May fold
+  # change" from "July fold change" here) -- patchworked below the main grid.
+  #
+  # In-panel labels are one-liners (median + 89% HPDI only, no PI -- the
+  # full PI+HPDI breakdown stays in the text report via report_contrasts_full()/
+  # save_report(), untouched) so the figure stays light. Multiple geom_text
+  # rows at the same x=Inf,y=Inf with a FIXED vjust render exactly on top of
+  # each other (confirmed directly) -- vjust must increment per row for the
+  # 3 one-liners to stack instead of overlapping.
+  ratio_labels <- report_contrasts_full(pc_full) %>%
+    filter(statistic %in% ratio_levels) %>%
+    arrange(statistic) %>%
+    mutate(label = paste0(statistic, " posterior median: ", round(median, 2),
+                          " (89% HPDI [", round(HPDI_lower, 2), ", ", round(HPDI_upper, 2), "])"),
+           vjust = 1.3 + 1.3 * (row_number() - 1))
+
+  ratio_plot <- trimmed %>%
+    filter(statistic %in% ratio_levels) %>%
+    mutate(statistic = droplevels(statistic)) %>%
+    ggplot(aes(x = value, fill = statistic, colour = statistic)) +
+    geom_density(alpha = 0.5, linewidth = 0.2) +
+    geom_vline(xintercept = 1, colour = "grey50") +
+    geom_text(data = ratio_labels, aes(label = label, vjust = vjust), x = Inf, y = Inf,
+              hjust = 1.05, size = 2.8, colour = "grey20",
+              inherit.aes = FALSE, family = "mono") +
+    scale_fill_manual(values = ratio_pal) +
+    scale_colour_manual(values = ratio_pal) +
+    theme(legend.position = "bottom") +
+    labs(x = "Fold change", y = NULL, fill = NULL, colour = NULL)
+
+  patchwork::wrap_plots(list(main_plot, ratio_plot), ncol = 1,
+                         heights = c(length(main_levels), 1)) +
+    patchwork::plot_annotation(caption = caption)
 }
 
 # Same idea as contrast_plot_panels(), but one plot per statistic with its

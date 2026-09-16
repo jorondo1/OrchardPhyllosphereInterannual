@@ -121,7 +121,7 @@ summary(prior_pred$Dv_shifted) # judge on median/IQR, not mean/SD
 
 p_prior_pc <- prior_predictive_spaghetti(
   prior_pred, value_col = "Dv_shifted", upper_q = 0.99, model = model,
-  title = "Prior predictive check", observed = dat_sim$Dv_shifted); p_prior_pc
+  title = "Prior predictive check", observed = dat_sim$Dv_shifted)
 
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
@@ -147,7 +147,7 @@ sbc_gen_MDSTYCV <- make_sbc_generator(
   gen_cols = c("Dv", "Mg", "Mo", "Yr", "Cv", "Tr", "deg_h_z", "precip_72h_z", "seq_depth_z"),
   extra_globals = "sim_div_MDSTYCV", shift = 1)
 
-n_sbc  <- 100
+n_sbc  <- 500
 n_iter <- 10000
 
 sbc_MDSTYCV <- run_sbc_pipeline(
@@ -158,41 +158,8 @@ sbc_MDSTYCV <- run_sbc_pipeline(
 
 plot_sbc_diagnostics(sbc_MDSTYCV, model_id, n_sbc)
 
-sbc_MDSTYCV$stats |>
-  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "sigma_tr", "cv_1", "cv_3", "cv_4", "cv_5")) |>
-  dplyr::group_by(variable) |>
-  dplyr::summarise(mean_rank_frac = mean(rank / max_rank),
-                   median_rank_frac = median(rank / max_rank))
-
 save_sbc_health_report(
   model_id, sbc_MDSTYCV, n_sbc, n_iter,
-  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                "sigma_tr", "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
-                "b_deg", "b_precip", "b_seq",
-                "may_gap", "july_gap", "seasonal_change"),
-  hiermod_out_dir = hiermod_out_dir)
-
-# Same n=400 stress test as every model in this rebuild before trusting an
-# n=100 "ok" -- especially important given sigma_tr's own documented
-# fragility, now sharing units with cv_1..cv_4 for the first time.
-n_sbc <- 400
-n_iter <- 10000
-sbc_MDSTYCV_2 <- run_sbc_pipeline(
-  generator = sbc_gen_MDSTYCV$generator, globals = sbc_gen_MDSTYCV$globals,
-  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
-  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDSTYCV,
-  control = list(adapt_delta = 0.99))
-
-plot_sbc_diagnostics(sbc_MDSTYCV_2, model_id, n_sbc)
-
-sbc_MDSTYCV_2$stats |>
-  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "sigma_tr", "cv_1", "cv_3", "cv_4", "cv_5")) |>
-  dplyr::group_by(variable) |>
-  dplyr::summarise(mean_rank_frac = mean(rank / max_rank),
-                   median_rank_frac = median(rank / max_rank))
-
-save_sbc_health_report(
-  model_id, sbc_MDSTYCV_2, n_sbc, n_iter,
   variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
                 "sigma_tr", "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
                 "b_deg", "b_precip", "b_seq",

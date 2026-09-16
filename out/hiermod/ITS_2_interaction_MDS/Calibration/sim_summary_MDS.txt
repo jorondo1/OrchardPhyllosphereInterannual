@@ -1,0 +1,53 @@
+==== model: Strider the Unrooted ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$main_model
+mu <- loga[Mg] + gamma * (Mo - 1)
+
+$gamma_def
+gamma <- s_conv + gap_shift * (Mg - 1)
+
+$prior_loga
+loga[Mg] ~ dnorm(2, 2)
+
+$prior_s
+s_conv ~ dnorm(0, 1)
+
+$prior_gs
+gap_shift ~ dnorm(0, 1)
+
+$pr_sigma
+sigma[Mg] ~ dhalfnorm(0, 1)
+
+attr(,"name")
+[1] "Strider the Unrooted"
+
+
+==== precis: fit_sim ====
+
+            mean    sd   5.5%  94.5%  rhat  ess_bulk ess_ratio
+loga[1]    2.952 0.081  2.822  3.082 1.001  8603.928     0.574
+loga[2]    2.757 0.081  2.626  2.887 1.000 10724.411     0.715
+s_conv    -1.479 0.114 -1.660 -1.295 1.001  7831.729     0.522
+gap_shift  1.266 0.160  1.012  1.522 1.001  7956.017     0.530
+sigma[1]   0.659 0.041  0.597  0.726 1.001 11810.510     0.787
+sigma[2]   0.582 0.041  0.521  0.651 1.001 11732.456     0.782
+
+
+==== parameter recovery ====
+      param   true post_median   lo89   hi89 covered
+1     loga1  2.996       2.953  2.822  3.082    TRUE
+2     loga2  2.773       2.757  2.626  2.887    TRUE
+3    s_conv -1.500      -1.482 -1.660 -1.295    TRUE
+4 gap_shift  1.300       1.267  1.012  1.522    TRUE
+5    sigma1  0.703       0.657  0.597  0.726    TRUE
+6    sigma2  0.555       0.580  0.521  0.651    TRUE
+covered: 6 / 6 
+
+
+==== posterior contrast ====
+Median May gap (Organic - Conventional) -- mean: -3.406  median: -3.392  89% PI: [ -6.636 , -0.202 ]  89% HPDI: [ -6.596 , -0.172 ]
+Median July gap (Organic - Conventional) -- mean: 8.399  median: 8.363  89% PI: [ 6.713 , 10.161 ]  89% HPDI: [ 6.674 , 10.1 ]
+Seasonal change in median gap (July - May) -- mean: 11.806  median: 11.801  89% PI: [ 8.201 , 15.448 ]  89% HPDI: [ 8.016 , 15.248 ]

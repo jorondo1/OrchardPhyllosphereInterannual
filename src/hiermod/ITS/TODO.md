@@ -41,6 +41,21 @@ from Model 1 onward:
   section for the full reasoning. `seq_depth_z` stays globally centered
   (its Management confound is a technical artifact to remove, not a
   substantive effect to preserve).
+- Every `N.4_*_analysis.R` script's `save_report()` call reports model+precis
+  ONLY (no `post_counts=`) -- e.g.
+  `save_report("fit_summary", model_id_X, fit_X, model = model_X_ITS)`.
+  Contrasts/posteriors go in a SEPARATE `save_posterior_kable()` call
+  instead (`saver_functions.R`; styled HTML table via `kableExtra::kable()`
+  + `kable_styling()` + `save_kable()` -- needs `pandoc` installed), built
+  from `bind_rows(compute_contrasts(pf, keep = setdiff(names(pf), c("tr",
+  "mean", "median")), group_levels = idx$Mg$levels), pc_estimands_means,
+  pc_estimands_medians)` -- i.e. every interpretable posterior (excluding
+  raw per-tree `tr[Tr]` draws), not just the headline contrast. See
+  `1.4_MD_ITS_analysis.R` for the simplest working example, or any 16S
+  `N.4_*_16S_analysis.R` for the full version with fold-change contrasts.
+  Calibration scripts' own `save_report("sim_summary", ...)` calls
+  (recovery + `cr$estimands`) are a different kind of report (calibration
+  diagnostic, not results) and stay as a single combined file, unsplit.
 
 - [ ] Recalibrate the latest model for bacteria
 

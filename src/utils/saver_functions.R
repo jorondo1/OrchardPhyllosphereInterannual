@@ -116,3 +116,26 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
   message("Saved to ", path)
 
 }
+
+# Comprehensive posterior summary as a styled HTML table (kableExtra), one
+# row per statistic/group -- mean, median, 89% PI, 89% HPDI. Companion to
+# save_report(): that one is model+precis only (a fit's own diagnostic
+# record); this is the "results report" -- every interpretable posterior a
+# reader might want a number for, not just the headline contrast. pc_full:
+# a compute_contrasts()/estimand_panels()-shaped statistic/group/value
+# tibble (bind_rows() together whatever the calling script already built,
+# e.g. compute_contrasts(pf, keep=...) + pc_estimands_means +
+# pc_estimands_medians -- see any *_16S_analysis.R script for the pattern).
+save_posterior_kable <- function(name, step, pc_full, dir = hiermod_out_dir, caption = NULL){
+  dir.create(dir, recursive = TRUE, showWarnings = FALSE)
+  path <- file.path(dir, paste0(name, "_", step, ".html"))
+
+  report_contrasts_full(pc_full) %>%
+    mutate(across(where(is.numeric), ~round(.x, 3))) %>%
+    kableExtra::kable("html", caption = caption %||% paste("Posterior summary:", step)) %>%
+    kableExtra::kable_styling(full_width = FALSE) %>%
+    kableExtra::save_kable(file = path)
+
+  invisible(path)
+  message("Saved to ", path)
+}

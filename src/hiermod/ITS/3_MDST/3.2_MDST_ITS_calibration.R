@@ -57,7 +57,7 @@ post_sim <- extract.samples(fit_sim)
 
 ### Fixed effect + sigma recovery ---------
 
-(param_recovery <- check_recovery(
+param_recovery <- check_recovery(
   true = list(
     loga1 = log(may_conv), loga2 = log(may_org),
     s_conv = july_conv_shift, gap_shift = july_org_shift,
@@ -65,7 +65,7 @@ post_sim <- extract.samples(fit_sim)
   post_draws = list(
     loga1 = post_sim$loga[,1], loga2 = post_sim$loga[,2],
     s_conv = post_sim$s_conv, gap_shift = post_sim$gap_shift,
-    sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2], sigma_tr = post_sim$sigma_tr)))
+    sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2], sigma_tr = post_sim$sigma_tr))
 
 ### Contrast recovery -------------
 
@@ -75,7 +75,7 @@ cr <- contrast_recovery(
 p_sim_contrast <- contrast_plot_panels(
   cr$estimands, quant = c(0.01, 0.99), scales = 'free_y',
   group_pal = Management_palette,
-  true_vals = cr$true_estimands); p_sim_contrast
+  true_vals = cr$true_estimands)
 
 save_report("sim_summary", model_id, recovery = param_recovery, fit_sim, cr$estimands, model)
 save_gg("sim_contrast_density", model_id, p_sim_contrast)
@@ -97,7 +97,7 @@ summary(prior_pred$Dv_shifted) # judge on median/IQR, not mean/SD
 
 p_prior_pc <- prior_predictive_spaghetti(
   prior_pred, value_col = "Dv_shifted", upper_q = 0.99, model = model,
-  title = "Prior predictive check", observed = dat_sim$Dv_shifted); p_prior_pc
+  title = "Prior predictive check", observed = dat_sim$Dv_shifted)
 
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
@@ -111,7 +111,7 @@ sbc_gen_MDST <- make_sbc_generator(
   gen_cols = c("Dv", "Mg", "Mo", "Tr"),
   extra_globals = "sim_div_MDST", shift = 1)
 
-n_sbc  <- 100
+n_sbc  <- 500
 n_iter <- 10000
 
 sbc_MDST <- run_sbc_pipeline(
@@ -122,31 +122,8 @@ sbc_MDST <- run_sbc_pipeline(
 
 plot_sbc_diagnostics(sbc_MDST, model_id, n_sbc)
 
-sbc_MDST$stats |>
-  dplyr::filter(variable %in% c("loga[1]", "loga[2]", "sigma_tr")) |>
-  dplyr::group_by(variable) |>
-  dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
-
 save_sbc_health_report(
   model_id, sbc_MDST, n_sbc, n_iter,
-  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
-  hiermod_out_dir = hiermod_out_dir)
-
-# Same n=400 stress test as every model in this rebuild before trusting an
-# n=100 "ok" -- especially important here given sigma_tr's own documented
-# fragility in the 16S family.
-n_sbc <- 400
-sbc_MDST_2 <- run_sbc_pipeline(
-  generator = sbc_gen_MDST$generator, globals = sbc_gen_MDST$globals,
-  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
-  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDST,
-  control = list(adapt_delta = 0.99))
-
-plot_sbc_diagnostics(sbc_MDST_2, model_id, n_sbc)
-
-save_sbc_health_report(
-  model_id, sbc_MDST_2, n_sbc, n_iter,
   variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
                 "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
   hiermod_out_dir = hiermod_out_dir)

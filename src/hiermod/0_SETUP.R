@@ -1,7 +1,7 @@
 # Shared preamble for every hiermod script (ITS and 16S). Set
 # hiermod_marker <- "ITS" or "16S" before sourcing this file.
 
-pacman::p_load(rethinking, tidyverse, bayesm, bayesplot, ggridges, magrittr, patchwork, rlang, scales, posterior)
+pacman::p_load(rethinking, tidyverse, bayesm, bayesplot, ggridges, magrittr, patchwork, rlang, scales, posterior, kableExtra)
 source('src/utils/hiermod_core.R')
 source('src/utils/saver_functions.R')
 source('src/utils/postcontrast_helpers.R')
@@ -63,6 +63,17 @@ Variance_partition_palette <- c(
   "Cultivar"            = "#CCB974",
   "Tree"                = "#DD8452",
   "Residual"            = "grey50"
+)
+
+# Fold-change panel palette (Model 2 onward) -- May/July each get their own
+# colour, "Contrast between folds" reuses Management_palette's own Contrast
+# colour (visually de-emphasized/consistent with every other "Contrast" row
+# elsewhere). Keyed by the exact statistic names contrast_plot_panels()'s
+# own ratio_stats= facet uses, same pattern as Variance_partition_palette.
+Fold_change_palette <- c(
+  "May fold change (Conventional / Organic)"  = "#CC8FBB",
+  "July fold change (Conventional / Organic)" = "#7AAB32",
+  "Contrast between folds (May / July)"       = Management_palette[["Contrast"]]
 )
 
 # ---- Standardized control covariates (Model 7 (MDLSYC) onward) ----

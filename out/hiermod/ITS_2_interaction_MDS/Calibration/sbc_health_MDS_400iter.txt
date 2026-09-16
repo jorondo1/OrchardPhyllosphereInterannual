@@ -1,0 +1,25 @@
+SBC health report -- MDS
+Generated: 2026-09-16 13:07:11
+n_sbc = 400, n_iter = 10000
+
+-- Backend diagnostics (sampling health) --
+  divergences:     0 total
+  max treedepth:   57563 total (worst single replicate: 4811)
+  low E-BFMI fits: 0 total
+  max Rhat:        2.085 (6/400 fits > 1.01)
+  min ESS bulk:    1
+  min ESS tail:    12
+
+-- Rank-fraction calibration (expected 0.5, SE = 0.0144 at n=400) --
+  variable              mean_frac   med_frac        z  flag
+  gap_shift                 0.497      0.492    -0.24  ok
+  july_gap                  0.495      0.517    -0.36  ok
+  loga[1]                   0.494      0.491    -0.44  ok
+  loga[2]                   0.494      0.492    -0.45  ok
+  may_gap                   0.507      0.523     0.48  ok
+  s_conv                    0.505      0.520     0.37  ok
+  seasonal_change           0.491      0.468    -0.64  ok
+  sigma[1]                  0.530      0.532     2.05  ok
+  sigma[2]                  0.532      0.544     2.22  ok
+
+Overall: OK

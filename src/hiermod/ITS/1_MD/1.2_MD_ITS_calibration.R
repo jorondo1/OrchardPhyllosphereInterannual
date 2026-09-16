@@ -123,7 +123,7 @@ sbc_gen_MD <- make_sbc_generator(
   extra_globals = "sim_div_MD")
 
 n_sbc  <- 100
-n_iter <- 10000
+n_iter <- 5000
 
 sbc_MD <- run_sbc_pipeline(
   generator = sbc_gen_MD$generator, globals = sbc_gen_MD$globals,

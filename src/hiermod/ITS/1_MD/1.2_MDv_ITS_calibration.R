@@ -22,7 +22,7 @@ source('src/hiermod/0_SETUP.R')
 source('src/hiermod/Models/MD_model.R') # model_MDv_ITS, sim_div_MDv(), means_MDv(), simulate_from_priors_MDv(), dq_MDv
 model_MDv <- model_MDv_ITS
 
-hiermod_out_dir <- "out/hiermod/ITS_1_lognormal_MD/Calibration"
+hiermod_out_dir <- "out/hiermod/ITS_1_lognormal_MD/Calibration_MDv"
 
 ### Parameter + contrast recovery -------------------------------------------
 
@@ -46,7 +46,7 @@ post_MDv_sim <- extract.samples(fit_MDv_sim)
   true = list(loga1 = log(true_conv), loga2 = log(true_org),
               sigma1 = true_sigma_MDv[1], sigma2 = true_sigma_MDv[2]),
   post_draws = list(loga1 = post_MDv_sim$loga[,1], loga2 = post_MDv_sim$loga[,2],
-                     sigma1 = post_MDv_sim$sigma[,1], sigma2 = post_MDv_sim$sigma[,2])
+                    sigma1 = post_MDv_sim$sigma[,1], sigma2 = post_MDv_sim$sigma[,2])
 ))
 
 ### Contrast recovery -------------
@@ -112,10 +112,11 @@ sbc_MDv$stats |>
   dplyr::group_by(variable) |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
-save_sbc_health_report(model_id_MDv, sbc_MDv, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]",
-                                      "median_contrast", "mean_contrast"),
-                        hiermod_out_dir = hiermod_out_dir)
+save_sbc_health_report(
+  model_id_MDv, sbc_MDv, n_sbc, n_iter,
+  variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]",
+                "median_contrast", "mean_contrast"),
+  hiermod_out_dir = hiermod_out_dir)
 
 # n_sbc=400 stress test, same discipline as every model in this rebuild
 # before trusting an n=100 "ok". If sigma[Mg] shows the same mode-at-zero
@@ -131,6 +132,6 @@ sbc_MDv_2 <- run_sbc_pipeline(
 plot_sbc_diagnostics(sbc_MDv_2, model_id_MDv, n_sbc)
 
 save_sbc_health_report(model_id_MDv, sbc_MDv_2, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]",
-                                      "median_contrast", "mean_contrast"),
-                        hiermod_out_dir = hiermod_out_dir)
+                       variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]",
+                                     "median_contrast", "mean_contrast"),
+                       hiermod_out_dir = hiermod_out_dir)

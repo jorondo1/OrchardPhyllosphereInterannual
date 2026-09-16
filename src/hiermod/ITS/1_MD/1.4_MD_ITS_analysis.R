@@ -1,15 +1,13 @@
-# MODEL 1 (MD) + MODEL 2 (MDv), 16S: posterior contrast, run against the saved fits.
+# MODEL 1 (MDv), ITS: posterior contrast, run against the saved fit. Mirrors
+# 1.4_MD_16S_analysis.R -- no prior_sigma override needed here (see 1.3's
+# own header): model_MDv_ITS's file-level sigma[Mg] ~ dexp(1) is what was
+# actually validated.
 
-hiermod_marker <- "16S"
+hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MD_model.R') # model_MD_16S/model_MDv_16S, means_MD/means_MDv
-
-model_MD  <- model_MD_16S
-model_MDv <- model_MDv_16S
-
-# Updated priors (see MDv calibration)
-model_MDv$prior_sigma <- quote(sigma[Mg] ~ dhalfnorm(0,1))
-hiermod_out_dir <- "out/hiermod/16S_1_lognormal_MD"
+source('src/hiermod/Models/MD_model.R') # model_MDv_ITS, means_MDv()
+model_MDv <- model_MDv_ITS
+hiermod_out_dir <- "out/hiermod/ITS_1_lognormal_MD"
 
 fit_MDv <- readRDS(file.path(hiermod_out_dir, "fit_MDv.rds"))
 

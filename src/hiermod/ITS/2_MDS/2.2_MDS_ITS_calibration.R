@@ -128,7 +128,7 @@ sbc_gen_MDS <- make_sbc_generator(
   gen_cols = c("Dv", "Mg", "Mo"),
   extra_globals = "sim_div_MDS", shift = 1)
 
-n_sbc  <- 100
+n_sbc  <- 400
 n_iter <- 10000
 
 sbc_MDS <- run_sbc_pipeline(
@@ -145,22 +145,6 @@ sbc_MDS$stats |>
   dplyr::summarise(mean_rank_frac = mean(rank / max_rank), median_rank_frac = median(rank / max_rank))
 
 save_sbc_health_report(model_id, sbc_MDS, n_sbc, n_iter,
-                        variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                                      "may_gap", "july_gap", "seasonal_change"),
-                        hiermod_out_dir = hiermod_out_dir)
-
-# Same n=400 stress test as every model in this rebuild before trusting an
-# n=100 "ok".
-n_sbc <- 400
-sbc_MDS_2 <- run_sbc_pipeline(
-  generator = sbc_gen_MDS$generator, globals = sbc_gen_MDS$globals,
-  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
-  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDS,
-  control = list(adapt_delta = 0.99))
-
-plot_sbc_diagnostics(sbc_MDS_2, model_id, n_sbc)
-
-save_sbc_health_report(model_id, sbc_MDS_2, n_sbc, n_iter,
                         variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
                                       "may_gap", "july_gap", "seasonal_change"),
                         hiermod_out_dir = hiermod_out_dir)

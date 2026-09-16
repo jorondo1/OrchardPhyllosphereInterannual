@@ -119,11 +119,7 @@ make_sbc_generator <- function(fit, simulate_fn, keep, gen_cols,
 
 # ---- Pipeline: generate + fit ------------------------------------------------
 
-# Generates n_sbc SBC replicate datasets in parallel (never cached to disk
-# -- generation is fast now via future.chunk.size parallelization, so the
-# complexity of an on-disk cache isn't worth it) and fits every one via
-# SBC_backend_ulam, keeping compute_SBC()'s own fit-level cache_mode =
-# "results" caching (that IS worth it -- refitting is the expensive step).
+# Generates n_sbc SBC replicate datasets in parallel 
 run_sbc_pipeline <- function(generator, globals, n_sbc, model, model_id, n_iter,
                              hiermod_out_dir, dquants = NULL, refresh = 0, ...){
   future::plan(future::multisession)
@@ -138,7 +134,7 @@ run_sbc_pipeline <- function(generator, globals, n_sbc, model, model_id, n_iter,
   
   SBC::compute_SBC(
     datasets, backend, dquants = dquants,
-    cache_mode = "results", cache_location = file.path(hiermod_out_dir, paste0("sbc_cache_", model_id)),
+    #cache_mode = "results", cache_location = file.path(hiermod_out_dir, paste0("sbc_cache_", model_id)),
     globals = c("SBC_fit.SBC_backend_ulam", "SBC_fit_to_draws_matrix.ulam", "SBC_fit_to_diagnostics.ulam"))
 }
 
