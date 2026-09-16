@@ -139,7 +139,7 @@ pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "yr1", "yr2",
                  "cv_1", "cv_3", "cv_4", "cv_5", "b_deg", "b_precip", "b_seq")
 
 p_pairs <- plot_mcmc_pairs(fit_sim, variables = pairs_vars, n_keep = 1000)
-save_gg("mcmc_pairs", model_id, p_pairs, width = 15, height = 15, type = "png")
+save_gg("sim_mcmc_pairs", model_id, p_pairs, width = 15, height = 15, type = "png")
 
 ## Simulation-based calibration (SBC), via the SBC package -----------------------
 

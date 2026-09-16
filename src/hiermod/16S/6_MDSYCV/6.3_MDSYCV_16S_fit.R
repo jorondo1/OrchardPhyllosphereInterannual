@@ -31,6 +31,7 @@ save_fit("fit", model_id_MDSYCV, fit_MDSYCV)
 saveRDS(dat_MDSYCV, file.path(hiermod_out_dir, "dat_MDSYCV.rds"))
 
 precis(fit_MDSYCV, depth = 2)
+
 save_pdf("fit_trankplot", model_id_MDSYCV,
          function() trankplot(fit_MDSYCV, n_cols = 4, max_rows = 10))
 
@@ -109,5 +110,6 @@ save_gg("fit_cultivar_effects", model_id_MDSYCV, p_cultivar, width = 8, height =
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "yr1", "yr2",
                  "cv_1", "cv_3", "cv_4", "cv_5", "b_deg", "b_precip", "b_seq")
-p_pairs <- plot_mcmc_pairs(fit_MDSYCV, variables = pairs_vars, n_keep = 250)
-save_gg("mcmc_pairs", model_id_MDSYCV, p_pairs, width = 18, height = 18, type = "png")
+p_pairs <- plot_mcmc_pairs(fit_MDSYCV, variables = pairs_vars, n_keep = 1000)
+save_gg("fit_mcmc_pairs", model_id_MDSYCV, p_pairs, width = 15, height = 15, type = "png")
+  
