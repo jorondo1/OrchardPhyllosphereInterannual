@@ -109,7 +109,21 @@ estimand_panels <- function(pairs, extra = NULL, group_levels = c("1", "2")){
 # raw, always-positive diversity quantity trivially has pd=1).
 report_contrasts_full <- function(pc_full, all_groups = FALSE){
   filtered <- if (all_groups) pc_full else pc_full %>% filter(group %in% c("Contrast", "Population"))
-  
+  # dplyr::summarise() still probes these aggregation expressions on a
+  # degenerate 0/1-row input to infer output types even when `filtered`
+  # has 0 matching rows (e.g. every variance_component_panels() call whose
+  # groups are custom labels like Year/Cultivar/Covariates, not literally
+  # "Contrast"/"Population") -- HPDI() throws ("obj must have nsamp > 1")
+  # on that probe input, so this has to short-circuit before summarise()
+  # ever runs, not rely on 0-row grouping to no-op safely (confirmed: it
+  # doesn't).
+  if (nrow(filtered) == 0) {
+    return(tibble(statistic = factor(character(0), levels = levels(pc_full$statistic)),
+                  group = character(0), mean = numeric(0), median = numeric(0),
+                  HPDI_lower = numeric(0), HPDI_upper = numeric(0),
+                  PI89_lower = numeric(0), PI89_upper = numeric(0), pd = numeric(0)))
+  }
+
   filtered %>%
     group_by(statistic, group) %>%
     summarise(
