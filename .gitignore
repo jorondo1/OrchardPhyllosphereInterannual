@@ -32,7 +32,7 @@ logs/
 *.html
 *.pdf
 *.csv
-# *.RDS
-# *.rds
+*.RDS
+*.rds
 *.csv
 *.xlsx
