@@ -14,9 +14,9 @@ p_load(
   phyloseq,
   patchwork,
   magrittr,
-  ggpubr
+  ggpubr,
+  ggtext  
 )
-
 
 # ==========================================================
 # 2. Load datasets
@@ -25,14 +25,11 @@ p_load(
 Years3 <- readRDS("Years3.rds")
 Years2 <- readRDS("Years2.rds")
 
-
 # ==========================================================
-# 3. Relative-abundance cutoff + legend options
+# 3. Relative-abundance cutoff
 # ==========================================================
 
 family_cutoff <- 1
-
-show_legend_abundance <- FALSE
 
 # ==========================================================
 # 4. Prepare Family relative-abundance data
@@ -80,7 +77,6 @@ prepare_family_data <- function(ps) {
   return(df)
 }
 
-
 # ==========================================================
 # 5. Prepare all datasets
 # ==========================================================
@@ -101,9 +97,9 @@ get_month_families <- function(df, time_value, cutoff = 1) {
     filter(Time == time_value) %>%
     filter(Family_clean != "Unclassified") %>%
     group_by(Sample, Family_clean) %>%
-    summarise(relAb = sum(relAb, na.rm = TRUE), .groups = "drop") %>%
+    summarise(relAb = sum(relAb, na.rm = FALSE), .groups = "drop") %>%
     group_by(Family_clean) %>%
-    summarise(mean_rel_abund = mean(relAb, na.rm = TRUE), .groups = "drop") %>%
+    summarise(mean_rel_abund = mean(relAb, na.rm = FALSE), .groups = "drop") %>%
     filter(mean_rel_abund >= cutoff) %>%
     pull(Family_clean)
   
@@ -164,12 +160,11 @@ family_class_Years2_July_Bacteria <- classify_month_families(family_data_Years2_
 family_class_Years2_May_Fungi  <- classify_month_families(family_data_Years2_Fungi, "May",  families_Years2_May_Fungi)
 family_class_Years2_July_Fungi <- classify_month_families(family_data_Years2_Fungi, "July", families_Years2_July_Fungi)
 
-
 # ==========================================================
-# 11. Calculate month-specific legend information
+# 11. Calculate month-specific legend ordering stats
 # ==========================================================
 
-get_family_legend_stats <- function(df, show_abundance = TRUE) {
+get_family_legend_stats <- function(df) {
   
   sample_family <- df %>%
     group_by(Sample, aggTaxo) %>%
@@ -184,40 +179,24 @@ get_family_legend_stats <- function(df, show_abundance = TRUE) {
       .groups = "drop"
     )
   
-  if (show_abundance) {
-    stats <- stats %>%
-      mutate(
-        Legend_Label = paste0(
-          aggTaxo, " (",
-          sprintf("%.2f", overall_mean), "% ± ",
-          sprintf("%.2f", overall_sd), ")"
-        )
-      )
-  } else {
-    stats <- stats %>%
-      mutate(Legend_Label = aggTaxo)
-  }
-  
   return(stats)
 }
 
-
 # ==========================================================
-# 12. Calculate May and July legends separately
+# 12. Calculate May and July legend stats separately
 # ==========================================================
 
-legend_Years3_May_Bacteria  <- get_family_legend_stats(family_class_Years3_May_Bacteria,  show_abundance = show_legend_abundance)
-legend_Years3_July_Bacteria <- get_family_legend_stats(family_class_Years3_July_Bacteria, show_abundance = show_legend_abundance)
+legend_Years3_May_Bacteria  <- get_family_legend_stats(family_class_Years3_May_Bacteria)
+legend_Years3_July_Bacteria <- get_family_legend_stats(family_class_Years3_July_Bacteria)
 
-legend_Years3_May_Fungi  <- get_family_legend_stats(family_class_Years3_May_Fungi,  show_abundance = show_legend_abundance)
-legend_Years3_July_Fungi <- get_family_legend_stats(family_class_Years3_July_Fungi, show_abundance = show_legend_abundance)
+legend_Years3_May_Fungi  <- get_family_legend_stats(family_class_Years3_May_Fungi)
+legend_Years3_July_Fungi <- get_family_legend_stats(family_class_Years3_July_Fungi)
 
-legend_Years2_May_Bacteria  <- get_family_legend_stats(family_class_Years2_May_Bacteria,  show_abundance = show_legend_abundance)
-legend_Years2_July_Bacteria <- get_family_legend_stats(family_class_Years2_July_Bacteria, show_abundance = show_legend_abundance)
+legend_Years2_May_Bacteria  <- get_family_legend_stats(family_class_Years2_May_Bacteria)
+legend_Years2_July_Bacteria <- get_family_legend_stats(family_class_Years2_July_Bacteria)
 
-legend_Years2_May_Fungi  <- get_family_legend_stats(family_class_Years2_May_Fungi,  show_abundance = show_legend_abundance)
-legend_Years2_July_Fungi <- get_family_legend_stats(family_class_Years2_July_Fungi, show_abundance = show_legend_abundance)
-
+legend_Years2_May_Fungi  <- get_family_legend_stats(family_class_Years2_May_Fungi)
+legend_Years2_July_Fungi <- get_family_legend_stats(family_class_Years2_July_Fungi)
 
 # ==========================================================
 # 13. Summarize abundance by Site
@@ -240,7 +219,6 @@ summarize_family_plot <- function(df) {
   return(plot_df)
 }
 
-
 # ==========================================================
 # 14. Create May and July plotting tables
 # ==========================================================
@@ -257,19 +235,8 @@ family_Years2_July_Bacteria <- summarize_family_plot(family_class_Years2_July_Ba
 family_Years2_May_Fungi  <- summarize_family_plot(family_class_Years2_May_Fungi)
 family_Years2_July_Fungi <- summarize_family_plot(family_class_Years2_July_Fungi)
 
-
 # ==========================================================
-# 15. Check that every bar is approximately 100%
-# ==========================================================
-
-check_total <- function(df) {
-  df %>%
-    group_by(Code) %>%
-    summarise(Total = sum(mean_rel_abund, na.rm = TRUE), .groups = "drop")
-}
-
-# ==========================================================
-# 16. CREATE ONE FIXED FAMILY COLOR MAP FOR ALL GRAPHS
+# 15. CREATE ONE FIXED FAMILY COLOR MAP FOR ALL GRAPHS
 # ==========================================================
 
 # ----------------------------------------------------------
@@ -295,16 +262,16 @@ bar_outline_width <- 0.2
 # ----------------------------------------------------------
 
 panel_border_color <- "black"
-panel_border_width  <- 1.5      # CHANGED: was 0.8 — thicker box around each graph
+panel_border_width  <- 1.5
 
 # ----------------------------------------------------------
 # Legend entry spacing
 # ----------------------------------------------------------
 
-legend_entry_spacing <- 0.15   # CHANGED: now in cm, applied as real gap BETWEEN key boxes (see 19A)
+legend_entry_spacing <- 0.15
 
 # ----------------------------------------------------------
-# 16A. Family names and their assigned colors
+# Family names and their assigned colors
 # ----------------------------------------------------------
 
 labels_fam <- c(
@@ -324,7 +291,7 @@ labels_fam <- c(
 
 
 # ----------------------------------------------------------
-# 16B. Fixed colors
+# Fixed colors
 # ----------------------------------------------------------
 
 fill_fam <- c(
@@ -339,21 +306,26 @@ fill_fam <- c(
 
 
 # ----------------------------------------------------------
-# 16C. Create named color vector
+#  Create named color vector
 # ----------------------------------------------------------
 
 family_colors <- fill_fam
 names(family_colors) <- labels_fam
 
-
 # ----------------------------------------------------------
-# 16D. Check the color assignments
+# italicize Family names in legends
 # ----------------------------------------------------------
 
-family_colors
+italicize_label <- function(x) {
+  ifelse(
+    x %in% c("Others", "Unclassified"),
+    x,
+    paste0("*", x, "*")
+  )
+}
 
 # ==========================================================
-# 16E. Create shared Family orders for Bacteria and Fungi
+# Create shared Family orders for Bacteria and Fungi
 # ==========================================================
 
 bacteria_family_order <- sort(
@@ -391,18 +363,18 @@ fungi_family_order <- c(
 
 
 # ==========================================================
-# 16F. Plot function
+# Plot function
 # ==========================================================
 
 plot_family_bar <- function(df, legend_stats, shared_family_order = NULL) {
   
   df <- df %>%
     left_join(
-      legend_stats %>% select(aggTaxo, Legend_Label, overall_mean),
+      legend_stats %>% select(aggTaxo, overall_mean),
       by = "aggTaxo"
     )
   
-  if (show_legend_abundance == FALSE && !is.null(shared_family_order)) {
+  if (!is.null(shared_family_order)) {
     
     family_order <- shared_family_order
     
@@ -421,19 +393,9 @@ plot_family_bar <- function(df, legend_stats, shared_family_order = NULL) {
   df <- df %>%
     mutate(aggTaxo = factor(aggTaxo, levels = family_order))
   
-  if (show_legend_abundance) {
-    
-    legend_labels <- legend_stats$Legend_Label
-    names(legend_labels) <- legend_stats$aggTaxo
-    legend_labels <- legend_labels[family_order]
-    legend_title <- "Family (Mean % ± SD)"
-    
-  } else {
-    
-    legend_labels <- family_order
-    names(legend_labels) <- family_order
-    legend_title <- "Family"
-  }
+  legend_labels <- italicize_label(family_order)
+  names(legend_labels) <- family_order
+  legend_title <- "Family"
   
   ggplot(
     df,
@@ -473,7 +435,7 @@ plot_family_bar <- function(df, legend_stats, shared_family_order = NULL) {
       axis.title.y = element_text(face = "bold", size = 16),
       axis.text.y = element_text(size = 14),
       legend.title = element_text(size = 16),
-      legend.text = element_text(size = 14),
+      legend.text = ggtext::element_markdown(size = 14),   
       legend.key.height = grid::unit(0.45, "cm"),
       legend.position = "right",
       plot.title = element_text(hjust = 0.5, face = "bold", size = month_title_size),
@@ -484,8 +446,6 @@ plot_family_bar <- function(df, legend_stats, shared_family_order = NULL) {
       )
     )
 }
-
-
 
 # ==========================================================
 # 17. Create BACTERIA plots
@@ -543,10 +503,6 @@ family_bar_Years2_July_Fungi <- plot_family_bar(
 # 19. CREATE COMPLETE SHARED LEGENDS
 # ==========================================================
 
-# ==========================================================
-# 19A. Function to create a COMPLETE shared legend
-# ==========================================================
-
 make_shared_family_legend <- function(family_order, legend_title) {
   
   legend_df <- tibble(
@@ -569,7 +525,7 @@ make_shared_family_legend <- function(family_order, legend_title) {
     scale_fill_manual(
       values = family_colors,
       breaks = family_order,
-      labels = family_order,
+      labels = italicize_label(family_order),
       drop = FALSE
     ) +
     
@@ -582,10 +538,10 @@ make_shared_family_legend <- function(family_order, legend_title) {
     theme(
       legend.position = "right",
       legend.title = element_text(face = "bold", size = family_legend_title_size),
-      legend.text = element_text(size = family_legend_text_size),   # CHANGED: removed the margin() hack from last time
+      legend.text = ggtext::element_markdown(size = family_legend_text_size),  # CHANGED
       legend.key.height = grid::unit(0.6, "cm"),
       legend.key.width  = grid::unit(0.6, "cm"),
-      legend.key.spacing.y = grid::unit(legend_entry_spacing, "cm")  # CHANGED: real gap between key+label rows, boxes stay intact (needs ggplot2 >= 3.5.0)
+      legend.key.spacing.y = grid::unit(legend_entry_spacing, "cm")
     )
   
   shared_legend <- ggpubr::get_legend(legend_plot)
@@ -593,10 +549,8 @@ make_shared_family_legend <- function(family_order, legend_title) {
   return(shared_legend)
 }
 
-
-
 # ==========================================================
-# 19B. Create BACTERIA shared legend
+# Create BACTERIA shared legend
 # ==========================================================
 
 bacteria_shared_legend <- make_shared_family_legend(
@@ -604,10 +558,8 @@ bacteria_shared_legend <- make_shared_family_legend(
   legend_title = "Bacterial Families"
 )
 
-
-
 # ==========================================================
-# 19C. Create FUNGI shared legend
+# Create FUNGI shared legend
 # ==========================================================
 
 fungi_shared_legend <- make_shared_family_legend(
@@ -615,10 +567,8 @@ fungi_shared_legend <- make_shared_family_legend(
   legend_title = "Fungal Families"
 )
 
-
-
 # ==========================================================
-# 19D. Measure each legend's NATURAL width
+# Measure each legend's NATURAL width
 # ==========================================================
 
 bacteria_legend_width <- grid::unit(1, "grobwidth", bacteria_shared_legend) +
@@ -626,8 +576,6 @@ bacteria_legend_width <- grid::unit(1, "grobwidth", bacteria_shared_legend) +
 
 fungi_legend_width <- grid::unit(1, "grobwidth", fungi_shared_legend) +
   grid::unit(0.3, "cm")
-
-
 
 # ==========================================================
 # 20. CHANGE INDIVIDUAL GRAPH TITLES
@@ -664,8 +612,6 @@ bac_2july <- family_bar_Years2_July_Bacteria +
     axis.ticks.y = element_blank()
   )
 
-
-
 # --------------------------
 # FUNGI
 # --------------------------
@@ -697,8 +643,6 @@ fun_2july <- family_bar_Years2_July_Fungi +
     axis.ticks.y = element_blank()
   )
 
-
-
 # ==========================================================
 # 21. FUNCTION FOR YEAR ROW LABEL
 # ==========================================================
@@ -711,8 +655,6 @@ make_year_label <- function(label) {
     ylim(0, 1) +
     theme_void()
 }
-
-
 
 # ==========================================================
 # 22. FUNCTION FOR BLACK DIVIDER LINE
@@ -727,8 +669,6 @@ make_divider <- function() {
     theme_void()
 }
 
-
-
 # ==========================================================
 # 23. CREATE ROW LABELS
 # ==========================================================
@@ -736,8 +676,6 @@ make_divider <- function() {
 label_3year <- make_year_label("3 Year Data")
 label_2year <- make_year_label("2 Year Data")
 divider_line <- make_divider()
-
-
 
 # ==========================================================
 # 24. CREATE BACTERIA GRAPH BLOCK
@@ -751,8 +689,6 @@ bacteria_graphs <- (
     (bac_2may | bac_2july)
 ) +
   plot_layout(heights = c(0.12, 1, 0.035, 0.12, 1))
-
-
 
 # ==========================================================
 # 25. CREATE FINAL BACTERIA PANEL
@@ -768,8 +704,6 @@ family_panel_Bacteria <- (
     )
   )
 
-
-
 # ==========================================================
 # 26. FUNGI GRAPH BLOCK
 # ==========================================================
@@ -782,8 +716,6 @@ fungi_graphs <- (
     (fun_2may | fun_2july)
 ) +
   plot_layout(heights = c(0.12, 1, 0.035, 0.12, 1))
-
-
 
 # ==========================================================
 # 27. CREATE FINAL FUNGI PANEL
@@ -799,26 +731,8 @@ family_panel_Fungi <- (
     )
   )
 
-
-
 # ==========================================================
-# 28. SHOW BACTERIA PANEL
-# ==========================================================
-
-family_panel_Bacteria
-
-
-
-# ==========================================================
-# 29. SHOW FUNGI PANEL
-# ==========================================================
-
-family_panel_Fungi
-
-
-
-# ==========================================================
-# 30. COMBINE BACTERIA + FUNGI
+# 28. COMBINE BACTERIA + FUNGI
 # ==========================================================
 
 family_panel_All <- (
@@ -837,15 +751,10 @@ family_panel_All <- (
   )
 
 
-
-# ==========================================================
-# 31. SHOW COMBINED PANEL
-# ==========================================================
-
 family_panel_All
 
 # ==========================================================
-# 32. SAVE TABLE OF ALL MEAN ABUNDANCES + STANDARD DEVIATIONS
+# 32. SAVE TABLE OF % ABUNDANCE 
 # ==========================================================
 
 # ----------------------------------------------------------
@@ -878,10 +787,16 @@ abundance_table_all <- bind_rows(
   
   rename(
     Family = aggTaxo,
-    Mean_Percent_Abundance = mean_rel_abund,
-    SD = sd_rel_abund,
-    SE = se_rel_abund,
-    N = n
+    Mean_Percent_Abundance = mean_rel_abund
+  ) %>%
+  
+  select(
+    Domain,
+    Year_Group,
+    Month,
+    Code,
+    Family,
+    Mean_Percent_Abundance
   ) %>%
   
   arrange(
@@ -892,19 +807,12 @@ abundance_table_all <- bind_rows(
     desc(Mean_Percent_Abundance)
   )
 
-
-# ----------------------------------------------------------
-# Round for readability
-# ----------------------------------------------------------
-
 abundance_table_all <- abundance_table_all %>%
   mutate(
-    across(
-      c(Mean_Percent_Abundance, SD, SE),
-      ~ round(.x, 2)
-    )
+    Mean_Percent_Abundance = round(Mean_Percent_Abundance, 2)
   )
 
+abundance_table_all
 
 # ----------------------------------------------------------
 # Save as CSV
@@ -917,8 +825,129 @@ write.csv(
 )
 
 
+
+# ==========================================================
+# 33. TOTAL UNIQUE TAXA PER TAXONOMIC LEVEL
+# ==========================================================
+
+clean_taxa_vector <- function(x) {
+  x <- as.character(x)
+  case_when(
+    is.na(x) ~ "Unclassified",
+    x == "" ~ "Unclassified",
+    x == "NA" ~ "Unclassified",
+    grepl("Incertae|Unclassified|uncultured|unknown", x, ignore.case = TRUE) ~ "Unclassified",
+    TRUE ~ x
+  )
+}
+
+get_unique_taxa_list <- function(ps) {
+  
+  tax_df <- as.data.frame(as(tax_table(ps), "matrix"), stringsAsFactors = FALSE)
+  
+  rank_list <- purrr::map(
+    names(tax_df),
+    function(rank) {
+      cleaned <- clean_taxa_vector(tax_df[[rank]])
+      cleaned <- cleaned[cleaned != "Unclassified"]
+      unique(cleaned)
+    }
+  )
+  
+  names(rank_list) <- names(tax_df)
+  
+  # ADDED: ASV-level count
+  rank_list[["ASV"]] <- taxa_names(ps)
+  
+  return(rank_list)
+}
+
 # ----------------------------------------------------------
-# View in R
+# Get the unique-taxa lists for each of the 4 datasets
 # ----------------------------------------------------------
 
-abundance_table_all
+taxa_Years3_Bacteria <- get_unique_taxa_list(Years3$Bacteria)
+taxa_Years3_Fungi    <- get_unique_taxa_list(Years3$Fungi)
+taxa_Years2_Bacteria <- get_unique_taxa_list(Years2$Bacteria)
+taxa_Years2_Fungi    <- get_unique_taxa_list(Years2$Fungi)
+
+count_by_rank <- function(taxa_list, year_group, domain) {
+  tibble(
+    Domain = domain,
+    Year_Group = year_group,
+    Rank = names(taxa_list),
+    Unique_Count = purrr::map_int(taxa_list, length)
+  )
+}
+
+unique_taxa_by_dataset <- bind_rows(
+  count_by_rank(taxa_Years3_Bacteria, "3 Year", "Bacteria"),
+  count_by_rank(taxa_Years3_Fungi,    "3 Year", "Fungi"),
+  count_by_rank(taxa_Years2_Bacteria, "2 Year", "Bacteria"),
+  count_by_rank(taxa_Years2_Fungi,    "2 Year", "Fungi")
+)
+
+union_by_rank <- function(list1, list2) {
+  ranks <- union(names(list1), names(list2))
+  out <- purrr::map(ranks, function(r) {
+    v1 <- if (r %in% names(list1)) list1[[r]] else character(0)
+    v2 <- if (r %in% names(list2)) list2[[r]] else character(0)
+    union(v1, v2)
+  })
+  names(out) <- ranks
+  return(out)
+}
+
+# ----------------------------------------------------------
+# Domain totals — Bacteria (Year2+Year3), Fungi (Year2+Year3)
+# ----------------------------------------------------------
+
+taxa_Bacteria_AllYears <- union_by_rank(taxa_Years3_Bacteria, taxa_Years2_Bacteria)
+taxa_Fungi_AllYears    <- union_by_rank(taxa_Years3_Fungi,    taxa_Years2_Fungi)
+
+domain_totals <- bind_rows(
+  tibble(
+    Domain = "Bacteria", Year_Group = "All Years",
+    Rank = names(taxa_Bacteria_AllYears),
+    Unique_Count = purrr::map_int(taxa_Bacteria_AllYears, length)
+  ),
+  tibble(
+    Domain = "Fungi", Year_Group = "All Years",
+    Rank = names(taxa_Fungi_AllYears),
+    Unique_Count = purrr::map_int(taxa_Fungi_AllYears, length)
+  )
+)
+
+# ----------------------------------------------------------
+# Combine into one summary table
+# ----------------------------------------------------------
+
+unique_taxa_long <- bind_rows(
+  unique_taxa_by_dataset %>% mutate(Group_Type = "By Dataset", .before = 1),
+  domain_totals          %>% mutate(Group_Type = "By Domain (All Years)", .before = 1)
+)
+
+standard_rank_order <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species", "ASV")
+rank_levels <- c(
+  intersect(standard_rank_order, unique(unique_taxa_long$Rank)),
+  setdiff(unique(unique_taxa_long$Rank), standard_rank_order)
+)
+
+unique_taxa_summary <- unique_taxa_long %>%
+  mutate(Rank = factor(Rank, levels = rank_levels)) %>%
+  pivot_wider(names_from = Rank, values_from = Unique_Count) %>%
+  select(Group_Type, Domain, Year_Group, all_of(rank_levels)) %>%
+  arrange(Group_Type, Domain, Year_Group)
+
+unique_taxa_summary
+
+# ----------------------------------------------------------
+# Save as CSV
+# ----------------------------------------------------------
+
+write.csv(
+  unique_taxa_summary,
+  "unique_taxa_summary.csv",
+  row.names = FALSE
+)
+
