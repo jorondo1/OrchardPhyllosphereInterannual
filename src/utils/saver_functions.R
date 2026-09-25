@@ -69,16 +69,16 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
   con <- file(path, open = "wt")
   sink(con)
   on.exit({ sink(); close(con) })
-
+  
   if (!is.null(model)) {
     header <- if (!is.null(model_name)) model_name
-              else if (!is.null(attr(model, "name"))) attr(model, "name")
-              else deparse(substitute(model))
+    else if (!is.null(attr(model, "name"))) attr(model, "name")
+    else deparse(substitute(model))
     cat("==== model:", header, "====\n\n")
     print(model)
     cat("\n\n")
   }
-
+  
   cat("==== precis:", deparse(substitute(fit)), "====\n\n")
   precis_fit <- precis(fit, depth = depth)
   # ess_bulk as a fraction of total post-warmup draws -- can exceed 1 under
@@ -88,13 +88,13 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
   # Values well below ~0.1-0.2 are the ones worth a second look.
   precis_fit$ess_ratio <- precis_fit$ess_bulk / NROW(extract.samples(fit)[[1]])
   print(round(precis_fit, 3))
-
+  
   if (!is.null(recovery)) {
     cat("\n\n==== parameter recovery ====\n")
     print(as.data.frame(recovery %>% mutate(across(where(is.numeric), ~round(.x, 3)))))
     cat("covered:", sum(recovery$covered), "/", nrow(recovery), "\n")
   }
-
+  
   if (!is.null(post_counts)) {
     cat("\n\n==== posterior contrast ====\n")
     if ("statistic" %in% names(post_counts)) {
@@ -111,28 +111,41 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
       print(PI(post_counts$contrast))
     }
   }
-
+  
   invisible(path)
   message("Saved to ", path)
-
+  
 }
 
-# Comprehensive posterior summary as a styled HTML table (kableExtra), one
-# row per statistic/group -- mean, median, 89% PI, 89% HPDI, pd. Companion
-# to save_report(): that one is model+precis only (a fit's own diagnostic
-# record); this is the "results report" -- every interpretable posterior a
-# reader might want a number for, including each group's own quantity
-# (all_groups=TRUE default), not just its Contrast. pc_full: a
-# compute_contrasts()/estimand_panels()-shaped statistic/group/value
-# tibble (bind_rows() together whatever the calling script already built,
-# e.g. compute_contrasts(pf, keep=...) + pc_estimands_means +
-# pc_estimands_medians -- see any *_16S_analysis.R script for the pattern).
+# Comprehensive posterior summary 
 save_posterior_kable <- function(name, step, pc_full, dir = hiermod_out_dir, caption = NULL, all_groups = TRUE){
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   path <- file.path(dir, paste0(name, "_", step, ".html"))
-
-  report_contrasts_full(pc_full, all_groups = all_groups) %>%
-    mutate(across(where(is.numeric), ~round(.x, 2))) %>%
+  
+  base_tbl <- report_contrasts_full(pc_full, all_groups = all_groups) %>% 
+    dplyr::select(statistic, group, median, HPDI_lower, HPDI_upper, pd)
+  
+  with_inverse <- base_tbl %>%
+    bind_rows(
+      filter(., str_detect(statistic, "fold")) %>%
+        mutate(
+          across(where(is.numeric), ~ 1 / .x),
+          statistic = paste(statistic, "(inverse)")
+        )
+    )
+  
+  # digits conditions
+  is_vp <- str_detect(with_inverse$statistic, "Variance partition")
+  
+  with_inverse %>%
+    mutate(across(
+      where(is.numeric),
+      ~ ifelse(
+        is_vp, 
+        sprintf("%.3f", .x), 
+        ifelse( # starts with 0 : 
+          (abs(.x) < 1 & .x != 0),sprintf("%.2f", .x), sprintf("%.1f", .x)))
+    )) %>%
     kableExtra::kable("html", caption = caption %||% paste0(
       "Posterior summary: ", step,
       ". pd = probability of direction (fraction of the posterior on the median's side of 0).")) %>%
@@ -140,7 +153,7 @@ save_posterior_kable <- function(name, step, pc_full, dir = hiermod_out_dir, cap
       full_width = FALSE,
       bootstrap_options = c('striped', 'hover')) %>%
     kableExtra::save_kable(file = path)
-
+  
   invisible(path)
   message("Saved to ", path)
 }

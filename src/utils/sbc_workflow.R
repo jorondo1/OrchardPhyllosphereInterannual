@@ -22,6 +22,34 @@
 #         variables = c("loga[1]", "loga[2]", "median_contrast"),
 #         hiermod_out_dir = hiermod_out_dir)
 
+# Contrast recovery -------------------------
+
+# Posterior + true-value tables for the May gap / July gap / seasonal-change
+contrast_recovery <- function(fit, means_fn, may_conv, may_org,
+                              july_conv_shift, july_org_shift, shift = 0){
+  pf <- post_full(fit, means_fn, shift = shift)
+  m  <- pf$median
+  
+  estimands <- estimand_rows(list(
+    "Median May gap (Organic - Conventional)"    = m$median_3 - m$median_1,
+    "Median July gap (Organic - Conventional)"   = m$median_4 - m$median_2,
+    "Seasonal change in median gap (July - May)" = (m$median_4 - m$median_2) - (m$median_3 - m$median_1)
+  ))
+  
+  may_gap  <- may_org - may_conv
+  july_gap <- may_org * exp(july_conv_shift + july_org_shift) - may_conv * exp(july_conv_shift)
+  
+  true_estimands <- tribble(
+    ~statistic,                                    ~value,
+    "Median May gap (Organic - Conventional)",     may_gap,
+    "Median July gap (Organic - Conventional)",    july_gap,
+    "Seasonal change in median gap (July - May)",  july_gap - may_gap,
+  )
+  
+  list(estimands = estimands, true_estimands = true_estimands)
+}
+
+
 # Pulls the i-th prior draw out of extract.prior()'s output as a plain
 # named list, for feeding to a model's simulate_from_priors_X() as one
 # "true" parameter set (an indexed parameter comes back as a matrix row, a

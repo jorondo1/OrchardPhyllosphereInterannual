@@ -1,7 +1,9 @@
 # MDSTYCV_model.R --- MODEL 7 (MDSTYCV), 16S: MDSYCV plus Tree, merging the
 # two branches this rebuild has kept separate since Model 3 (MDST, Tree)
 # and Model 4 (MDSYz, Year, later +Covariates +Cultivar).
-#
+
+source('src/hiermod/0_INDEX.R')
+
 # This is not a purely mechanical merge. Direct query of the real data
 # confirms Tree is DETERMINISTICALLY NESTED in Cultivar (129/129 trees map
 # to exactly one cultivar) and in Location (129/129, though Location still
@@ -53,17 +55,17 @@ attr(model_MDSTYCV_ITS, "name") <- "Saruman the Fool"
 means_MDSTYCV <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
   total_var_conv <- post$sigma[,1]^2 + as.vector(post$sigma_tr)^2
   total_var_org  <- post$sigma[,2]^2 + as.vector(post$sigma_tr)^2
-
+  
   s_conv    <- as.vector(post$s_conv)
   gap_shift <- as.vector(post$gap_shift)
   covariate_offset <- as.vector(post$b_deg)*deg_h_z + as.vector(post$b_precip)*precip_72h_z +
     as.vector(post$b_seq)*seq_depth_z
-
+  
   mu_conv_May  <- post$loga[,1] + covariate_offset
   mu_conv_July <- mu_conv_May + s_conv
   mu_org_May   <- post$loga[,2] + covariate_offset
   mu_org_July  <- mu_org_May + s_conv + gap_shift
-
+  
   list(
     mean = cbind(
       lognormal_mean(mu_conv_May,  total_var_conv, shift = shift),
@@ -98,55 +100,62 @@ dq_MDSTYCV <- SBC::derived_quantities(
 )
 
 ## variance_partition_MDSTYCV() --------------------------------------------------
-# Same as variance_partition_MDSYCV() plus a Tree share (sigma_tr^2/total),
-# folded into total the same way sigma_tr^2 was folded into total_var in
-# means_MDSTYCV() above. Tree is a random, not fixed, effect -- kept as its
-# own bucket rather than part of the sequential fixed-effects decomposition
-# (see variance_partition_MDSYC()'s own comment for that rationale). The
-# direct answer to "was adding Tree worth it" from a variance-explained
-# standpoint -- see MDSTYCV_posterior_guide.html section 7.
+# Reports a marginal ("by margin", order-free) decomposition via the shared
+# variance_partition_panels() engine (postcontrast_helpers.R).
+#
+# Management x Season is kept as ONE combined term (loga[Mg] + gamma_term),
+# not split into Management/Season/interaction -- splitting them was tried
+# and produced a strongly negative "by margin" share for the interaction
+# (median ~ -0.33 in the real 16S fit). That's not confounding in the usual
+# ANOVA sense -- it's that this function's "marginal" share is a no-refit
+# shortcut (var(full) - var(full minus term), holding every OTHER
+# coefficient fixed at its joint full-model value), which lacks the
+# projection-based non-negativity guarantee a real refit-based ANOVA/
+# PERMANOVA Type III SS has. Management (loga[Mg]) and the interaction
+# (gap_shift*(Mg-1)*(Mo-1)) are raw 0/1-indicator coded (unlike Year/
+# Cultivar's sum-to-zero coding), so they aren't orthogonal by construction
+# -- in this fit, gap_shift and the loga[Mg] contrast have opposite signs
+# (Organic starts lower in May but climbs more steeply by July), which
+# drives a large negative cross term. Combining them back into one term
+# sidesteps the issue entirely (a term's marginal share vs. itself is just
+# its own variance). A real Shapley/LMG (order-averaged, refit-based)
+# decomposition would handle this properly -- deferred for now.
+#
+# Tree is a proper per-observation term (realized tr[Tr] draws x sigma_tr,
+# like Year/Cultivar's own realized-level construction) instead of the old
+# bulk sigma_tr^2/total bolt-on that was commented out of this model's total
+# entirely -- Tree is included in the explained/total variance here for the
+# first time, matching variance_partition_MDSTYCL()'s own (already-included)
+# treatment for the first time.
 
 variance_partition_MDSTYCV <- function(post, dat){
-  loga_obs   <- post$loga[, dat$Mg]
-  gamma      <- as.vector(post$s_conv) + outer(as.vector(post$gap_shift), dat$Mg - 1)
-  gamma_term <- sweep(gamma, 2, dat$Mo - 1, "*")
-  yr3        <- -(as.vector(post$yr1) + as.vector(post$yr2))
-  yr_obs     <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]
+  yr3    <- -(as.vector(post$yr1) + as.vector(post$yr2))
+  yr_obs <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]
 
   cv_derived <- -(as.vector(post$cv_1) + as.vector(post$cv_3) + as.vector(post$cv_4) + as.vector(post$cv_5))
   cv_mat     <- cbind(post$cv_1, cv_derived, post$cv_3, post$cv_4, post$cv_5) # Cv index order: 1..5
   cv_obs     <- cv_mat[, dat$Cv]
 
-  covariates <- outer(as.vector(post$b_deg), dat$deg_h_z) +
-    outer(as.vector(post$b_precip), dat$precip_72h_z) +
-    outer(as.vector(post$b_seq), dat$seq_depth_z)
-
-  fixed_MgMo    <- loga_obs + gamma_term
-  fixed_MgMoY   <- fixed_MgMo + yr_obs
-  fixed_MgMoYCo <- fixed_MgMoY + covariates
-  fixed_full    <- fixed_MgMoYCo + cv_obs
-
-  var_MgMo  <- apply(fixed_MgMo,    1, var)
-  var_Y     <- apply(fixed_MgMoY,   1, var) - var_MgMo
-  var_Cov   <- apply(fixed_MgMoYCo, 1, var) - apply(fixed_MgMoY, 1, var)
-  var_Cv    <- apply(fixed_full,    1, var) - apply(fixed_MgMoYCo, 1, var)
-  explained <- apply(fixed_full,    1, var)
-
-  sigma_tr_sq <- as.vector(post$sigma_tr)^2
+  tree_obs <- sweep(post$tr[, dat$Tr], 1, as.vector(post$sigma_tr), "*")
 
   mg_n <- as.integer(table(factor(dat$Mg, levels = 1:2)))
   residual_var <- as.vector((post$sigma^2) %*% (mg_n / sum(mg_n)))
 
-  total <- explained + sigma_tr_sq + residual_var
+  loga_obs   <- post$loga[, dat$Mg]
+  gamma      <- as.vector(post$s_conv) + outer(as.vector(post$gap_shift), dat$Mg - 1)
+  gamma_term <- sweep(gamma, 2, dat$Mo - 1, "*")
 
-  bind_rows(
-    tibble(statistic = "Variance partition", group = "Management x Season", value = var_MgMo / total),
-    tibble(statistic = "Variance partition", group = "Year",                 value = var_Y / total),
-    tibble(statistic = "Variance partition", group = "Covariates",           value = var_Cov / total),
-    tibble(statistic = "Variance partition", group = "Cultivar",             value = var_Cv / total),
-    tibble(statistic = "Variance partition", group = "Tree",                 value = sigma_tr_sq / total),
-    tibble(statistic = "Variance partition", group = "Residual",             value = residual_var / total)
+  terms <- list(
+    "Reads count"          = outer(as.vector(post$b_seq), dat$seq_depth_z),
+    "Degree-hours"         = outer(as.vector(post$b_deg), dat$deg_h_z),
+    "Precipitation"        = outer(as.vector(post$b_precip), dat$precip_72h_z),
+    "Year"                 = yr_obs,
+    "Cultivar"             = cv_obs,
+    "Tree"                 = tree_obs,
+    "Management x Season"  = loga_obs + gamma_term
   )
+
+  variance_partition_panels(terms, residual_var)
 }
 
 ## Data-generating function ---------------------------------------------------
@@ -160,33 +169,34 @@ variance_partition_MDSTYCV <- function(post, dat){
 # model at all, so there was no nesting to represent.
 
 sim_div_MDSTYCV <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
-                             cv_1, cv_3, cv_4, cv_5, sigma_tr,
-                             b_deg, b_precip, b_seq, shift = NULL){
+                            cv_1, cv_3, cv_4, cv_5, sigma_tr,
+                            b_deg, b_precip, b_seq, shift = NULL){
   n_tree <- N_samples %/% 2 # 2 rows/tree (May + July)
   yr_vec <- c(yr1, yr2, -(yr1 + yr2))
   cv_vec <- c(cv_1, -(cv_1 + cv_3 + cv_4 + cv_5), cv_3, cv_4, cv_5) # Cv index order: 1..5
-
+  
   trees <- tibble(
     Tr = seq_len(n_tree), Mg = rbern(n_tree) + 1,
     Yr = sample(3, n_tree, replace = TRUE), Cv = sample(5, n_tree, replace = TRUE))
   dat <- trees %>% crossing(Mo = 1:2) %>% arrange(Tr)
-
+  
   tree_offset <- rnorm(n_tree, 0, sigma_tr)
-
+  
   gamma <- s_conv + gap_shift*(dat$Mg - 1)
   mu_structural <- loga[dat$Mg] + gamma*(dat$Mo - 1) + yr_vec[dat$Yr] + cv_vec[dat$Cv] + tree_offset[dat$Tr]
-
+  
   dat$deg_h_z      <- rnorm(nrow(dat))
   dat$precip_72h_z <- rnorm(nrow(dat))
   dat$seq_depth_z  <- rnorm(nrow(dat))
-
+  
   mu <- mu_structural + b_deg*dat$deg_h_z + b_precip*dat$precip_72h_z + b_seq*dat$seq_depth_z
-
+  
   dat$Dv <- rlnorm(nrow(dat), meanlog = mu, sdlog = sigma[dat$Mg])
   if (!is.null(shift)) dat$Dv_shifted <- shift + dat$Dv
   dat
 }
 
+## Prior simulation wrapper ---------------
 simulate_from_priors_MDSTYCV <- function(true_params, N_samples = 250, shift = NULL){
   sim_div_MDSTYCV(
     N_samples = N_samples,

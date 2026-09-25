@@ -1,6 +1,7 @@
 # MDSY_model.R --- MODEL 4 (MDSY), 16S: MDS plus Year as a FIXED effect
 # (yr[Yr] ~ dnorm(0,1), no sigma_yr, no pooling) -- deliberately not random.
-#
+source('src/hiermod/0_INDEX.R')
+
 # Only 3 years exist. A hierarchical/pooled treatment would need sigma_yr
 # estimated from just 3 group means -- barely more informative than fitting
 # 3 independent offsets directly, while adding another entangled scale

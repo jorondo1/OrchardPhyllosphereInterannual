@@ -4,6 +4,8 @@
 ## Data-generating function ---------------------------------------------------
 # Hand-rolled simulator: raw mean_/cv_ -> lognormal Dv, given a group index Mg.
 
+source('src/hiermod/0_INDEX.R')
+
 sim_div_M <- function(Mg, mean_, cv_){
   N      <- length(Mg)
   Dv     <- numeric(N)

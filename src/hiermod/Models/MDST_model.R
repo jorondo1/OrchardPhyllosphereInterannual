@@ -7,7 +7,9 @@
 # treats as independent draws from dlnorm(mu, sigma[Mg]).
 # Not modelling that overstates effective N and risks absorbing real
 # tree-to-tree variation into sigma[Mg] as pure noise. 
-#
+
+source('src/hiermod/0_INDEX.R')
+
 # Priors: loga[Mg]/s_conv/gap_shift/sigma[Mg] are hardcoded at MDS's own
 # validated answer (this model's starting point, per the rolling
 # "each model bakes in what the previous one learned" convention) --

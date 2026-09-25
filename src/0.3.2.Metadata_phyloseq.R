@@ -20,7 +20,11 @@ meta_formatted <- meta_raw %>%
     code = as.factor(code),
     MANAGEMENT = factor(
       recode(MANAGEMENT, CONV = "Conventional", ORG = "Organic"),
-      levels = c('Conventional', 'Organic'))) %>% 
+      levels = c('Conventional', 'Organic')),
+    Dataset = case_when(
+      cultivar %in% c('Honeycrisp', 'Spartan') ~ '2-year',
+      cultivar %in% c('Cortland', 'Liberty', 'Paulared') ~ '3-year'
+    )) %>% 
   # flush useless variables
   dplyr::select(-sample, -seq, -replicate, -type) %>% 
   # Consistent variable naming scheme
@@ -103,90 +107,4 @@ write_rds(
   ps.ls.out, 
   'data/ps_objects_full.rds', 
   compress = 'xz')
-
-
-# Visualise sample count per metadata combinations:
-
-dat <- rbind(
-  samdat_as_tibble(ps.ls.out$Fungi) %>% mutate(Barcode = 'Fungi'),
-  samdat_as_tibble(ps.ls.out$Bacteria) %>% mutate(Barcode = 'Bacteria')
-) 
-
-
-dat %>% 
-  mutate(Dataset = case_when(
-    Cultivar %in% c('Honeycrisp', 'Spartan') ~ '2-year dataset',
-    TRUE ~ '3-year dataset'
-  )) %>% 
-  count(Barcode, Dataset, Year, Time, Cultivar, Code, Management) %>%
-  rename(N_samples = n) %>% 
-  ggplot(aes(x = Time, y = N_samples, fill = Code)) +
-  geom_col(position = "dodge") +
-  ggh4x::facet_nested(Barcode+Year ~ Dataset + Management + Cultivar) +  # Facet by 2 variables
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme_light()  +
-  theme(
-    legend.position = 'bottom',
-    panel.grid = element_blank()) +
-  guides(fill = guide_legend(nrow = 1)) +
-  labs(fill = 'Orchard')
-
-ggsave('out/summaries/sample_count_by_metadata.pdf',
-       bg = 'white', width = 2200, height = 2000, 
-       units = 'px', dpi = 220)
-
-# Classification rates
-
-ranks <- c('Phylum','Class', 'Order', 'Family', 'Genus')
-
-# LOOP over taxranks
-classification<- imap(ps.ls.out, function(ps,barcode){
-    ps.melted  <- psflashmelt(ps) %>% 
-      filter(Abundance>0) %>% 
-      group_by(Sample) %>% 
-      mutate(relAb = Abundance/sum(Abundance))
-    
-  map(ranks, function(rank) {
-    ps.melted %>%
-      select(Sample, !!sym(rank), relAb) %>% 
-      mutate(classified = case_when(!!sym(rank)=='Unclassified' ~ 0, TRUE ~ 1)) %>% 
-      summarise(  
-        asv_prop = sum(classified)/n(), # proportion of classified asvs
-        relAb_prop = sum(classified*relAb) # abundance-weighted prop of classified asvs
-      ) %>%  
-      pivot_longer(cols = c('relAb_prop','asv_prop'), 
-                   names_to = 'proportion_type') %>% 
-      mutate(taxRank = factor(rank, levels = ranks)) # add taxrank variable
-  }) %>% list_rbind() %>% 
-    mutate(barcode = barcode) 
-  
-}) %>% list_rbind()
-
-
-# TODO: panel plot
-classification %>% 
-  mutate(proportion_type = case_when(
-    proportion_type == 'asv_prop' ~ 'Proportion of ASVs',
-    proportion_type == 'relAb_prop' ~ 'Proportion of ASV reads'
-  ),
-#  barcode = recode_factor(barcode, !!!kingdoms),
-  ) %>% 
-  ggplot(aes(y = value, x = taxRank, colour = taxRank)) +
-  geom_boxplot() +
-  ylim(0,NA)+
-  facet_grid(barcode~proportion_type) +
-  scale_colour_brewer(palette = 'Set2') +
-  theme_light() +
-  labs(y = 'Proportion of taxonomically labelled ASVs',
-       colour = 'Taxonomic rank') +
-  theme(#axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.x = element_blank(),
-        legend.position = 'none',
-        strip.text = element_text(color = "black",size = 14,face = "bold")) 
-
-
-ggsave('out/summaries/classification_rates.pdf',
-       bg = 'white', width = 2000, height = 2000, 
-       units = 'px', dpi = 220)
 

@@ -6,6 +6,9 @@
 # can be freshly SBC-validated on its own before any random effect is
 # reintroduced.
 #
+
+source('src/hiermod/0_INDEX.R')
+
 # Priors here hardcode what Model 1 (MD/MDv) actually learned, not a fresh
 # starting guess: loga[Mg] ~ dnorm(5,2) and sigma[Mg] ~ dhalfnorm(0,1) are
 # MDv's own validated answer (see 1.2_MDv_16S_calibration.R), carried

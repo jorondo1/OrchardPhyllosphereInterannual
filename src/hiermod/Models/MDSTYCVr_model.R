@@ -2,7 +2,9 @@
 # with Cultivar switched from a FIXED sum-to-zero effect to a partially-
 # pooled RANDOM effect (cv[Cv]*sigma_cv, non-centered) -- the exact same
 # recipe as Tree's own tr[Tr]*sigma_tr.
-#
+
+source('src/hiermod/0_INDEX.R')
+
 # Motivation (from discussion, not yet in any TODO): the 5 cultivars in
 # this dataset are a specific, deliberate choice (we picked these varieties,
 # we could have picked others), which is at least an arguable case for

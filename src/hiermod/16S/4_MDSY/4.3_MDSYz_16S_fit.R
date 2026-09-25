@@ -44,9 +44,7 @@ save_gg("postpred_stat", model_id_MDSYz, p_ppc)
 
 ## Year effect (fixed, not pooled) ---------------------------------------------
 # yr1/yr2 are the free parameters; yr3 = -(yr1+yr2) by construction
-# (sum-to-zero). Shown together as one panel since all three are on the
-# same log-scale footing, no separate hyper-SD to report (this is a fixed
-# effect, not a variance component).
+# (sum-to-zero). 
 
 pf <- post_full(fit_MDSYz)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)

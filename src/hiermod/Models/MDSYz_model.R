@@ -6,7 +6,9 @@
 # same fix) as Location's own historical problem: with no sum-to-zero
 # constraint, yr[Yr] isn't separately identified from loga[Mg]'s overall
 # level, and that ambiguity gets resolved inconsistently across replicates.
-#
+
+source('src/hiermod/0_INDEX.R')
+
 # Built as its own sibling model rather than editing MDSY in place, so the
 # two stay independently comparable (same convention as MDLS2v/MDLS2vz).
 #

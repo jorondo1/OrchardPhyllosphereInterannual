@@ -4,7 +4,9 @@
 # growing conditions), and log sequencing depth (technical: deeper
 # sequencing detects more taxa, inflating diversity metrics independent of
 # any real biological effect). All three already computed in 0_SETUP.R.
-#
+
+source('src/hiermod/0_INDEX.R')
+
 # Continues the MDS -> MDSYz branch specifically (Year, sum-to-zero fixed),
 # not yet merged with the separate MDST (Tree) branch -- one thing at a
 # time, same discipline as the rest of this rebuild. Location stays out

@@ -1,7 +1,9 @@
 # MDSTYCL_model.R --- MODEL 9 (MDSTYCL, "Faramir the Judicious"), 16S:
 # MDSTYCV with Cultivar's fixed effect (cv[Cv]) REPLACED by Location's
 # fixed effect (lo[Lo]), same sum-to-zero recipe.
-#
+
+source('src/hiermod/0_INDEX.R')
+
 # Why this exists: Model 8 (MDSTYCVr, "Gimli the Greedy") tried making
 # Cultivar a RANDOM effect instead and failed badly -- real SBC
 # (n_sbc=500): 297 divergences, 154/500 (30.8%) fits Rhat>1.01, and
@@ -83,51 +85,48 @@ means_MDSTYCL <- means_MDSTYCV
 dq_MDSTYCL    <- dq_MDSTYCV
 
 ## variance_partition_MDSTYCL() --------------------------------------------------
-# Same as variance_partition_MDSTYCV(), with the Cultivar sequential-
-# fixed-effect step replaced by a Location one (still sequential/fixed --
-# Location, like Cultivar in Model 6, is fixed here, not random).
+# Same redesign as variance_partition_MDSTYCV() (see its own comment for the
+# by-margin rationale and why Management x Season stays one combined term) --
+# Location swapped in for Cultivar, in the same slot (coarser grouping
+# before the Tree it nests, same 129/129 deterministic mapping as Cultivar).
+# Tree was already folded into this model's own total (unlike MDSTYCV's,
+# until its own redesign) via the bulk sigma_tr^2 bolt-on; now a proper
+# per-observation term like every other entry here, via
+# variance_partition_panels()'s shared engine.
 
 variance_partition_MDSTYCL <- function(post, dat){
-  loga_obs   <- post$loga[, dat$Mg]
-  gamma      <- as.vector(post$s_conv) + outer(as.vector(post$gap_shift), dat$Mg - 1)
-  gamma_term <- sweep(gamma, 2, dat$Mo - 1, "*")
-  yr3        <- -(as.vector(post$yr1) + as.vector(post$yr2))
-  yr_obs     <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]
+  yr3    <- -(as.vector(post$yr1) + as.vector(post$yr2))
+  yr_obs <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]
 
-  lo_derived <- -as.vector(post$lo1)
-  lo_mat     <- cbind(post$lo1, lo_derived) # Lo index order: 1, 2
-  lo_obs     <- lo_mat[, dat$Lo]
+  lo2    <- -(as.vector(post$lo1))
+  # NB: was `[dat$Lo]` (no comma) -- linear/column-major indexing on a
+  # matrix, not column selection by dat$Lo like every other realized-level
+  # term here (yr_obs, cv_obs). That silently returned near-constant
+  # garbage instead of each observation's actual Location coefficient --
+  # the likely cause of Location's R2 share collapsing to ~0 (and sometimes
+  # negative).
+  lo_obs <- cbind(post$lo1, lo2)[, dat$Lo]
 
-  covariates <- outer(as.vector(post$b_deg), dat$deg_h_z) +
-    outer(as.vector(post$b_precip), dat$precip_72h_z) +
-    outer(as.vector(post$b_seq), dat$seq_depth_z)
-
-  fixed_MgMo    <- loga_obs + gamma_term
-  fixed_MgMoY   <- fixed_MgMo + yr_obs
-  fixed_MgMoYCo <- fixed_MgMoY + covariates
-  fixed_full    <- fixed_MgMoYCo + lo_obs
-
-  var_MgMo  <- apply(fixed_MgMo,    1, var)
-  var_Y     <- apply(fixed_MgMoY,   1, var) - var_MgMo
-  var_Cov   <- apply(fixed_MgMoYCo, 1, var) - apply(fixed_MgMoY, 1, var)
-  var_Lo    <- apply(fixed_full,    1, var) - apply(fixed_MgMoYCo, 1, var)
-  explained <- apply(fixed_full,    1, var)
-
-  sigma_tr_sq <- as.vector(post$sigma_tr)^2
+  tree_obs <- sweep(post$tr[, dat$Tr], 1, as.vector(post$sigma_tr), "*")
 
   mg_n <- as.integer(table(factor(dat$Mg, levels = 1:2)))
   residual_var <- as.vector((post$sigma^2) %*% (mg_n / sum(mg_n)))
 
-  total <- explained + sigma_tr_sq + residual_var
+  loga_obs   <- post$loga[, dat$Mg]
+  gamma      <- as.vector(post$s_conv) + outer(as.vector(post$gap_shift), dat$Mg - 1)
+  gamma_term <- sweep(gamma, 2, dat$Mo - 1, "*")
 
-  bind_rows(
-    tibble(statistic = "Variance partition", group = "Management x Season", value = var_MgMo / total),
-    tibble(statistic = "Variance partition", group = "Year",                 value = var_Y / total),
-    tibble(statistic = "Variance partition", group = "Covariates",           value = var_Cov / total),
-    tibble(statistic = "Variance partition", group = "Location",            value = var_Lo / total),
-    tibble(statistic = "Variance partition", group = "Tree",                value = sigma_tr_sq / total),
-    tibble(statistic = "Variance partition", group = "Residual",            value = residual_var / total)
+  terms <- list(
+    "Reads count"          = outer(as.vector(post$b_seq), dat$seq_depth_z),
+    "Degree-hours"         = outer(as.vector(post$b_deg), dat$deg_h_z),
+    "Precipitation"        = outer(as.vector(post$b_precip), dat$precip_72h_z),
+    "Year"                 = yr_obs,
+    "Location"             = lo_obs,
+    "Tree"                 = tree_obs,
+    "Management x Season"  = loga_obs + gamma_term
   )
+
+  variance_partition_panels(terms, residual_var)
 }
 
 ## Data-generating function ---------------------------------------------------

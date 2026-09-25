@@ -98,7 +98,7 @@ post_sim <- extract.samples(fit_sim)
 
 ### Fixed effect + sigma recovery ---------
 
-(param_recovery <- check_recovery(
+param_recovery <- check_recovery(
   true = list(
     loga1 = log(may_conv), loga2 = log(may_org),
     s_conv = july_conv_shift, gap_shift = july_org_shift,
@@ -110,7 +110,7 @@ post_sim <- extract.samples(fit_sim)
     s_conv = post_sim$s_conv, gap_shift = post_sim$gap_shift,
     sigma1 = post_sim$sigma[,1], sigma2 = post_sim$sigma[,2], sigma_tr = post_sim$sigma_tr,
     yr1 = post_sim$yr1, yr2 = post_sim$yr2, lo1 = post_sim$lo1,
-    b_deg = post_sim$b_deg, b_precip = post_sim$b_precip, b_seq = post_sim$b_seq)))
+    b_deg = post_sim$b_deg, b_precip = post_sim$b_precip, b_seq = post_sim$b_seq))
 
 ### Contrast recovery -------------
 
@@ -174,8 +174,8 @@ sbc_gen_MDSTYCL <- make_sbc_generator(
   gen_cols = c("Dv", "Mg", "Mo", "Yr", "Lo", "Tr", "deg_h_z", "precip_72h_z", "seq_depth_z"),
   extra_globals = "sim_div_MDSTYCL", shift = 1)
 
-n_sbc  <- 100
-n_iter <- 5000
+n_sbc  <- 500
+n_iter <- 10000
 
 sbc_MDSTYCL <- run_sbc_pipeline(
   generator = sbc_gen_MDSTYCL$generator, globals = sbc_gen_MDSTYCL$globals,
@@ -187,29 +187,6 @@ plot_sbc_diagnostics(sbc_MDSTYCL, model_id, n_sbc)
 
 save_sbc_health_report(
   model_id, sbc_MDSTYCL, n_sbc, n_iter,
-  variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
-                "sigma_tr", "yr1", "yr2", "lo1",
-                "b_deg", "b_precip", "b_seq",
-                "may_gap", "july_gap", "seasonal_change"),
-  hiermod_out_dir = hiermod_out_dir)
-
-# Same stress test as every model in this rebuild before trusting an "ok"
-# result at n=100. EXPENSIVE (comparable models take ~30min at n_sbc=400-
-# 500 on a 6-core laptop) -- run on a cluster/more cores, not as part of a
-# first pass.
-
-n_sbc <- 500
-n_iter <- 10000
-sbc_MDSTYCL_2 <- run_sbc_pipeline(
-  generator = sbc_gen_MDSTYCL$generator, globals = sbc_gen_MDSTYCL$globals,
-  n_sbc = n_sbc, model = model, model_id = model_id, n_iter = n_iter,
-  hiermod_out_dir = hiermod_out_dir, dquants = dq_MDSTYCL,
-  control = list(adapt_delta = 0.99))
-
-plot_sbc_diagnostics(sbc_MDSTYCL_2, model_id, n_sbc)
-
-save_sbc_health_report(
-  model_id, sbc_MDSTYCL_2, n_sbc, n_iter,
   variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
                 "sigma_tr", "yr1", "yr2", "lo1",
                 "b_deg", "b_precip", "b_seq",

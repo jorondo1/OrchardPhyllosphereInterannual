@@ -1,7 +1,9 @@
 # MDSYCV_model.R --- MODEL 6 (MDSYCV, "Bombadil the Eldest"), 16S: MDSYC
 # plus Cultivar as a FIXED, sum-to-zero effect (5 levels: Cortland, Liberty,
 # Paulared, Honeycrisp, Spartan).
-#
+
+source('src/hiermod/0_INDEX.R')
+
 # Motivation: MDSYC found sigma[Mg] meaningfully higher for Organic than
 # Conventional (89% contrast [0.16, 0.48], excludes 0) even after season,
 # year, and weather/sequencing covariates. Management and Cultivar aren't

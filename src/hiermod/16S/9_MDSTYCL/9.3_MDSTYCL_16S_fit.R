@@ -1,59 +1,73 @@
-# MODEL 7 (MDSTYCV, "Saruman the Fool"), 16S, SHIFTED (Hill_1 - 1): real fit
-# and PPC. model_MDSTYCV_16S already carries its own validated priors, no
+# MODEL 7 (MDSTYCL, "Saruman the Fool"), 16S, SHIFTED (Hill_1 - 1): real fit
+# and PPC. model_MDSTYCL_16S already carries its own validated priors, no
 # local override needed here.
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDSTYCV_model.R') # model_MDSTYCV_16S, means_MDSTYCV()
+source('src/hiermod/Models/MDSTYCL_model.R') # model_MDSTYCL_16S, means_MDSTYCL()
 
-hiermod_out_dir <- "out/hiermod/16S_7_tree_full_MDSTYCV"
+hiermod_out_dir <- "out/hiermod/16S_9_location_MDSTYCL"
+
+## DATA SUBSET
+div %<>% filter(Location %in% c('B', 'D'))
+
+# idx$Tr (0_INDEX.R) is built over the FULL, unfiltered 129-tree div, so its
+# to_index() still returns each tree's GLOBAL index (up to 129) here, but
+# ulam() sizes tr[] from how many DISTINCT indices are actually present in
+# this B/D subset (~75) -- so a tree whose global index exceeds that count
+# (e.g. 116) overflows the declared array ("index 116 out of range;
+# expecting index to be between 1 and 75"). Needs a subset-local, compacted
+# index, same reasoning as Location's own local remap just below.
+idx_Tr_local <- make_index(div$Tree_id)
 
 ## Model fit ----------------------------------------------------------------
 
-dat_MDSTYCV <- list(
+dat_MDSTYCL <- list(
   Dv = div$Hill_1 - 1, # subtract the floor because Dv must be (0, Inf)-support to match the likelihood
   Mg = idx$Mg$to_index(div$Management),
   Mo = idx$Mo$to_index(div$Time),
   Yr = idx$Yr$to_index(div$Year),
-  Cv = idx$Cv$to_index(div$Cultivar),
-  Tr = idx$Tr$to_index(div$Tree_id),
+# rewrite Location levels
+  Lo = ifelse(idx$Lo$to_index(div$Location) == 2, 1L, 2L), # B=1, D=2
+  Tr = idx_Tr_local$to_index(div$Tree_id),
   deg_h_z = div$deg_h_z,
   precip_72h_z = div$precip_72h_z,
   seq_depth_z = div$seq_depth_z
 )
 
-fit_MDSTYCV <- ulam(
-  model_MDSTYCV_16S,
-  data = dat_MDSTYCV,
+fit_MDSTYCL <- ulam(
+  model_MDSTYCL_16S,
+  data = dat_MDSTYCL,
   chains = 6, cores = 6, iter = 10000,
   control = list(adapt_delta = 0.99)
 )
-save_fit("fit", model_id_MDSTYCV, fit_MDSTYCV)
-saveRDS(dat_MDSTYCV, file.path(hiermod_out_dir, "dat_MDSTYCV.rds"))
 
-precis(fit_MDSTYCV, depth = 2)
+save_fit("fit", model_id_MDSTYCL, fit_MDSTYCL)
+saveRDS(dat_MDSTYCL, file.path(hiermod_out_dir, "dat_MDSTYCL.rds"))
 
-save_pdf("fit_trankplot", model_id_MDSTYCV,
-         function() trankplot(fit_MDSTYCV, n_cols = 6, max_rows = 20),
+precis(fit_MDSTYCL, depth = 2)
+
+save_pdf("fit_trankplot", model_id_MDSTYCL,
+         function() trankplot(fit_MDSTYCL, n_cols = 6, max_rows = 30),
          width = 24, height = 36)
 
 ## Posterior predictive check --------------------------------------------------
 
 ### Overall, by Management x Season cell ----
 
-pp_group <- ppc_group(dat_MDSTYCV)
-p_postpred <- plot_ppc_overlay(fit_MDSTYCV, dat_MDSTYCV, pp_group, xlim = c(NA, 2000)); p_postpred
-save_gg("postpred_density", model_id_MDSTYCV, p_postpred)
+pp_group <- ppc_group(dat_MDSTYCL)
+p_postpred <- plot_ppc_overlay(fit_MDSTYCL, dat_MDSTYCL, pp_group, xlim = c(NA, 2000))
+save_gg("postpred_density", model_id_MDSTYCL, p_postpred)
 
 ### Contrast test statistics ----
 
-(p_ppc <- plot_ppc_season_contrast_stats(fit_MDSTYCV, dat_MDSTYCV))
-save_gg("postpred_stat", model_id_MDSTYCV, p_ppc)
+(p_ppc <- plot_ppc_season_contrast_stats(fit_MDSTYCL, dat_MDSTYCL))
+save_gg("postpred_stat", model_id_MDSTYCL, p_ppc)
 
 ## Year effect (fixed, not pooled) ---------------------------------------------
 # Same as 4.3/5.3/6.3's own panel -- yr1/yr2 free, yr3 = -(yr1+yr2) by construction.
 
-pf <- post_full(fit_MDSTYCV)
+pf <- post_full(fit_MDSTYCL)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)
 
 pc_year <- bind_rows(
@@ -80,18 +94,11 @@ p_covariates <- variance_component_panels(
 # cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = -(cv_1+cv_3+cv_4+cv_5) by
 # construction (Liberty has the most combined observations).
 
-cv_2 <- -(pf$cv_1$cv_1 + pf$cv_3$cv_3 + pf$cv_4$cv_4 + pf$cv_5$cv_5)
+pc_location <-  tibble(
+  group = "B", value = pf$lo1$lo1) %>% mutate(statistic = "Location effect (log scale)")
 
-pc_cultivar <- bind_rows(
-  tibble(group = idx$Cv$levels[1], value = pf$cv_1$cv_1),
-  tibble(group = idx$Cv$levels[2], value = cv_2),
-  tibble(group = idx$Cv$levels[3], value = pf$cv_3$cv_3),
-  tibble(group = idx$Cv$levels[4], value = pf$cv_4$cv_4),
-  tibble(group = idx$Cv$levels[5], value = pf$cv_5$cv_5)
-) %>% mutate(statistic = "Cultivar effect (log scale)")
-
-p_cultivar <- variance_component_panels(
-  pc_cultivar, quant = c(0, 1), palette = idx$Cv$palette); ap_cultivar
+p_location <- variance_component_panels(
+  pc_location, quant = c(0, 1), palette = fill_loc[c("B", "D")]); p_location
 
 ## Tree effect: how much tree-to-tree spread is there in the real fit? --------
 # sigma_tr's own posterior magnitude, next to sigma[Mg] for scale -- same
@@ -111,22 +118,22 @@ p_sigma_tr <- variance_component_panels(
 
 ## Year/Covariate/Cultivar/Tree effects, combined ---------------------------------
 
-p_effects <- p_year / p_covariates / p_cultivar / p_sigma_tr
-save_gg("fit_effects", model_id_MDSTYCV, p_effects, width = 8, height = 14)
+p_effects <- p_year / p_covariates / p_location / p_sigma_tr
+save_gg("fit_effects", model_id_MDSTYCL, p_effects, width = 8, height = 14)
 
 ## Full pairwise parameter check ------------------------------------------------
 # Same rationale/settings as 7.2's own calibration-stage check -- the
 # combination that mattered most there: sigma_tr vs cv_1..cv_4.
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_tr",
-                 "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
+                 "yr1", "yr2", "lo1",
                  "b_deg", "b_precip", "b_seq")
-p_pairs <- plot_mcmc_pairs(fit_MDSTYCV,
+p_pairs <- plot_mcmc_pairs(fit_MDSTYCL,
                            variables = pairs_vars, n_keep = 1000)
-save_gg("fit_mcmc_pairs", model_id_MDSTYCV, p_pairs, width = 15, height = 15, type = "png")
+save_gg("fit_mcmc_pairs", model_id_MDSTYCL, p_pairs, width = 15, height = 15, type = "png")
 
 
 # Summary:
 
-save_report("fit_summary", model_id_MDSTYCV, fit_MDSTYCV, model = model_MDSTYCV_16S)
+save_report("fit_summary", model_id_MDSTYCL, fit_MDSTYCL, model = model_MDSTYCL_16S)
 
