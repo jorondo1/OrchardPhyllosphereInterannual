@@ -97,7 +97,7 @@ perm_data <- list(meta_2y_may = meta_2y_may, dist_2y_may = dist_2y_may_wuf, meta
                   meta_2y = meta_2y, dist_2y = dist_2y_wuf, meta_3y = meta_3y, dist_3y = dist_3y_wuf)
 
 
-saveRDS(perm_data, "Permanova_input_16S.rds")
+#saveRDS(perm_data, "Permanova_input_16S.rds")
 
 
 # PCoA and PERMANOVA whole dataset (Bray-Curtis) ----------------------------------------
@@ -497,7 +497,9 @@ scores_pcoa_2y_wuf <- as.data.frame(scores(pcoa_2y_wuf, display = "sites")) %>%
   rownames_to_column("Sample") %>%
   merge(meta_2y, by = "Sample") %>%
   mutate(y_t = paste0(Year, "_", Time), Year = as.character(Year), t_m = paste0(Time, "_", Management),
-         Organism = paste0("Bacteria"), Dataset = paste0("2-years")) 
+         Organism = paste0("Bacteria"), Dataset = paste0("2-years"),
+         cult_may = ifelse(Time == "May", paste0(Cultivar), paste0("other")), cult_july = ifelse(Time == "July", paste0(Cultivar), paste0("other")),
+         loc_may = ifelse(Time == "May", paste0(Location), paste0("other")), loc_july = ifelse(Time == "July", paste0(Location), paste0("other"))) 
 
 scores_pcoa_2y_wuf_16S <- scores_pcoa_2y_wuf
 
@@ -515,6 +517,7 @@ ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, color = Management, fill = Ma
 ggsave("Fig_wuf/PCoA_2y_time_man_16S.png", dpi = 300)
 
 
+###Main Figure - Panel A###
 p16S_2y <- ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, color = t_m, fill = t_m, shape = t_m)) +
   theme_pcoa +
   geom_point(size = 5) +
@@ -527,30 +530,52 @@ p16S_2y <- ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, color = t_m, fill 
 ggsave("Fig_wuf/PCoA_2y_wuf_tm_16S.png", dpi = 300)
 
 
-ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, color = Cultivar, fill = Cultivar, shape = Cultivar)) +
+###Supp. figure###
+ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, color = cult_may, fill = cult_may, shape = cult_may)) +
   theme_pcoa +
   geom_point(size = 5) +
-  stat_ellipse(level=0.95, geom = "polygon", alpha = .1, aes(group = Cultivar)) +
   labs(x = paste0("PCoA1 ", variance_2y_wuf[1], "%"), y = paste0("PCoA2 ", variance_2y_wuf[2], "%")) +
-  facet_wrap(~Time) +
   scale_color_manual(breaks = labels_cult, values = colors_cult) +
   scale_fill_manual(breaks = labels_cult, values = fill_cult) +
   scale_shape_manual(breaks = labels_cult, values = shapes_cult)
 
-ggsave("Fig_wuf/PCoA_2y_time_cult_16S.png", dpi = 300)
+ggsave("Fig_wuf/PCoA_2y_cult_may_16S.png", dpi = 300)
 
 
-ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, color = Location, fill = Location, shape = Location)) +
+###Supp. figure###
+ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, color = cult_july, fill = cult_july, shape = cult_july)) +
   theme_pcoa +
   geom_point(size = 5) +
-  stat_ellipse(level=0.95, geom = "polygon", alpha = .1, aes(group = Location)) +
   labs(x = paste0("PCoA1 ", variance_2y_wuf[1], "%"), y = paste0("PCoA2 ", variance_2y_wuf[2], "%")) +
-  facet_wrap(~Time) +
+  scale_color_manual(breaks = labels_cult, values = colors_cult) +
+  scale_fill_manual(breaks = labels_cult, values = fill_cult) +
+  scale_shape_manual(breaks = labels_cult, values = shapes_cult)
+
+ggsave("Fig_wuf/PCoA_2y_cult_july_16S.png", dpi = 300)
+
+
+###Supp. figure###
+ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, color = loc_may, fill = loc_may, shape = loc_may)) +
+  theme_pcoa +
+  geom_point(size = 5) +
+  labs(x = paste0("PCoA1 ", variance_2y_wuf[1], "%"), y = paste0("PCoA2 ", variance_2y_wuf[2], "%")) +
   scale_color_manual(breaks = labels_loc, values = colors_loc) +
   scale_fill_manual(breaks = labels_loc, values = fill_loc) +
   scale_shape_manual(breaks = labels_loc, values = shapes_loc)
 
-ggsave("Fig_wuf/PCoA_2y_time_loc_16S.png", dpi = 300)
+ggsave("Fig_wuf/PCoA_2y_loc_may_16S.png", dpi = 300)
+
+
+###Supp. figure###
+ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, color = loc_july, fill = loc_july, shape = loc_july)) +
+  theme_pcoa +
+  geom_point(size = 5) +
+  labs(x = paste0("PCoA1 ", variance_2y_wuf[1], "%"), y = paste0("PCoA2 ", variance_2y_wuf[2], "%")) +
+  scale_color_manual(breaks = labels_loc, values = colors_loc) +
+  scale_fill_manual(breaks = labels_loc, values = fill_loc) +
+  scale_shape_manual(breaks = labels_loc, values = shapes_loc)
+
+ggsave("Fig_wuf/PCoA_2y_loc_july_16S.png", dpi = 300)
 
 
 ggplot(scores_pcoa_2y_wuf, aes(x = MDS1, y = MDS2, fill = mean_temp)) +
@@ -743,7 +768,9 @@ scores_pcoa_3y_wuf <- as.data.frame(scores(pcoa_3y_wuf, display = "sites")) %>%
   rownames_to_column("Sample") %>%
   merge(meta_3y, by = "Sample") %>%
   mutate(y_t = paste0(Year, "_", Time), Year = as.character(Year), t_m = paste0(Time, "_", Management), 
-         Organism = paste0("Bacteria"), Dataset = paste0("3-years")) 
+         Organism = paste0("Bacteria"), Dataset = paste0("3-years"),
+         cult_may = ifelse(Time == "May", paste0(Cultivar), paste0("other")), cult_july = ifelse(Time == "July", paste0(Cultivar), paste0("other")),
+         loc_may = ifelse(Time == "May", paste0(Location), paste0("other")), loc_july = ifelse(Time == "July", paste0(Location), paste0("other"))) 
 
 scores_pcoa_3y_wuf_16S <- scores_pcoa_3y_wuf
 
@@ -761,6 +788,7 @@ ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, color = Management, fill = Ma
 ggsave("Fig_wuf/PCoA_3y_time_man_16S.png", dpi = 300)
 
 
+###Main figure - Panel C###
 p16S_3y <- ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, color = t_m, fill = t_m, shape = t_m)) +
   theme_pcoa +
   geom_point(size = 5) +
@@ -773,30 +801,52 @@ p16S_3y <- ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, color = t_m, fill 
 ggsave("Fig_wuf/PCoA_3y_wuf_tm_16S.png", dpi = 300)
 
 
-ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, color = Cultivar, fill = Cultivar, shape = Cultivar)) +
+###Supp. figure###
+ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, color = cult_may, fill = cult_may, shape = cult_may)) +
   theme_pcoa +
   geom_point(size = 5) +
-  stat_ellipse(level=0.95, geom = "polygon", alpha = .1, aes(group = Cultivar)) +
   labs(x = paste0("PCoA1 ", variance_3y_wuf[1], "%"), y = paste0("PCoA2 ", variance_3y_wuf[2], "%")) +
-  facet_wrap(~Time) +
   scale_color_manual(breaks = labels_cult, values = colors_cult) +
   scale_fill_manual(breaks = labels_cult, values = fill_cult) +
   scale_shape_manual(breaks = labels_cult, values = shapes_cult)
 
-ggsave("Fig_wuf/PCoA_3y_time_cult_16S.png", dpi = 300)
+ggsave("Fig_wuf/PCoA_3y_cult_may_16S.png", dpi = 300)
 
 
-ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, color = Location, fill = Location, shape = Location)) +
+###Supp. figure###
+ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, color = cult_july, fill = cult_july, shape = cult_july)) +
   theme_pcoa +
   geom_point(size = 5) +
-  stat_ellipse(level=0.95, geom = "polygon", alpha = .1, aes(group = Location)) +
   labs(x = paste0("PCoA1 ", variance_3y_wuf[1], "%"), y = paste0("PCoA2 ", variance_3y_wuf[2], "%")) +
-  facet_wrap(~Time) +
+  scale_color_manual(breaks = labels_cult, values = colors_cult) +
+  scale_fill_manual(breaks = labels_cult, values = fill_cult) +
+  scale_shape_manual(breaks = labels_cult, values = shapes_cult)
+
+ggsave("Fig_wuf/PCoA_3y_cult_july_16S.png", dpi = 300)
+
+
+###Supp. figure###
+ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, color = loc_may, fill = loc_may, shape = loc_may)) +
+  theme_pcoa +
+  geom_point(size = 5) +
+  labs(x = paste0("PCoA1 ", variance_3y_wuf[1], "%"), y = paste0("PCoA2 ", variance_3y_wuf[2], "%")) +
   scale_color_manual(breaks = labels_loc, values = colors_loc) +
   scale_fill_manual(breaks = labels_loc, values = fill_loc) +
   scale_shape_manual(breaks = labels_loc, values = shapes_loc)
 
-ggsave("Fig_wuf/PCoA_3y_time_loc_16S.png", dpi = 300)
+ggsave("Fig_wuf/PCoA_3y_loc_may_16S.png", dpi = 300)
+
+
+###Supp. figure###
+ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, color = loc_july, fill = loc_july, shape = loc_july)) +
+  theme_pcoa +
+  geom_point(size = 5) +
+  labs(x = paste0("PCoA1 ", variance_3y_wuf[1], "%"), y = paste0("PCoA2 ", variance_3y_wuf[2], "%")) +
+  scale_color_manual(breaks = labels_loc, values = colors_loc) +
+  scale_fill_manual(breaks = labels_loc, values = fill_loc) +
+  scale_shape_manual(breaks = labels_loc, values = shapes_loc)
+
+ggsave("Fig_wuf/PCoA_3y_loc_july_16S.png", dpi = 300)
 
 
 ggplot(scores_pcoa_3y_wuf, aes(x = MDS1, y = MDS2, fill = mean_temp)) +
@@ -845,20 +895,20 @@ anova_degh_3y_wuf <- as.data.frame(anova(disp_degh_3y_wuf)) #5.736146e-06
 
 
 
-perm_loc_man_cult_3y_wuf <- adonis2(dist_3y_wuf~seq_depth_z+Management*Location*Time+Cultivar, meta_3y, permutations = 999, method = "wunifrac", by = "terms")
+perm_loc_man_cult_3y_wuf <- adonis2(dist_3y_wuf~seq_depth_z+Location*Time+Cultivar, meta_3y, permutations = 999, method = "wunifrac", by = "terms")
 
 perm_loc_man_cult_3y_wuf %>%
   rownames_to_column("Parameter") %>%
   write_csv("Perm_wuf/Perm_3y_loc_man_time_16S.csv")
 
-perm_loc_man_cult_3y_may_wuf <- adonis2(dist_3y_may_wuf~seq_depth_z+Management*Location+Cultivar, meta_3y_may, permutations = 999, method = "wunifrac", by = "terms")
+perm_loc_man_cult_3y_may_wuf <- adonis2(dist_3y_may_wuf~seq_depth_z+Location+Cultivar, meta_3y_may, permutations = 999, method = "wunifrac", by = "terms")
 
 perm_loc_man_cult_3y_may_wuf %>%
   rownames_to_column("Parameter") %>%
   write_csv("Perm_wuf/Perm_3y_may_loc_man_time_16S.csv")
 
 
-perm_loc_man_cult_3y_july_wuf <- adonis2(dist_3y_july_wuf~seq_depth_z+Management*Location+Cultivar, meta_3y_july, permutations = 999, method = "wunifrac", by = "terms")
+perm_loc_man_cult_3y_july_wuf <- adonis2(dist_3y_july_wuf~seq_depth_z+Location+Cultivar, meta_3y_july, permutations = 999, method = "wunifrac", by = "terms")
 
 perm_loc_man_cult_3y_july_wuf %>%
   rownames_to_column("Parameter") %>%

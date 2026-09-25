@@ -57,23 +57,23 @@ fill_site <- c("#D17913", "#F3A44A","#096EA4","#1C9EE4","#FFC787","#89CEF3") #co
 
 
 #location
-labels_loc <- c("A", "B", "C", "D")
+labels_loc <- c("A", "B", "C", "D", "other")
 
-colors_loc <- c("black", "black", "black", "black")
+colors_loc <- c("black", "black", "black", "black", "black")
 
-shapes_loc <- c(21, 21, 21, 21)
+shapes_loc <- c(21, 21, 21, 21, 21)
 
-fill_loc <- c("#5DB63B", "#2C9EE3", "gold", "#F8A11C")
+fill_loc <- c("#5DB63B", "#2C9EE3", "gold", "#F8A11C", "grey90")
 
 
 #cultivar
-labels_cult <- c("Cortland", "Liberty", "Paulared", "Honeycrisp", "Spartan")
+labels_cult <- c("Cortland", "Liberty", "Paulared", "Honeycrisp", "Spartan", "other")
 
-colors_cult <- c("black", "black", "black", "black", "black")
+colors_cult <- c("black", "black", "black", "black", "black", "black")
 
-shapes_cult <- c(21, 21, 21, 21, 21)
+shapes_cult <- c(21, 21, 21, 21, 21, 21)
 
-fill_cult <- c("#7DB16B","#45818E","#AB4F84", "#AE9FCB", "#99CFE1") #first three colors adopted from Sophie
+fill_cult <- c("#7DB16B","#45818E","#AB4F84", "#AE9FCB", "#99CFE1", "grey90") #first three colors adopted from Sophie
 
 
 #gradient
