@@ -1,0 +1,25 @@
+==== model: Gollum the Two-Faced ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$linear_model
+mu <- loga[Mg]
+
+$prior_loga
+loga[Mg] ~ dnorm(2, 2)
+
+$prior_sigma
+sigma[Mg] ~ dexp(1)
+
+attr(,"name")
+[1] "Gollum the Two-Faced"
+
+
+==== precis: fit_MDv ====
+
+          mean    sd  5.5% 94.5%  rhat ess_bulk ess_ratio
+loga[1]  2.010 0.080 1.883 2.138 1.000 36973.49     1.232
+loga[2]  2.463 0.079 2.337 2.587 1.000 36213.96     1.207
+sigma[1] 0.960 0.056 0.875 1.053 1.001 38908.62     1.297
+sigma[2] 0.792 0.057 0.706 0.888 1.000 37088.66     1.236

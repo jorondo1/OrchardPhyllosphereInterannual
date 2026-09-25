@@ -1,0 +1,81 @@
+==== model: Radagast the Grower ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$main_model
+mu <- loga[Mg] + gamma * (Mo - 1) + yr_eff + b_deg * deg_h_z + 
+    b_precip * precip_72h_z + b_seq * seq_depth_z
+
+$gamma_def
+gamma <- s_conv + gap_shift * (Mg - 1)
+
+$prior_loga
+loga[Mg] ~ dnorm(5, 2)
+
+$prior_s
+s_conv ~ dnorm(0, 1)
+
+$prior_gs
+gap_shift ~ dnorm(0, 1)
+
+$pr_sigma
+sigma[Mg] ~ dhalfnorm(0, 1)
+
+$yr_eff_def
+yr_eff <- yr1 * (Yr == 1) + yr2 * (Yr == 2) - (yr1 + yr2) * (Yr == 
+    3)
+
+$prior_yr1
+yr1 ~ dnorm(0, 1)
+
+$prior_yr2
+yr2 ~ dnorm(0, 1)
+
+$prior_deg
+b_deg ~ dnorm(0, 1)
+
+$prior_precip
+b_precip ~ dnorm(0, 1)
+
+$prior_seq
+b_seq ~ dnorm(0, 1)
+
+
+
+==== precis: fit_sim ====
+
+            mean    sd   5.5%  94.5%  rhat ess_bulk ess_ratio
+loga[1]    5.196 0.068  5.089  5.303 1.000 11638.00     0.776
+loga[2]    4.673 0.100  4.511  4.832 1.000 13649.48     0.910
+s_conv     0.410 0.094  0.261  0.562 1.000 10821.59     0.721
+gap_shift  0.377 0.168  0.109  0.645 1.000 10154.10     0.677
+sigma[1]   0.525 0.034  0.473  0.583 1.001 16174.36     1.078
+sigma[2]   0.759 0.052  0.681  0.846 1.001 17345.61     1.156
+yr1        0.092 0.056  0.004  0.181 1.000 14533.94     0.969
+yr2        0.171 0.055  0.084  0.258 1.001 15136.80     1.009
+b_deg      0.181 0.036  0.123  0.239 1.000 17478.86     1.165
+b_precip  -0.155 0.041 -0.222 -0.090 1.001 16233.88     1.082
+b_seq      0.293 0.040  0.229  0.356 1.001 17142.19     1.143
+
+
+==== parameter recovery ====
+       param   true post_median   lo89   hi89 covered
+1      loga1  5.193       5.196  5.089  5.303    TRUE
+2      loga2  4.787       4.674  4.511  4.832    TRUE
+3     s_conv  0.350       0.410  0.261  0.562    TRUE
+4  gap_shift  0.200       0.377  0.109  0.645    TRUE
+5     sigma1  0.472       0.524  0.473  0.583   FALSE
+6     sigma2  0.703       0.756  0.681  0.846    TRUE
+7        yr1  0.100       0.091  0.004  0.181    TRUE
+8        yr2  0.300       0.171  0.084  0.258   FALSE
+9      b_deg  0.200       0.181  0.123  0.239    TRUE
+10  b_precip -0.150      -0.155 -0.222 -0.090    TRUE
+11     b_seq  0.300       0.293  0.229  0.356    TRUE
+covered: 9 / 11 
+
+
+==== posterior contrast ====
+Median May gap (Organic - Conventional) -- mean: -73.505  median: -73.69  89% PI: [ -99.469 , -47.606 ]  89% HPDI: [ -98.736 , -47.044 ]
+Median July gap (Organic - Conventional) -- mean: -36.503  median: -37.047  89% PI: [ -83.561 , 11.828 ]  89% HPDI: [ -84.196 , 10.899 ]
+Seasonal change in median gap (July - May) -- mean: 37.002  median: 36.467  89% PI: [ -16.039 , 90.929 ]  89% HPDI: [ -16.496 , 90.34 ]

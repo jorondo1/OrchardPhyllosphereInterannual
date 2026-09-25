@@ -1,0 +1,37 @@
+==== model: Samwise the Steadfast ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma)
+
+$linear_model
+mu <- loga[Mg]
+
+$prior_loga
+loga[Mg] ~ dnorm(2, 2)
+
+$prior_sigma
+sigma ~ dexp(1)
+
+attr(,"name")
+[1] "Samwise the Steadfast"
+
+
+==== precis: fit_MD_cal ====
+
+         mean    sd  5.5% 94.5% rhat ess_bulk ess_ratio
+loga[1] 2.313 0.062 2.214 2.413    1 28417.60     0.947
+loga[2] 2.718 0.064 2.616 2.819    1 30857.97     1.029
+sigma   0.706 0.032 0.657 0.759    1 29142.00     0.971
+
+
+==== parameter recovery ====
+  param  true post_median  lo89  hi89 covered
+1 loga1 2.485       2.313 2.214 2.413   FALSE
+2 loga2 2.708       2.718 2.616 2.819    TRUE
+3 sigma 0.703       0.705 0.657 0.759    TRUE
+covered: 2 / 3 
+
+
+==== posterior contrast ====
+mean -- mean: 6.491  median: 6.462  89% PI: [ 4.146 , 8.93 ]  89% HPDI: [ 4.037 , 8.799 ]
+median -- mean: 5.054  median: 5.041  89% PI: [ 3.229 , 6.932 ]  89% HPDI: [ 3.153 , 6.851 ]

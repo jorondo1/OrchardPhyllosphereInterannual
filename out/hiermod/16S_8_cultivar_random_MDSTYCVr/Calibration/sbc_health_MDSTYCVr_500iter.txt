@@ -1,0 +1,32 @@
+SBC health report -- MDSTYCVr
+Generated: 2026-09-16 20:34:53
+n_sbc = 500, n_iter = 5000
+
+-- Backend diagnostics (sampling health) --
+  divergences:     297 total
+  max treedepth:   373429 total (worst single replicate: 2500)
+  low E-BFMI fits: 0 total
+  max Rhat:        2.123 (154/500 fits > 1.01)
+  min ESS bulk:    1
+  min ESS tail:    11
+
+-- Rank-fraction calibration (expected 0.5, SE = 0.0129 at n=500) --
+  variable              mean_frac   med_frac        z  flag
+  b_deg                     0.501      0.490     0.06  ok
+  b_precip                  0.502      0.510     0.18  ok
+  b_seq                     0.532      0.522     2.50  ok
+  gap_shift                 0.490      0.472    -0.78  ok
+  july_gap                  0.507      0.500     0.52  ok
+  loga[1]                   0.346      0.283   -11.96  MISCALIBRATED
+  loga[2]                   0.316      0.229   -14.22  MISCALIBRATED
+  may_gap                   0.495      0.492    -0.35  ok
+  s_conv                    0.530      0.548     2.29  ok
+  seasonal_change           0.516      0.546     1.21  ok
+  sigma[1]                  0.513      0.516     1.01  ok
+  sigma[2]                  0.508      0.522     0.66  ok
+  sigma_cv                  0.426      0.378    -5.76  MISCALIBRATED
+  sigma_tr                  0.510      0.502     0.77  ok
+  yr1                       0.523      0.526     1.77  ok
+  yr2                       0.480      0.472    -1.52  ok
+
+Overall: MISCALIBRATED

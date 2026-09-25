@@ -1,0 +1,48 @@
+==== model: Elrond the Ageless ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$main_model
+mu <- loga[Mg] + gamma * (Mo - 1) + yr_eff
+
+$gamma_def
+gamma <- s_conv + gap_shift * (Mg - 1)
+
+$prior_loga
+loga[Mg] ~ dnorm(5, 2)
+
+$prior_s
+s_conv ~ dnorm(0, 1)
+
+$prior_gs
+gap_shift ~ dnorm(0, 1)
+
+$pr_sigma
+sigma[Mg] ~ dhalfnorm(0, 1)
+
+$yr_eff_def
+yr_eff <- yr1 * (Yr == 1) + yr2 * (Yr == 2) - (yr1 + yr2) * (Yr == 
+    3)
+
+$prior_yr1
+yr1 ~ dnorm(0, 1)
+
+$prior_yr2
+yr2 ~ dnorm(0, 1)
+
+attr(,"name")
+[1] "Elrond the Ageless"
+
+
+==== precis: fit_MDSYz ====
+
+            mean    sd   5.5%  94.5%  rhat ess_bulk ess_ratio
+loga[1]    5.133 0.113  4.950  5.313 1.000 18949.40     0.632
+loga[2]    3.338 0.178  3.055  3.624 1.000 20966.99     0.699
+s_conv    -1.173 0.158 -1.425 -0.921 1.000 17993.86     0.600
+gap_shift  0.881 0.289  0.420  1.345 1.000 17636.11     0.588
+sigma[1]   0.968 0.057  0.881  1.064 1.000 27884.60     0.929
+sigma[2]   1.235 0.090  1.101  1.386 1.000 27463.53     0.915
+yr1       -0.314 0.107 -0.486 -0.142 1.000 22893.00     0.763
+yr2        0.518 0.094  0.367  0.668 1.001 22911.35     0.764

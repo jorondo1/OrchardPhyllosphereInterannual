@@ -1,0 +1,51 @@
+==== model: Strider ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$main_model
+mu <- loga[Mg] + gamma * (Mo - 1)
+
+$gamma_def
+gamma <- s_conv + gap_shift * (Mg - 1)
+
+$prior_loga
+loga[Mg] ~ dnorm(5, 2)
+
+$prior_s
+s_conv ~ dnorm(0, 1)
+
+$prior_gs
+gap_shift ~ dnorm(0, 1)
+
+$pr_sigma
+sigma[Mg] ~ dhalfnorm(0, 1)
+
+
+
+==== precis: fit_sim ====
+
+           mean    sd  5.5% 94.5%  rhat  ess_bulk ess_ratio
+loga[1]   5.170 0.065 5.067 5.273 1.001  8754.242     0.584
+loga[2]   4.793 0.092 4.647 4.940 1.001  9985.451     0.666
+s_conv    0.353 0.090 0.209 0.498 1.000  8188.452     0.546
+gap_shift 0.375 0.158 0.119 0.623 1.000  8069.351     0.538
+sigma[1]  0.518 0.034 0.467 0.573 1.000 12835.287     0.856
+sigma[2]  0.698 0.047 0.627 0.777 1.000 12478.442     0.832
+
+
+==== parameter recovery ====
+      param  true post_median  lo89  hi89 covered
+1     loga1 5.193       5.170 5.067 5.273    TRUE
+2     loga2 4.787       4.793 4.647 4.940    TRUE
+3    s_conv 0.350       0.352 0.209 0.498    TRUE
+4 gap_shift 0.200       0.378 0.119 0.623    TRUE
+5    sigma1 0.472       0.516 0.467 0.573    TRUE
+6    sigma2 0.703       0.696 0.627 0.777    TRUE
+covered: 6 / 6 
+
+
+==== posterior contrast ====
+Median May gap (Organic - Conventional) -- mean: -55.141  median: -55.301  89% PI: [ -80.338 , -29.54 ]  89% HPDI: [ -80.947 , -30.476 ]
+Median July gap (Organic - Conventional) -- mean: 0.049  median: -0.32  89% PI: [ -44.296 , 45.682 ]  89% HPDI: [ -46.22 , 43.71 ]
+Seasonal change in median gap (July - May) -- mean: 55.19  median: 55.328  89% PI: [ 3.452 , 106.398 ]  89% HPDI: [ 2.625 , 105.364 ]

@@ -1,0 +1,26 @@
+SBC health report -- MDST
+Generated: 2026-09-16 13:42:36
+n_sbc = 500, n_iter = 10000
+
+-- Backend diagnostics (sampling health) --
+  divergences:     0 total
+  max treedepth:   368101 total (worst single replicate: 5000)
+  low E-BFMI fits: 0 total
+  max Rhat:        2.121 (122/500 fits > 1.01)
+  min ESS bulk:    1
+  min ESS tail:    10
+
+-- Rank-fraction calibration (expected 0.5, SE = 0.0129 at n=500) --
+  variable              mean_frac   med_frac        z  flag
+  gap_shift                 0.509      0.526     0.67  ok
+  july_gap                  0.485      0.457    -1.17  ok
+  loga[1]                   0.491      0.499    -0.67  ok
+  loga[2]                   0.465      0.445    -2.67  MISCALIBRATED
+  may_gap                   0.471      0.456    -2.23  ok
+  s_conv                    0.495      0.492    -0.40  ok
+  seasonal_change           0.511      0.495     0.86  ok
+  sigma[1]                  0.498      0.493    -0.16  ok
+  sigma[2]                  0.498      0.511    -0.19  ok
+  sigma_tr                  0.534      0.552     2.64  MISCALIBRATED
+
+Overall: MISCALIBRATED
