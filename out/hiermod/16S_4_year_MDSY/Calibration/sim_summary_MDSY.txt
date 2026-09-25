@@ -1,0 +1,60 @@
+==== model: Elrond the Ageless ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$main_model
+mu <- loga[Mg] + gamma * (Mo - 1) + yr[Yr]
+
+$gamma_def
+gamma <- s_conv + gap_shift * (Mg - 1)
+
+$prior_loga
+loga[Mg] ~ dnorm(5, 2)
+
+$prior_s
+s_conv ~ dnorm(0, 1)
+
+$prior_gs
+gap_shift ~ dnorm(0, 1)
+
+$pr_sigma
+sigma[Mg] ~ dhalfnorm(0, 1)
+
+$prior_yr
+yr[Yr] ~ dnorm(0, 1)
+
+
+
+==== precis: fit_sim ====
+
+            mean    sd   5.5% 94.5%  rhat  ess_bulk ess_ratio
+loga[1]    5.234 0.539  4.355 6.084 1.002  3249.118     0.217
+loga[2]    4.910 0.541  4.030 5.760 1.002  3280.722     0.219
+s_conv     0.364 0.096  0.214 0.519 1.000  7603.617     0.507
+gap_shift  0.318 0.156  0.072 0.565 1.000  7525.500     0.502
+sigma[1]   0.533 0.035  0.479 0.593 1.001 10121.061     0.675
+sigma[2]   0.679 0.046  0.609 0.757 1.001 10036.909     0.669
+yr[1]      0.059 0.539 -0.788 0.937 1.002  3240.794     0.216
+yr[2]      0.235 0.538 -0.614 1.109 1.002  3245.406     0.216
+yr[3]     -0.247 0.538 -1.097 0.630 1.002  3268.461     0.218
+
+
+==== parameter recovery ====
+      param   true post_median   lo89  hi89 covered
+1     loga1  5.193       5.237  4.355 6.084    TRUE
+2     loga2  4.787       4.915  4.030 5.760    TRUE
+3    s_conv  0.350       0.362  0.214 0.519    TRUE
+4 gap_shift  0.600       0.317  0.072 0.565   FALSE
+5    sigma1  0.472       0.531  0.479 0.593   FALSE
+6    sigma2  0.703       0.677  0.609 0.757    TRUE
+7       yr1  0.000       0.053 -0.788 0.937    TRUE
+8       yr2  0.300       0.228 -0.614 1.109    TRUE
+9       yr3 -0.200      -0.256 -1.097 0.630    TRUE
+covered: 7 / 9 
+
+
+==== posterior contrast ====
+Median May gap (Organic - Conventional) -- mean: -59.92  median: -49.827  89% PI: [ -134.632 , -15.952 ]  89% HPDI: [ -112.099 , -7.768 ]
+Median July gap (Organic - Conventional) -- mean: -1.262  median: -1.772  89% PI: [ -60.218 , 57.403 ]  89% HPDI: [ -61.557 , 55.762 ]
+Seasonal change in median gap (July - May) -- mean: 58.658  median: 46.219  89% PI: [ -3.321 , 159.118 ]  89% HPDI: [ -12.369 , 138.356 ]

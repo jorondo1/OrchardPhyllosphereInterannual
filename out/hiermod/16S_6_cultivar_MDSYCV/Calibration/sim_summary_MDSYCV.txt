@@ -1,0 +1,106 @@
+==== model: Bombadil the Eldest ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$main_model
+mu <- loga[Mg] + gamma * (Mo - 1) + yr_eff + cv_eff + b_deg * 
+    deg_h_z + b_precip * precip_72h_z + b_seq * seq_depth_z
+
+$gamma_def
+gamma <- s_conv + gap_shift * (Mg - 1)
+
+$prior_loga
+loga[Mg] ~ dnorm(5, 2)
+
+$prior_s
+s_conv ~ dnorm(0, 1)
+
+$prior_gs
+gap_shift ~ dnorm(0, 1)
+
+$pr_sigma
+sigma[Mg] ~ dhalfnorm(0, 1)
+
+$yr_eff_def
+yr_eff <- yr1 * (Yr == 1) + yr2 * (Yr == 2) - (yr1 + yr2) * (Yr == 
+    3)
+
+$prior_yr1
+yr1 ~ dnorm(0, 1)
+
+$prior_yr2
+yr2 ~ dnorm(0, 1)
+
+$prior_deg
+b_deg ~ dnorm(0, 1)
+
+$prior_precip
+b_precip ~ dnorm(0, 1)
+
+$prior_seq
+b_seq ~ dnorm(0, 1)
+
+$cv_eff_def
+cv_eff <- cv_1 * (Cv == 1) + cv_3 * (Cv == 3) + cv_4 * (Cv == 
+    4) + cv_5 * (Cv == 5) - (cv_1 + cv_3 + cv_4 + cv_5) * (Cv == 
+    2)
+
+$prior_cv1
+cv_1 ~ dnorm(0, 1)
+
+$prior_cv3
+cv_3 ~ dnorm(0, 1)
+
+$prior_cv4
+cv_4 ~ dnorm(0, 1)
+
+$prior_cv5
+cv_5 ~ dnorm(0, 1)
+
+
+
+==== precis: fit_sim ====
+
+            mean    sd   5.5%  94.5%  rhat  ess_bulk ess_ratio
+loga[1]    5.124 0.065  5.020  5.228 1.000 11210.978     0.747
+loga[2]    4.666 0.099  4.508  4.825 1.000 13739.103     0.916
+s_conv     0.528 0.090  0.385  0.675 1.000 10325.367     0.688
+gap_shift  0.127 0.162 -0.131  0.386 1.000  9584.717     0.639
+sigma[1]   0.507 0.034  0.455  0.563 1.000 16690.085     1.113
+sigma[2]   0.736 0.051  0.661  0.821 1.000 17513.079     1.168
+yr1        0.127 0.055  0.039  0.215 1.001 14823.351     0.988
+yr2        0.239 0.056  0.149  0.327 1.000 13790.822     0.919
+b_deg      0.166 0.038  0.105  0.226 1.001 18844.349     1.256
+b_precip  -0.192 0.039 -0.254 -0.131 1.001 17653.897     1.177
+b_seq      0.327 0.037  0.267  0.387 1.000 18714.315     1.248
+cv_1       0.201 0.073  0.084  0.317 1.001 15183.052     1.012
+cv_3      -0.131 0.077 -0.253 -0.008 1.001 13924.113     0.928
+cv_4       0.155 0.089  0.012  0.297 1.000 13418.378     0.895
+cv_5      -0.050 0.075 -0.171  0.071 1.000 14374.999     0.958
+
+
+==== parameter recovery ====
+       param   true post_median   lo89   hi89 covered
+1      loga1  5.193       5.124  5.020  5.228    TRUE
+2      loga2  4.787       4.665  4.508  4.825    TRUE
+3     s_conv  0.350       0.528  0.385  0.675   FALSE
+4  gap_shift  0.200       0.127 -0.131  0.386    TRUE
+5     sigma1  0.472       0.505  0.455  0.563    TRUE
+6     sigma2  0.703       0.734  0.661  0.821    TRUE
+7        yr1  0.100       0.126  0.039  0.215    TRUE
+8        yr2  0.300       0.239  0.149  0.327    TRUE
+9      b_deg  0.200       0.166  0.105  0.226    TRUE
+10  b_precip -0.150      -0.192 -0.254 -0.131    TRUE
+11     b_seq  0.300       0.327  0.267  0.387    TRUE
+12      cv_1  0.200       0.201  0.084  0.317    TRUE
+13      cv_3 -0.150      -0.130 -0.253 -0.008    TRUE
+14      cv_4  0.100       0.155  0.012  0.297    TRUE
+15      cv_5 -0.100      -0.050 -0.171  0.071    TRUE
+covered: 14 / 15 
+
+
+==== posterior contrast ====
+Median May gap (Organic - Conventional) -- mean: -61.52  median: -61.792  89% PI: [ -85.477 , -37.096 ]  89% HPDI: [ -84.739 , -36.441 ]
+Median July gap (Organic - Conventional) -- mean: -79.846  median: -80.043  89% PI: [ -123.206 , -35.783 ]  89% HPDI: [ -123.294 , -36.004 ]
+Seasonal change in median gap (July - May) -- mean: -18.326  median: -18.566  89% PI: [ -66.95 , 30.124 ]  89% HPDI: [ -68.703 , 28.062 ]

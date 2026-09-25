@@ -1,0 +1,66 @@
+==== model: Elrond the Ageless ====
+
+$likelihood
+Dv ~ dlnorm(mu, sigma[Mg])
+
+$main_model
+mu <- loga[Mg] + gamma * (Mo - 1) + yr_eff
+
+$gamma_def
+gamma <- s_conv + gap_shift * (Mg - 1)
+
+$prior_loga
+loga[Mg] ~ dnorm(5, 2)
+
+$prior_s
+s_conv ~ dnorm(0, 1)
+
+$prior_gs
+gap_shift ~ dnorm(0, 1)
+
+$pr_sigma
+sigma[Mg] ~ dhalfnorm(0, 1)
+
+$yr_eff_def
+yr_eff <- yr1 * (Yr == 1) + yr2 * (Yr == 2) - (yr1 + yr2) * (Yr == 
+    3)
+
+$prior_yr1
+yr1 ~ dnorm(0, 1)
+
+$prior_yr2
+yr2 ~ dnorm(0, 1)
+
+
+
+==== precis: fit_sim ====
+
+           mean    sd  5.5% 94.5%  rhat  ess_bulk ess_ratio
+loga[1]   5.215 0.067 5.107 5.324 1.000  8993.414     0.600
+loga[2]   4.892 0.090 4.751 5.037 1.000 10981.738     0.732
+s_conv    0.366 0.094 0.217 0.520 1.000  8439.097     0.563
+gap_shift 0.316 0.156 0.069 0.564 1.001  8403.942     0.560
+sigma[1]  0.533 0.035 0.480 0.591 1.000 14371.056     0.958
+sigma[2]  0.679 0.045 0.612 0.755 1.000 13909.746     0.927
+yr1       0.177 0.053 0.092 0.262 1.001 11935.444     0.796
+yr2       0.253 0.053 0.169 0.337 1.001 12390.253     0.826
+
+
+==== parameter recovery ====
+      param   true post_median   lo89   hi89 covered
+1     loga1  5.193       5.215  5.107  5.324    TRUE
+2     loga2  4.787       4.892  4.751  5.037    TRUE
+3    s_conv  0.350       0.366  0.217  0.520    TRUE
+4 gap_shift  0.600       0.315  0.069  0.564   FALSE
+5    sigma1  0.472       0.531  0.480  0.591   FALSE
+6    sigma2  0.703       0.677  0.612  0.755    TRUE
+7       yr1  0.100       0.177  0.092  0.262    TRUE
+8       yr2  0.300       0.253  0.169  0.337    TRUE
+9       yr3 -0.400      -0.430 -0.521 -0.340    TRUE
+covered: 7 / 9 
+
+
+==== posterior contrast ====
+Median May gap (Organic - Conventional) -- mean: -50.688  median: -50.68  89% PI: [ -77.612 , -23.269 ]  89% HPDI: [ -77.623 , -23.309 ]
+Median July gap (Organic - Conventional) -- mean: -1.274  median: -1.584  89% PI: [ -47.633 , 46.73 ]  89% HPDI: [ -48.942 , 45.076 ]
+Seasonal change in median gap (July - May) -- mean: 49.414  median: 48.671  89% PI: [ -3.956 , 103.856 ]  89% HPDI: [ -4.422 , 103.214 ]
