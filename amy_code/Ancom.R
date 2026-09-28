@@ -456,7 +456,7 @@ if (nrow(heatmap_all) == 0) {
 # 5. HEATMAP COLUMN LABELS 
 # ==========================================================
 
-year_suffix <- c(Years3 = "(3)", Years2 = "(2)")
+year_suffix <- c(Years3 = "(3y)", Years2 = "(2y)")
 
 heatmap_all <- heatmap_all %>%
   mutate(
@@ -536,15 +536,8 @@ heatmap_all <- heatmap_all %>%
 
 plot_heatmap <- function(df, dataset_name) {
   
-  taxon_order <- df %>%
-    group_by(Taxon_Label) %>%
-    summarise(max_abs_lfc = max(abs(LFC), na.rm = TRUE), .groups = "drop") %>%
-    arrange(desc(max_abs_lfc)) %>%
-    pull(Taxon_Label)
+  taxon_order <- sort(unique(df$Taxon_Label))
   
-  # Column order: all Years3 columns before Years2 columns; within each
-  # year, Time (month) columns before Management columns; within each
-  # Group, alphabetical (e.g. May before July).
   column_order <- df %>%
     distinct(Year_Dataset, Group, Heatmap_Column) %>%
     mutate(
@@ -563,24 +556,60 @@ plot_heatmap <- function(df, dataset_name) {
     left_join(
       df %>%
         group_by(Taxon_Label, Heatmap_Column) %>%
-        summarise(LFC = ifelse(all(is.na(LFC)), NA_real_, mean(LFC, na.rm = TRUE)), .groups = "drop"),
+        summarise(
+          LFC = ifelse(
+            all(is.na(LFC)),
+            NA_real_,
+            mean(LFC, na.rm = TRUE)
+          ),
+          .groups = "drop"
+        ),
       by = c("Taxon_Label", "Heatmap_Column")
     )
   
-  df_complete$Taxon_Label   <- factor(df_complete$Taxon_Label, levels = rev(taxon_order))
-  df_complete$Heatmap_Column <- factor(df_complete$Heatmap_Column, levels = column_order)
+  df_complete$Taxon_Label <- factor(
+    df_complete$Taxon_Label,
+    levels = rev(taxon_order)
+  )
+  
+  df_complete$Heatmap_Column <- factor(
+    df_complete$Heatmap_Column,
+    levels = column_order
+  )
   
   max_abs_lfc <- max(abs(df_complete$LFC), na.rm = TRUE)
   if (!is.finite(max_abs_lfc) || max_abs_lfc == 0) max_abs_lfc <- 1
   
-  ggplot(df_complete, aes(x = Heatmap_Column, y = Taxon_Label, fill = LFC)) +
+  ggplot(
+    df_complete,
+    aes(x = Heatmap_Column, y = Taxon_Label, fill = LFC)
+  ) +
     geom_tile(color = "black", linewidth = 0.5) +
-    geom_text(aes(label = ifelse(is.na(LFC), "", sprintf("%.2f", LFC))), size = 5, color = "black") +
-    scale_fill_gradient2(
-      low = "tomato", mid = "white", high = "royalblue2", midpoint = 0,
-      limits = c(-max_abs_lfc, max_abs_lfc), name = "LFC", na.value = "white"
+    geom_text(
+      aes(
+        label = ifelse(
+          is.na(LFC),
+          "",
+          sprintf("%.2f", LFC)
+        )
+      ),
+      size = 5,
+      color = "black"
     ) +
-    labs(title = dataset_name, x = NULL, y = NULL) +
+    scale_fill_gradient2(
+      low = "tomato",
+      mid = "white",
+      high = "royalblue2",
+      midpoint = 0,
+      limits = c(-max_abs_lfc, max_abs_lfc),
+      name = "LFC",
+      na.value = "white"
+    ) +
+    labs(
+      title = dataset_name,
+      x = NULL,
+      y = NULL
+    ) +
     theme_minimal() +
     theme(
       plot.title   = element_text(size = 16, hjust = 0.5),
@@ -594,7 +623,6 @@ plot_heatmap <- function(df, dataset_name) {
       axis.ticks   = element_blank()
     )
 }
-
 datasets <- unique(heatmap_all$Dataset)
 plots_by_dataset <- list()
 
