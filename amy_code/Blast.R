@@ -1,28 +1,7 @@
 # ==========================================================
 # BLAST TAXONOMY BY SPECIES CLUSTER
 # ==========================================================
-#
-# This script:
-#
-# 1. Reads the fungal FASTA file
-# 2. Reads the complete BLAST output
-# 3. Extracts ALL BLAST hits for every query
-# 4. Matches BLAST queries to phyloseq Species_cluster
-# 5. Applies BLAST quality thresholds
-# 6. Identifies recognizable genera
-# 7. Keeps hits with no recognizable genus
-# 8. Calculates genus support within each Species_cluster
-# 9. Requires >=50% support for a genus identification
-# 10. Produces complete BLAST summaries
-#
-# BLAST thresholds:
-#   Percent identity >= 97%
-#   Query coverage   >= 90%
-#   E-value           <= 1e-50
-#
-# ==========================================================
-
-
+ 
 # ==========================================================
 # 1. LOAD PACKAGES
 # ==========================================================
@@ -50,13 +29,91 @@ conflicts_prefer(
 
 
 # ==========================================================
-# 2. FILE LOCATIONS
+# SELECT FUNGI SPECIES CLUSTERS FOR BLAST
 # ==========================================================
 
-fasta_file <- "Selected_Fungi_ASVs.fasta"
+ps <- ps_objects_full$Fungi
 
-blast_file <- "B3G8Z4XD014-Alignment_Fungi.txt"
+# Species cluster numbers to export
+clusters_to_blast <- c(
+  4, 5, 7, 14, 15, 17
+)
 
+# ==========================================================
+# EXTRACT FUNGAL TAXONOMY
+# ==========================================================
+
+tax_df <- as.data.frame(
+  tax_table(ps)
+) %>%
+  rownames_to_column("ASV")
+
+# ==========================================================
+# IDENTIFY SPECIES CLUSTER NUMBER
+# ==========================================================
+
+tax_df <- tax_df %>%
+  mutate(
+    Species_cluster_number =
+      as.numeric(Species_cluster)
+  )
+
+# ==========================================================
+# KEEP ONLY THE SELECTED SPECIES CLUSTERS
+# ==========================================================
+
+selected_taxa <- tax_df %>%
+  filter(
+    Species_cluster_number %in% clusters_to_blast
+  )
+
+
+cat(
+  "Number of ASVs selected:",
+  nrow(selected_taxa),
+  "\n"
+)
+
+
+cat(
+  "Number of Species clusters selected:",
+  n_distinct(selected_taxa$Species_cluster),
+  "\n"
+)
+
+# ==========================================================
+# CREATE FASTA SEQUENCES
+# ==========================================================
+
+selected_sequences <- DNAStringSet(
+  selected_taxa$ASV
+)
+
+
+# Use Species cluster + ASV number as FASTA names
+names(selected_sequences) <- paste0(
+  selected_taxa$Species_cluster,
+  "_ASV",
+  seq_len(nrow(selected_taxa))
+)
+
+
+# ==========================================================
+# WRITE FASTA FILE
+# ==========================================================
+
+writeXStringSet(
+  selected_sequences,
+  filepath = "Fungi_Blast.fasta"
+)
+
+# ==========================================================
+# 2. LOAD FILES AFTER BLAST
+# ==========================================================
+
+blast_file <- "Fungi_Fin_Blast.txt"
+
+fasta_file <- "Fungi_Blast.fasta"
 
 # ==========================================================
 # 3. READ FASTA
@@ -77,33 +134,18 @@ cat(
   "\n"
 )
 
-
 # ==========================================================
-# 4. READ PHYLOSEQ OBJECT
-# ==========================================================
-
-ps <- ps_objects_full$Fungi
-
-
-# ==========================================================
-# 5. EXTRACT PHYLOSEQ TAXONOMY
+# 4. EXTRACT PHYLOSEQ TAXONOMY
 # ==========================================================
 
 tax_df <- as.data.frame(
   tax_table(ps)
 ) %>%
-  
   rownames_to_column(
     "ASV"
   )
 
-
-# Your taxa_names() are the actual DNA sequences.
-#
-# Therefore Sequence = ASV
-
 tax_df$Sequence <- tax_df$ASV
-
 
 cat(
   "Number of phyloseq taxa:",
@@ -113,7 +155,7 @@ cat(
 
 
 # ==========================================================
-# 6. READ BLAST OUTPUT
+# 5. READ BLAST OUTPUT
 # ==========================================================
 
 blast_lines <- readLines(
@@ -127,9 +169,8 @@ cat(
   "\n"
 )
 
-
 # ==========================================================
-# 7. FIND ALL BLAST QUERIES
+# 6. FIND ALL BLAST QUERIES
 # ==========================================================
 
 query_lines <- grep(
@@ -486,25 +527,68 @@ if (
   
 }
 
-
 # ==========================================================
-# 11. MATCH BLAST HITS TO PHYLOSEQ
+# 11. MATCH BLAST QUERIES TO FASTA SEQUENCES
 # ==========================================================
 
 blast_df <- blast_df %>%
-  
   left_join(
-    
+    fasta_df %>%
+      select(
+        FASTA_ID,
+        Sequence
+      ) %>%
+      rename(
+        FASTA_Sequence = Sequence
+      ),
+    by = c("Sequence" = "FASTA_ID")
+  )
+
+
+# ==========================================================
+# REPLACE FASTA ID WITH ACTUAL DNA SEQUENCE
+# ==========================================================
+
+blast_df <- blast_df %>%
+  mutate(
+    Sequence = FASTA_Sequence
+  ) %>%
+  select(
+    -FASTA_Sequence
+  )
+
+
+# ==========================================================
+# MATCH TO PHYLOSEQ TAXONOMY
+# ==========================================================
+
+blast_df <- blast_df %>%
+  left_join(
     tax_df %>%
       select(
         Sequence,
         ASV,
         Species_cluster
       ),
-    
     by = "Sequence"
-    
   )
+
+
+# ==========================================================
+# CHECK MATCHING
+# ==========================================================
+
+matched_hits <- sum(
+  !is.na(blast_df$Species_cluster)
+)
+
+cat(
+  "BLAST hits matched to Species_cluster:",
+  matched_hits,
+  "of",
+  nrow(blast_df),
+  "\n"
+)
 
 
 # ==========================================================
