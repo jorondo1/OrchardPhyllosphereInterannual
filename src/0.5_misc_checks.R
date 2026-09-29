@@ -1,16 +1,15 @@
-# Checking rarefaction 
+# Checking correlation between read countst and diveristy indices-
+# checking if that changes depending on rarefaction
+
 pacman::p_load(phyloseq, tidyverse, ape, phangorn, btools)
 
-ps.ls    <- read_rds('data/ps_objects_full.rds') # $Bacteria, $Fungi -- filtered, NOT rarefied
-div.ITS  <- read_rds('data/diversity_data.rds')
+ps.ls     <- read_rds('data/ps_objects_full.rds') # $Bacteria, $Fungi -- filtered, NOT rarefied
+div_data  <- read_rds('data/diversity_data.rds')  # $Bacteria, $Fungi -- rarefied
+ps.ls_sub <- list()
+ps.ls_sub$Bacteria <- ps.ls$Bacteria
+ps.ls_sub$Fungi <- ps.ls$Fungi
 
-## Non-rarefied diversity ------------------------------------------------------
-# Same formulas as mgx.tools::rarefy_diversity()/compute_diversities.R,
-# applied once directly to the raw count table instead of averaging over
-# repeated rarefaction draws. Richness/Shannon/Simpson (and the two Hill
-# numbers built from them) use relative abundances, matching the rarefied
-# calculation; Tail is reproduced from raw counts (not proportions) because
-# that's how it's defined upstream too, not a normalization we're skipping.
+## Non rarefied diversity ------------------------------------------------------
 
 compute_nonrare_diversity <- function(ps){
   if (!ape::is.rooted(phy_tree(ps))) {
@@ -51,7 +50,7 @@ compute_nonrare_diversity <- function(ps){
     )
 }
 
-nonrare <- map(ps.ls, compute_nonrare_diversity) # $Bacteria, $Fungi
+nonrare <- map(ps.ls_sub, compute_nonrare_diversity) # $Bacteria, $Fungi
 
 ## Join against the rarefied indices ------------------------------------------
 
@@ -59,8 +58,8 @@ rare_cols <- c('Sample', 'Seq_depth', 'Richness', 'Shannon', 'Hill_1',
                'Simpson', 'Hill_2', 'Tail', 'Faith')
 
 div_compare <- imap(nonrare, function(nr, kingdom){
-  div.ITS[[kingdom]]$alpha %>%
-    select(any_of(rare_cols)) %>%
+  div_data[[kingdom]]$alpha %>%
+    dplyr::select(any_of(rare_cols)) %>%
     left_join(nr, by = 'Sample')
 }) %>% list_rbind(names_to = 'Kingdom')
 
@@ -83,17 +82,17 @@ div_long <- indices %>%
 ## Plot -------------------------------------------------------------------------
 
 # Spearman rank correlation with Seq_depth, per index/type, annotated onto
-# its own panel -- text colour inherits the same `type` mapping as the
-# points (aes(colour = type) is set once, at the top level), so no separate
-# colour scale to keep in sync.
+# its own panel 
 
 map(c('Fungi', 'Bacteria'), function(kingdom) {
+  
   cor_labels <- div_long %>%
     filter(Kingdom == kingdom) %>%
     group_by(index, type) %>%
     summarise(rho = cor(Seq_depth, value, method = 'spearman', use = 'complete.obs'), .groups = 'drop') %>%
     mutate(label = paste0(type, ': rho = ', round(rho, 2)),
            vjust = if_else(type == 'Rarefied', 1.5, 3))
+  
   p_rare_vs_nonrare <- div_long %>%
     filter(Kingdom == kingdom) %>%
     ggplot(aes(x = Seq_depth, y = value, colour = type)) +
@@ -101,13 +100,47 @@ map(c('Fungi', 'Bacteria'), function(kingdom) {
     geom_text(data = cor_labels, aes(x = Inf, y = Inf, label = label, vjust = vjust),
               hjust = 1.05, size = 3, show.legend = FALSE) +
     facet_grid(index ~ Kingdom, scales = 'free') +
+    # overlay rarefied and non-rarefied
     scale_colour_manual(values = c(Rarefied = '#4E79A7', `Non-rarefied` = '#E15759')) +
     labs(x = 'Sequencing depth (raw, pre-rarefaction reads)', y = NULL, colour = NULL,
          title = 'Diversity index vs sequencing depth, rarefied vs non-rarefied') +
     theme_light() +
     theme(strip.text.y = element_text(angle = 0, hjust = 0))
   
-  ggsave(paste0('out/summaries/seqdepth_cor_',kingdom,'.pdf'),
-         p_rare_vs_nonrare, width = 2000, height = 3000,
-         units = 'px', dpi = 220, bg = 'white')
 })
+
+
+# Spearman rank correlation with Seq_depth, per index/type, annotated onto
+# its own panel 
+
+#map(c('Fungi', 'Bacteria'), function(kingdom) {
+
+cor_labels <- div_long %>%
+  filter(index == 'Hill_1') %>% 
+  group_by(Kingdom, type) %>%
+  summarise(rho = cor(Seq_depth, value, method = 'spearman', use = 'complete.obs'), .groups = 'drop') %>%
+  mutate(label = paste0(type, ': rho = ', round(rho, 2)),
+         vjust = if_else(type == 'Rarefied', 1.5, 3))
+
+p_rare_vs_nonrare <- div_long %>%
+  filter(index == 'Hill_1') %>% 
+  ggplot(aes(x = Seq_depth, y = value, colour = type)) +
+  geom_point(alpha = 0.6, size = 1.2) +
+  geom_text(data = cor_labels, aes(x = Inf, y = Inf, label = label, vjust = vjust),
+            hjust = 1.05, size = 3, show.legend = FALSE) +
+  facet_grid(Kingdom~., scales = 'free') +
+  # overlay rarefied and non-rarefied
+  scale_colour_manual(values = c(Rarefied = '#4E79A7', `Non-rarefied` = '#E15759')) +
+  labs(x = 'Samlpe read count', y = 'Effective number of ASVs (Hill 1)', colour = NULL) +
+  theme(legend.position = c(0.8,0.8),
+        legend.background = element_rect(
+          linewidth = 0.2,
+          colour = 'black'
+        )); p_rare_vs_nonrare
+
+ggsave(paste0('out/summaries/seqdepth_cor.pdf'),
+       p_rare_vs_nonrare, width = 2000, height = 1300,
+       units = 'px', dpi = 280, bg = 'white')
+# })
+
+

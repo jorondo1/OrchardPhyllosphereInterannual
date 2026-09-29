@@ -1,20 +1,16 @@
-pacman::p_load(tidyverse,  here, phyloseq, mgx.tools, kableExtra, magrittr)
-ps.ls <- read_rds('data/ps_objects_full.rds')
+pacman::p_load(tidyverse, here, phyloseq, mgx.tools, kableExtra, magrittr, update = FALSE)
+source('src/0.0_Config.R') # ps_dataset_labels
 
+ps.ls <- read_rds('data/ps_objects_full.rds')
 
 # Sample count viz --------------
 
 dat <- rbind(
   samdat_as_tibble(ps.ls$Fungi) %>% mutate(Barcode = 'Fungi'),
   samdat_as_tibble(ps.ls$Bacteria) %>% mutate(Barcode = 'Bacteria')
-) 
+)
 
-
-count_dat <- dat %>% 
-  mutate(Dataset = case_when(
-    Cultivar %in% c('Honeycrisp', 'Spartan') ~ '2-year dataset',
-    TRUE ~ '3-year dataset'
-  )) %>% 
+count_dat <- dat %>%
   count(Barcode, Dataset, Year, Time, Cultivar, Code, Management) %>%
   rename(N_samples = n)
 
@@ -23,7 +19,6 @@ count_dat %>%
   geom_col(position = "dodge") +
   ggh4x::facet_nested(Barcode+Year ~ Dataset + Management + Cultivar) +  # Facet by 2 variables
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  theme_light()  +
   theme(
     legend.position = 'bottom',
     panel.grid = element_blank()) +
@@ -37,10 +32,22 @@ ggsave('out/summaries/sample_count_by_metadata.pdf',
 # Classification rates -------------------
 
 classrates <- compute_classification_rates(ps.ls[c('Bacteria','Fungi') ])
+
 plot_class_rates(classrates)
+
 ggsave('out/summaries/classification_rates.pdf',
        bg = 'white', width = 2000, height = 2000, 
-       units = 'px', dpi = 220)
+       units = 'px', dpi = 300)
+
+# Summarise
+classrates %>% 
+  filter(taxRank == "Genus") %>% 
+  group_by(Dataset, proportion_type) %>% 
+  mutate(non_classified = 1-Classification_rate) %>% 
+  summarise(
+    mean_rate = mean(non_classified),
+    sd_rate = sd(non_classified),
+    .groups = 'drop')
 
 
 # ASV stats table  -----------------------------
@@ -50,32 +57,15 @@ fmt_int  <- function(x) format(round(x), big.mark = ",")
 fmt_dec <-  function(x) format(round(x, 1), nsmall = 1)
 fmt_prop <- function(x) format(round(x, 2), nsmall = 2)
 
-# per-dataset 
-ps.ls$`Bacteria (3-year subset)` <- ps.ls$Bacteria %>% 
-  phyloseq::subset_samples(Dataset == "3-year") %>% 
-  prune_taxa(taxa_sums(.)>0, .)
-
-ps.ls$`Bacteria (2-year subset)` <- ps.ls$Bacteria %>% 
-  phyloseq::subset_samples(Dataset == "2-year") %>% 
-  prune_taxa(taxa_sums(.)>0, .)
-
-ps.ls$`Fungi (3-year subset)` <- ps.ls$Fungi %>% 
-  phyloseq::subset_samples(Dataset == "3-year") %>% 
-  prune_taxa(taxa_sums(.)>0, .)
-
-ps.ls$`Fungi (2-year subset)` <- ps.ls$Fungi %>% 
-  phyloseq::subset_samples(Dataset == "2-year") %>% 
-  prune_taxa(taxa_sums(.)>0, .)
-
-# Stats per object
-ps.stats <- imap(ps.ls, function(ps, barcode) {
+# Stats per object (ps.ls already has all 6 entries -- see load above)
+ps.stats <- imap(ps.ls, function(ps, name) {
   asv <- otu_table(ps)
   seq_per_sam <- rowSums(asv)
   asv_per_sam <- rowSums(asv > 0)
   asv_prevalence <- colSums(asv > 0)
-
+  
   tibble(
-    Dataset = barcode,
+    Dataset = ps_dataset_labels[[name]],
     Seq  = fmt_int(sum(asv)),
     ASVs = fmt_int(ncol(asv)),
     N    = fmt_int(nrow(asv)),
@@ -91,11 +81,13 @@ ps.stats <- imap(ps.ls, function(ps, barcode) {
   )
 }) %>% list_rbind()
 
-kable(ps.stats, "html", align = "l") %>%
+ps.stats %>% 
+  arrange(Dataset) %>% 
+  kable("html", align = "l") %>%
   kable_styling(full_width = FALSE) %>%
   add_header_above(c(
     "Dataset" = 1,
-    "Sequences" = 1,
+    "Reads\n(1,000)" = 1,
     "ASVs" = 1,
     "Samples" = 1,
     "Mean ± SD" = 1,
@@ -107,12 +99,57 @@ kable(ps.stats, "html", align = "l") %>%
   )) %>%
   add_header_above(c(
     " " = 4,
-    "Sequences per sample" = 2,
+    "Reads per sample" = 2,
     "ASVs per sample" = 2,
     "ASV prevalence" = 2
-    )) %>%
-  row_spec(0, extra_css = "display: none;")  %T>% 
+  )) %>%
+  row_spec(0, extra_css = "display: none;")  %T>%
   
   # NOTE : ITS filtered excludes all non-AMF fungi!
   save_kable(file = "out/manuscript/supp/asv_summary.html")
+
+# Unique taxa per taxonomic rank -----------------------------------------------
+# Same taxa-cleaning convention as amy_code/Family_Site.R.
+
+clean_taxa_vector <- function(x) {
+  x <- as.character(x)
+  case_when(
+    is.na(x) ~ "Unclassified",
+    x == "" ~ "Unclassified",
+    x == "NA" ~ "Unclassified",
+    grepl("Incertae|Unclassified|uncultured|unknown", x, ignore.case = TRUE) ~ "Unclassified",
+    TRUE ~ x
+  )
+}
+
+get_unique_taxa_list <- function(ps) {
+  tax_df <- as.data.frame(as(tax_table(ps), "matrix"), stringsAsFactors = FALSE)
+  rank_list <- purrr::map(names(tax_df), function(rank) {
+    cleaned <- clean_taxa_vector(tax_df[[rank]])
+    unique(cleaned[cleaned != "Unclassified"])
+  })
+  names(rank_list) <- names(tax_df)
+  rank_list[["ASV"]] <- taxa_names(ps) # ASV pseudo-rank
+  rank_list
+}
+
+standard_rank_order <- c("Phylum", "Class", "Order", "Family", "Genus", "Species_cluster", "ASV")
+
+unique_taxa_summary <- imap(ps.ls, function(ps, name) {
+  taxa_list <- get_unique_taxa_list(ps)
+  taxa_list <- taxa_list[standard_rank_order]
+  tibble(
+    Dataset = ps_dataset_labels[[name]],
+    Rank = factor(names(taxa_list), levels = intersect(standard_rank_order, names(taxa_list))),
+    Unique_Count = purrr::map_int(taxa_list, length)
+  )
+}) %>%
+  list_rbind() %>%
+  pivot_wider(names_from = Rank, values_from = Unique_Count)
+
+unique_taxa_summary %>% 
+  arrange(Dataset) %>% 
+  kable("html", align = "lccccccc") %>%
+  kable_styling(full_width = FALSE) %T>%
+  save_kable(file = "out/manuscript/supp/unique_taxa_summary.html")
 

@@ -16,7 +16,7 @@
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
 source('src/hiermod/Models/MDST_model.R') # model_MDST_16S, means_MDST(), sim_div_MDST(), simulate_from_priors_MDST(), dq_MDST
-
+source('src/utils/sbc_workflow.R') 
 model <- model_MDST_16S
 model_id <- model_id_MDST
 

@@ -84,8 +84,14 @@ fung_means <- mean_plots[[2]] +
 
 # Legend hidden on both mean panels 
 mean_plot <- (bact_means + fung_means) &
-  scale_fill_manual(values = combined_pal, limits = names(combined_pal), guide = "none") &
-  scale_colour_manual(values = combined_pal, limits = names(combined_pal), guide = "none")
+  scale_fill_manual(
+    values = combined_pal,
+    limits = names(combined_pal), 
+    guide = "none") &
+  scale_colour_manual(
+    values = combined_pal, 
+    limits = names(combined_pal),
+    guide = "none")
 
 
 # Fold-diff plots

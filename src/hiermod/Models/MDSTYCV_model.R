@@ -118,8 +118,8 @@ dq_MDSTYCV <- SBC::derived_quantities(
 # (Organic starts lower in May but climbs more steeply by July), which
 # drives a large negative cross term. Combining them back into one term
 # sidesteps the issue entirely (a term's marginal share vs. itself is just
-# its own variance). A real Shapley/LMG (order-averaged, refit-based)
-# decomposition would handle this properly -- deferred for now.
+# its own variance). method = "lmg" gives the Shapley/LMG version instead
+# (variance_partition_lmg(), non-negative shares).
 #
 # Tree is a proper per-observation term (realized tr[Tr] draws x sigma_tr,
 # like Year/Cultivar's own realized-level construction) instead of the old
@@ -128,7 +128,8 @@ dq_MDSTYCV <- SBC::derived_quantities(
 # first time, matching variance_partition_MDSTYCL()'s own (already-included)
 # treatment for the first time.
 
-variance_partition_MDSTYCV <- function(post, dat){
+variance_partition_MDSTYCV <- function(post, dat, method = c("margin", "lmg")){
+  method <- match.arg(method)
   yr3    <- -(as.vector(post$yr1) + as.vector(post$yr2))
   yr_obs <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]
 
@@ -155,7 +156,8 @@ variance_partition_MDSTYCV <- function(post, dat){
     "Management x Season"  = loga_obs + gamma_term
   )
 
-  variance_partition_panels(terms, residual_var)
+  if (method == "lmg") variance_partition_lmg(terms, residual_var)
+  else variance_partition_panels(terms, residual_var)
 }
 
 ## Data-generating function ---------------------------------------------------

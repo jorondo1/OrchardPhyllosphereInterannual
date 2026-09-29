@@ -362,8 +362,7 @@ build_pc_estimands <- function(pf, group_levels = c("1", "2")){
 # under this no-refit shortcut, and it's exactly why Management x Season's
 # main effects + interaction get combined back into one term (see
 # variance_partition_MDSTYCV()'s own comment) rather than split three ways.
-# A real Shapley/LMG (order-averaged) decomposition would be closer to the
-# ANOVA convention -- deferred for now.
+# See variance_partition_lmg() below for the order-averaged alternative.
 # /thanks claude :::::::::::::::
 
 variance_partition_panels <- function(terms, residual_var){
@@ -381,6 +380,48 @@ variance_partition_panels <- function(terms, residual_var){
   ) %>%
     mutate(
       statistic = "Variance partition (By margin)",
+      group = factor(group, levels = c(nm, "Residual"))
+    )
+}
+
+# Shapley/LMG version: same inputs and output shape as variance_partition_panels().
+# Per draw, regress the linear predictor on the term contributions (one free
+# slope each); a term's share is its R2 gain averaged over every order of
+# adding terms. Shares are >= 0 and sum to the explained fraction.
+# 2^K regressions per draw, so it runs on n_draws evenly spaced draws.
+
+variance_partition_lmg <- function(terms, residual_var, n_draws = 1000){
+  nm <- names(terms)
+  K  <- length(nm)
+  draws <- unique(round(seq(1, length(residual_var), length.out = n_draws)))
+
+  # all 2^K subsets; row index = 1 + sum(2^(j-1)) over included terms j
+  subsets <- as.matrix(expand.grid(rep(list(c(FALSE, TRUE)), K)))
+  size    <- rowSums(subsets)
+  # Shapley weight of adding a term to a subset of this size
+  w <- ifelse(size < K, factorial(size) * factorial(pmax(K - size - 1, 0)) / factorial(K), 0)
+
+  res <- t(vapply(draws, function(s){
+    X <- scale(sapply(terms, function(m) m[s, ]), scale = FALSE)
+    y <- rowSums(X)
+    G <- crossprod(X)
+    b <- crossprod(X, y)
+    r2 <- apply(subsets, 1, function(S)
+      if (!any(S)) 0 else sum(b[S] * solve(G[S, S, drop = FALSE], b[S])) / sum(y^2))
+
+    shapley <- vapply(seq_len(K), function(j){
+      without <- which(!subsets[, j])
+      sum(w[without] * (r2[without + 2^(j - 1)] - r2[without]))
+    }, numeric(1))
+
+    explained <- var(y)
+    c(shapley * explained, residual_var[s]) / (explained + residual_var[s])
+  }, numeric(K + 1)))
+  colnames(res) <- c(nm, "Residual")
+
+  purrr::imap_dfr(as_tibble(res), ~ tibble(group = .y, value = .x)) %>%
+    mutate(
+      statistic = "Variance partition (Shapley/LMG)",
       group = factor(group, levels = c(nm, "Residual"))
     )
 }
