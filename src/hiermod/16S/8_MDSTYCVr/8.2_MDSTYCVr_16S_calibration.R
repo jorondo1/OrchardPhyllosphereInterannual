@@ -30,7 +30,8 @@
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDSTYCVr_model.R') # model_MDSTYCVr_16S, means_MDSTYCVr(), sim_div_MDSTYCVr(), simulate_from_priors_MDSTYCVr(), dq_MDSTYCVr
+source('src/hiermod/Models/MDSTYCVr_model.R') 
+source('src/utils/sbc_workflow.R') 
 
 model <- model_MDSTYCVr_16S
 model_id <- model_id_MDSTYCVr

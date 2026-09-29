@@ -106,10 +106,10 @@ variance_partition_MDSYCV <- function(post, dat){
 
   bind_rows(
     tibble(statistic = "Variance partition", group = "Management x Season", value = var_MgMo / total),
-    tibble(statistic = "Variance partition", group = "Year",                 value = var_Y / total),
-    tibble(statistic = "Variance partition", group = "Covariates",           value = var_Cov / total),
-    tibble(statistic = "Variance partition", group = "Cultivar",             value = var_Cv / total),
-    tibble(statistic = "Variance partition", group = "Residual",             value = residual_var / total)
+    tibble(statistic = "Variance partition", group = "Year", value = var_Y / total),
+    tibble(statistic = "Variance partition", group = "Covariates", value = var_Cov / total),
+    tibble(statistic = "Variance partition", group = "Cultivar", value = var_Cv / total),
+    tibble(statistic = "Variance partition", group = "Residual", value = residual_var / total)
   )
 }
 

@@ -13,8 +13,9 @@ meta_formatted <- meta_raw %>%
     year = factor(year, levels = c(2022, 2023, 2024)),
     #!!!  orchard = factor(orchard, levels = ...),
     TREE_ID = paste(year, site, cultivar, replicate, sep = "-"),
-    # Reorder cultivar levels
-    cultivar = factor(cultivar, levels = c("Cortland"  , "Honeycrisp" ,"Liberty" , "Spartan", "Paulared")),
+    # Reorder cultivar levels (canonical order, matches src/0.0_Config.R's
+    # fill_cult and src/hiermod/0_INDEX.R's idx$Cv)
+    cultivar = factor(cultivar, levels = c("Cortland", "Liberty", "Paulared", "Honeycrisp", "Spartan")),
     # Create Location variable
     Location = as.factor(str_extract(code, "^.")),
     code = as.factor(code),
@@ -32,20 +33,21 @@ meta_formatted <- meta_raw %>%
 
 # add meteo data -----------------------------------------------------------
 
-meteo_raw <- read_rds("data/meteo/processed/Meteo_indexes.rds") 
+meteo_raw <- read_rds("data/meteo/processed/Meteo_indexes.rds")
 
-meteo <- meteo_raw %>% 
-  separate_wider_delim(Time, delim = "_", names = c('Month', 'Year')) %>% 
-  mutate(Time = case_when(Month == '5' ~ 'May', Month == '7' ~ 'July'),
-         .keep = 'unused') %>% 
+# Time is a readable "May 2022"/"July 2022" factor; splitting on " " gives
+# Time ("May"/"July") and Year directly.
+meteo <- meteo_raw %>%
+  separate_wider_delim(Time, delim = " ", names = c('Time', 'Year')) %>%
   select(-Location)
 
-meta_out <- meta_formatted %>% 
-  left_join(meteo, by = c('Year', 'Time', 'Site')) %>% 
-  rename(Sample = Unique) %>% 
-  select(-Site)
+meta_out <- meta_formatted %>%
+  left_join(meteo, by = c('Year', 'Time', 'Site')) %>%
+  rename(Sample = Unique)
+# Site (PMB/ASB/VBS/COM/MIB/MIC) kept -- src/1.4_Fig_BetaDiv_Envfit.R needs
+# it for its own per-site subsetting.
 
-#  subsets by barcode
+# Subsets by barcode ---------------------------------------------------------
 ps.ls.in <- read_rds('data/ps_objects_preproc.rds')
 ps_bact <- ps.ls.in$Bacteria$filt
 ps_fung <- ps.ls.in$Fungi$filt
@@ -53,8 +55,7 @@ ps_fung <- ps.ls.in$Fungi$filt
 setdiff(sample_names(ps_bact), meta_out$Sample)
 setdiff(sample_names(ps_fung), meta_out$Sample)
 
-
-meta_fung <- meta_out %>% 
+meta_fung <- meta_out %>%
   filter(Sample %in% sample_names(ps_fung)) %>% 
   as.data.frame() %>% column_to_rownames("Sample")
 
@@ -67,13 +68,12 @@ meta_bact <- meta_out %>%
 meta_bact$Seq_depth <- rowSums(otu_table(ps_bact))[rownames(meta_bact)]
 meta_fung$Seq_depth <- rowSums(otu_table(ps_fung))[rownames(meta_fung)]
 
-# add centered/scaled covariates (hiermod models, src/hiermod/0_SETUP.R) -----
+# Add centered/scaled covariates (hiermod models, src/hiermod/0_SETUP.R) ----
 # deg_h_z: centered WITHIN Time (July is reliably warmer than May every
-# year, a real seasonal identity worth keeping separate from the
-# covariate). precip_72h_z/seq_depth_z: centered globally -- precip has no
-# reliable May-vs-July direction (e.g. 2022 reverses it), and seq_depth's
-# Management correlation is a confound we want removed, not preserved.
-# Keep this logic in sync with 0_SETUP.R's own if it ever changes.
+# year -- a seasonal identity kept separate from the covariate).
+# precip_72h_z/seq_depth_z: centered globally -- precip has no reliable
+# May-vs-July direction, and seq_depth's Management correlation is a
+# confound to remove, not preserve.
 
 add_centered_covariates <- function(dat){
   deg_h_season_mean <- tapply(dat$deg_h, dat$Time, mean)
@@ -96,9 +96,20 @@ meta_fung <- add_centered_covariates(meta_fung)
 sample_data(ps_bact) <- meta_bact
 sample_data(ps_fung) <- meta_fung
 
+# 2yr/3yr subsets ------------------------------------------------------------
+subset_ps_by_dataset <- function(ps, dataset_value){
+  keep <- sample_data(ps)$Dataset == dataset_value
+  ps_sub <- prune_samples(sample_names(ps)[keep], ps)
+  prune_taxa(taxa_sums(ps_sub) > 0, ps_sub)
+}
+
 ps.ls.out <- list(
-  Bacteria = ps_bact,
-  Fungi = ps_fung
+  Bacteria    = ps_bact,
+  Fungi       = ps_fung,
+  Bacteria_3y = subset_ps_by_dataset(ps_bact, "3-year"),
+  Bacteria_2y = subset_ps_by_dataset(ps_bact, "2-year"),
+  Fungi_3y    = subset_ps_by_dataset(ps_fung, "3-year"),
+  Fungi_2y    = subset_ps_by_dataset(ps_fung, "2-year")
 ); ps.ls.out
 
 # write out ---------------------------------------------------------------

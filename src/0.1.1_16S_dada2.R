@@ -3,9 +3,7 @@
 
 # following tutorial: https://jorondo1.github.io/mgx.tutorials/dada2_16S_tutorial.html 
 
-######################
-###Set up R in ip34###
-######################
+# Set up R in ip34 -------------------------------------------------------
 
 # terminal (bash) commands, run manually on ip34/Mammouth, not R code
 # ssh <username>@ip34.ccs.usherbrooke.ca
@@ -32,7 +30,7 @@ pacman::p_load(dada2, tidyverse, mgx.tools, Biostrings, ShortRead, parallel, upd
 
 # Define paths -----------------------------------------------------------------
 
-path_data <- normalizePath('/jbod2/def-ilafores/analysis/2026_AppleMicrobiome/16S')
+path_data <- normalizePath('/net/nfs-bio/jbod2/def-ilafores/analysis/2026_AppleMicrobiome/data/16S')
 
 path_raw <- file.path(path_data, '0_raw')
 if (!dir.exists(path_raw))     dir.create(path_raw, recursive = TRUE)
@@ -48,9 +46,7 @@ if (!dir.exists(path_out))     dir.create(path_out)
 if (!dir.exists(path_summary)) dir.create(path_summary)
 
 
-###########################
-### DADA2 WORKFLOW ###
-###########################
+# DADA2 workflow ----------------------------------------------------------
 
 FWD <- "AACMGGATTAGATACCCKG"  # 799F
 REV <- "AGGGTTGCGCTCGTTG"     # 1115R
@@ -108,6 +104,15 @@ mgx.tools::primer_occurence(fnFs.cut, fnRs.cut, FWD, REV, ncores = ncores)
 
 cutFs <- sort(list.files(path_cut, pattern = "_R1.fastq.gz", full.names = TRUE))
 cutRs <- sort(list.files(path_cut, pattern = "_R2.fastq.gz", full.names = TRUE))
+
+# Reprint sample names for ENA
+(sample.names <- gsub(
+  pattern = ".*\\.([^.]+_*)_R1\\.fastq\\.gz", 
+  replacement = "\\1", 
+  x = basename(cutFs)))
+
+write_delim(data.frame(sample.names), file.path(path_summary, 'sample_names.tsv'))
+
 
 # 3. Quality filtering ------------------------------------------------------------
 
@@ -211,33 +216,6 @@ mgx.tools::plot_track_change(track_change) %>%
 
 # terminal (bash) command, run manually, not R code
 # scp -r <username>@ip34.ccs.usherbrooke.ca:/jbod2/def-ilafores/analysis/2026_AppleMicrobiome/16S/X_DADA2_Summary C:/Users/anjaw/Documents/Canada_UdeS/PhD/A_Apple_microbiome/DADA2
-
-# 7. Taxonomic assignment (DADA2) -------------------------------------------------
-# 
-# !!! We used DECIPHER instead, but this code was formerly used for the bayesian approach
-# 
-# ref_db_path <- file.path(path_data, 'ref_taxonomy')
-# dir.create(ref_db_path)
-# 
-# # Download database
-# system(paste(
-#   "wget -P",
-#   ref_db_path,
-#   "https://zenodo.org/records/14169026/files/silva_nr99_v138.2_toGenus_trainset.fa.gz"))
-# 
-# list.files(ref_db_path)
-# 
-# silva_train  <- file.path(ref_db_path, "silva_nr99_v138.2_toGenus_trainset.fa.gz")
-# 
-# taxonomy <- assignTaxonomy(
-#   seqtab.filt, 
-#   silva_train,
-#   tryRC = TRUE, 
-#   multithread = ncores, # don't use more than 24, it hurts the performance
-#   verbose = TRUE
-# )
-# 
-# write_rds(taxonomy, file.path(path_out, 'taxonomy.RDS'), compress = 'gz')
 
 # Copy reads table and taxonomy from ip34 to local -----------------------------
 

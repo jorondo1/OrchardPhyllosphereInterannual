@@ -30,25 +30,26 @@ pc_estimands_medians <- pc_estimands$medians
 ## Variance partition -----------------------------------------------------------
 # variance_partition_MDSTYCV() needs raw extract.samples() (plain matrices,
 # for the outer()/%*% arithmetic inside it); not `pf`, which post_full()
-# wraps into tibbles. Marginal ("by margin") decomposition only -- see
-# variance_partition_MDSTYCV()'s own comment (MDSTYCV_model.R) for why
-# Management x Season stays one combined term rather than splitting into
-# main effects + interaction.
+# wraps into tibbles. "By margin" (no-refit shortcut, can go negative) next
+# to Shapley/LMG (non-negative, sums to 1) -- see variance_partition_MDSTYCV()'s
+# own comment (MDSTYCV_model.R).
 
 post_raw <- extract.samples(fit_MDSTYCV)
-pc_varpart <- variance_partition_MDSTYCV(post_raw, dat_MDSTYCV)
+pc_varpart <-  variance_partition_MDSTYCV(post_raw, dat_MDSTYCV, method = "lmg")
 
 p_varpart <- pc_varpart %>%
   ggplot(aes(x = value, y = group, fill = group, height = after_stat(ndensity))) +
-  ggridges::geom_density_ridges(stat = "density", alpha = 0.7, colour = "white",
+  ggridges::geom_density_ridges(
+    stat = "density", alpha = 0.7, colour = "white",
                                  scale = 1.5, rel_min_height = 0.01) +
   geom_vline(xintercept = 0, colour = "grey50", linetype = "dashed") +
-  scale_fill_manual(values = Variance_partition_palette) +
+
+    scale_fill_manual(values = Variance_partition_palette) +
   labs(x = "Fraction of total variance", y = NULL, fill = NULL,
-       title = "Variance partition (Bayesian R2, by margin)") +
+       title = "Variance partition (Bayesian R2)") +
   theme(legend.position = "none"); p_varpart
 
-save_gg("fit_variance_partition", model_id_MDSTYCV, p_varpart, width = 8, height = 4)
+save_gg("fit_variance_partition", model_id_MDSTYCV, p_varpart, width = 12, height = 4)
 
 ## Comprehensive posterior summary (results report) -----------------------------
 # Every interpretable posterior's own mean/median/89% PI/HPDI, not just the

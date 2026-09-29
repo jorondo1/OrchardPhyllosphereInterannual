@@ -1,0 +1,3 @@
+Title: weighted UniFrac PCoA ordination of fungi communities, 2-year (n = 91) and 3-year (n = 157) site subsets.
+
+Legend: (A) 2-year subset, coloured by Management. (B) 2-year subset, coloured by Time, shaped by Location. (C) 3-year subset, coloured by Management. (D) 3-year subset, coloured by Time, shaped by Location. In every panel, black arrows show taxonomic classes significantly correlated with that panel's ordination (envfit, 999 permutations, p <= 0.001, arrow length >= 0.4), labeled by class name.

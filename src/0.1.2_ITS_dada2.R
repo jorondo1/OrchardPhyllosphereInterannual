@@ -1,9 +1,7 @@
 # Script to process 16S sequencing reads from 2026_AppleMicrobiome on ip34/Mammouth
 # Author: Anja Werz
 
-######################
-###Set up R in ip34###
-######################
+# Set up R in ip34 -------------------------------------------------------
 
 # nice R
 path_cutadapt <- '/cvmfs/soft.mugqic/CentOS6/software/cutadapt/cutadapt-2.10/bin/cutadapt'
@@ -35,9 +33,7 @@ if (!dir.exists(path_cut))     dir.create(path_cut)
 if (!dir.exists(path_out))     dir.create(path_out)
 if (!dir.exists(path_summary)) dir.create(path_summary)
 
-###########################
-### DADA2 WORKFLOW ###
-###########################
+# DADA2 workflow ----------------------------------------------------------
 
 # add primers, taken from Sophie ITS file
 
@@ -121,26 +117,6 @@ out <- filterAndTrim(
 )
 
 rownames(out) <- sample.names
-
-#### >>> tests ---
-reads_dropped45 <- out %>% 
-  as.data.frame() %>% 
-  rownames_to_column('Sample') %>% 
-  mutate(
-    change = (reads.in-reads.out)/reads.in
-  ) %>% 
-  summarise(
-    min = min(change),
-    mean = mean(change),
-    median = median(change),
-    sd = sd(change),
-    max = max(change)
-  ) %>% 
-  mutate(
-    test = 'maxEE45', .before = everything()
-  )
-rbind(reads_dropped, reads_dropped44, reads_dropped45)
-#### /// tests ---
 
 plot_list <- gen_qplots(Fs = filtFs, Rs = filtRs, nsam = 4)
 save_qplots(plot_list = plot_list,
@@ -267,10 +243,6 @@ taxonomy <- mgx.tools::format_DECIPHER_for_dada2(
 )
 
 write_rds(taxonomy, file.path(path_out, 'taxonomy_ITS_DECIPHER.RDS'), compress = 'gz')
-
-
-
-
 
 
 

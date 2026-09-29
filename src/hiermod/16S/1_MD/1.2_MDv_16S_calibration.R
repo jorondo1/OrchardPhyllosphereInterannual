@@ -22,7 +22,8 @@
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MD_model.R') # model_MD_16S, model_MDv_16S, sim_div_MDv(), means_MD(), means_MDv(), simulate_from_priors_MDv(), dq_MDv
+source('src/hiermod/Models/MD_model.R') 
+source('src/utils/sbc_workflow.R') 
 model_MDv <- model_MDv_16S
 model_MDv$prior_loga  <- quote(loga[Mg] ~ dnorm(5,2))
 model_MDv$prior_sigma <- quote(sigma[Mg] ~ dexp(2))

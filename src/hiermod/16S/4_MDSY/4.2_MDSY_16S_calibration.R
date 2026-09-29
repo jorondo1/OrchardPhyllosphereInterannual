@@ -9,8 +9,8 @@
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
-source('src/hiermod/Models/MDSY_model.R') # model_MDSY_16S, means_MDSY(), sim_div_MDSY(), simulate_from_priors_MDSY(), dq_MDSY
-
+source('src/hiermod/Models/MDSY_model.R') 
+source('src/utils/sbc_workflow.R') 
 model <- model_MDSY_16S
 model_id <- model_id_MDSY
 

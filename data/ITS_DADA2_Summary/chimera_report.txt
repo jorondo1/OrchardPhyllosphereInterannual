@@ -1,0 +1,3 @@
+522 chimeras were found out of 3327 ASVs.
+2805 non-chimeric ASVs left.
+5.45 % of sequences were lost.

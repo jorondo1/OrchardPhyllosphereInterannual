@@ -1,0 +1,1552 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="receipt.xsl"?>
+<RECEIPT receiptDate="2026-09-28T18:41:58.621+01:00" submissionFile="submission-UdS_1790617318621.xml" success="true">
+     <SAMPLE accession="ERS31385375" alias="2022-1-ASB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515929" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385376" alias="2022-1-ASB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515930" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385377" alias="2022-1-ASB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515931" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385378" alias="2022-1-ASB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515932" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385379" alias="2022-1-ASB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515933" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385380" alias="2022-1-ASB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515934" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385381" alias="2022-1-ASB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515935" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385382" alias="2022-1-ASB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515936" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385383" alias="2022-1-ASB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515937" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385384" alias="2022-1-PMB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515938" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385385" alias="2022-1-PMB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515939" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385386" alias="2022-1-PMB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515940" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385387" alias="2022-1-PMB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515941" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385388" alias="2022-1-PMB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515942" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385389" alias="2022-1-PMB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515943" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385390" alias="2022-1-PMB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515944" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385391" alias="2022-1-PMB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515945" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385392" alias="2022-1-PMB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515946" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385393" alias="2022-1-VBS-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515947" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385394" alias="2022-1-VBS-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515948" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385395" alias="2022-1-VBS-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515949" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385396" alias="2022-1-VBS-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515950" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385397" alias="2022-1-VBS-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515951" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385398" alias="2022-1-VBS-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515952" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385399" alias="2022-1-VBS-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515953" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385400" alias="2022-1-VBS-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515954" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385401" alias="2022-1-VBS-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515955" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385402" alias="2022-2-ASB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515956" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385403" alias="2022-2-ASB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515957" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385404" alias="2022-2-ASB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515958" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385405" alias="2022-2-ASB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515959" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385406" alias="2022-2-ASB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515960" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385407" alias="2022-2-ASB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515961" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385408" alias="2022-2-ASB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515962" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385409" alias="2022-2-ASB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515963" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385410" alias="2022-2-ASB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515964" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385411" alias="2022-2-PMB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515965" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385412" alias="2022-2-PMB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515966" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385413" alias="2022-2-PMB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515967" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385414" alias="2022-2-PMB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515968" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385415" alias="2022-2-PMB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515969" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385416" alias="2022-2-PMB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515970" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385417" alias="2022-2-PMB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515971" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385418" alias="2022-2-PMB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515972" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385419" alias="2022-2-PMB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515973" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385420" alias="2022-2-VBS-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515974" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385421" alias="2022-2-VBS-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515975" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385422" alias="2022-2-VBS-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515976" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385423" alias="2022-2-VBS-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515977" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385424" alias="2022-2-VBS-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515978" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385425" alias="2022-2-VBS-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515979" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385426" alias="2022-2-VBS-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515980" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385427" alias="2022-2-VBS-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515981" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385428" alias="2022-2-VBS-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515982" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385429" alias="2023-1-ASB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515983" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385430" alias="2023-1-ASB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515984" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385431" alias="2023-1-ASB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515985" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385432" alias="2023-1-ASB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515986" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385433" alias="2023-1-ASB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515987" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385434" alias="2023-1-ASB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515988" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385435" alias="2023-1-ASB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515989" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385436" alias="2023-1-ASB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515990" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385437" alias="2023-1-ASB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515991" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385438" alias="2023-1-COM-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515992" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385439" alias="2023-1-COM-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515993" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385440" alias="2023-1-COM-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515994" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385441" alias="2023-1-COM-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515995" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385442" alias="2023-1-COM-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515996" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385443" alias="2023-1-COM-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515997" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385444" alias="2023-1-MIB-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515998" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385445" alias="2023-1-MIB-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123515999" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385446" alias="2023-1-MIB-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516000" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385447" alias="2023-1-MIB-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516001" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385448" alias="2023-1-MIB-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516002" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385449" alias="2023-1-MIB-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516003" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385450" alias="2023-1-MIC-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516004" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385451" alias="2023-1-MIC-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516005" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385452" alias="2023-1-MIC-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516006" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385453" alias="2023-1-MIC-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516007" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385454" alias="2023-1-MIC-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516008" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385455" alias="2023-1-MIC-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516009" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385456" alias="2023-1-PMB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516010" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385457" alias="2023-1-PMB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516011" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385458" alias="2023-1-PMB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516012" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385459" alias="2023-1-PMB-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516013" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385460" alias="2023-1-PMB-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516014" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385461" alias="2023-1-PMB-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516015" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385462" alias="2023-1-PMB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516016" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385463" alias="2023-1-PMB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516017" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385464" alias="2023-1-PMB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516018" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385465" alias="2023-1-PMB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516019" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385466" alias="2023-1-PMB-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516020" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385467" alias="2023-1-PMB-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516021" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385468" alias="2023-1-PMB-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516022" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385469" alias="2023-1-PMP-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516023" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385470" alias="2023-1-PMP-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516024" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385471" alias="2023-1-VBS-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516025" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385472" alias="2023-1-VBS-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516026" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385473" alias="2023-1-VBS-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516027" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385474" alias="2023-1-VBS-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516028" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385475" alias="2023-1-VBS-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516029" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385476" alias="2023-1-VBS-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516030" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385477" alias="2023-1-VBS-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516031" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385478" alias="2023-1-VBS-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516032" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385479" alias="2023-1-VBS-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516033" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385480" alias="2023-2-ASB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516034" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385481" alias="2023-2-ASB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516035" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385482" alias="2023-2-ASB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516036" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385483" alias="2023-2-ASB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516037" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385484" alias="2023-2-ASB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516038" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385485" alias="2023-2-ASB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516039" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385486" alias="2023-2-ASB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516040" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385487" alias="2023-2-ASB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516041" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385488" alias="2023-2-ASB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516042" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385489" alias="2023-2-COM-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516043" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385490" alias="2023-2-COM-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516044" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385491" alias="2023-2-COM-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516045" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385492" alias="2023-2-COM-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516046" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385493" alias="2023-2-COM-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516047" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385494" alias="2023-2-COM-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516048" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385495" alias="2023-2-MIB-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516049" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385496" alias="2023-2-MIB-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516050" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385497" alias="2023-2-MIB-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516051" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385498" alias="2023-2-MIB-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516052" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385499" alias="2023-2-MIB-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516053" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385500" alias="2023-2-MIB-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516054" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385501" alias="2023-2-MIC-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516055" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385502" alias="2023-2-MIC-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516056" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385503" alias="2023-2-MIC-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516057" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385504" alias="2023-2-MIC-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516058" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385505" alias="2023-2-MIC-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516059" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385506" alias="2023-2-MIC-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516060" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385507" alias="2023-2-PMB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516061" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385508" alias="2023-2-PMB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516062" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385509" alias="2023-2-PMB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516063" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385510" alias="2023-2-PMB-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516064" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385511" alias="2023-2-PMB-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516065" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385512" alias="2023-2-PMB-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516066" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385513" alias="2023-2-PMB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516067" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385514" alias="2023-2-PMB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516068" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385515" alias="2023-2-PMB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516069" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385516" alias="2023-2-PMB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516070" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385517" alias="2023-2-PMB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516071" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385518" alias="2023-2-PMB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516072" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385519" alias="2023-2-PMB-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516073" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385520" alias="2023-2-PMB-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516074" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385521" alias="2023-2-PMB-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516075" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385522" alias="2023-2-VBS-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516076" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385523" alias="2023-2-VBS-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516077" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385524" alias="2023-2-VBS-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516078" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385525" alias="2023-2-VBS-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516079" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385526" alias="2023-2-VBS-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516080" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385527" alias="2023-2-VBS-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516081" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385528" alias="2023-2-VBS-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516082" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385529" alias="2023-2-VBS-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516083" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385530" alias="2023-2-VBS-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516084" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385531" alias="2024-1-ASB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516085" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385532" alias="2024-1-ASB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516086" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385533" alias="2024-1-ASB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516087" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385534" alias="2024-1-ASB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516088" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385535" alias="2024-1-ASB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516089" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385536" alias="2024-1-ASB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516090" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385537" alias="2024-1-ASB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516091" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385538" alias="2024-1-ASB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516092" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385539" alias="2024-1-ASB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516093" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385540" alias="2024-1-COM-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516094" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385541" alias="2024-1-COM-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516095" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385542" alias="2024-1-COM-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516096" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385543" alias="2024-1-COM-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516097" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385544" alias="2024-1-COM-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516098" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385545" alias="2024-1-COM-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516099" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385546" alias="2024-1-MIB-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516100" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385547" alias="2024-1-MIB-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516101" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385548" alias="2024-1-MIB-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516102" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385549" alias="2024-1-MIB-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516103" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385550" alias="2024-1-MIB-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516104" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385551" alias="2024-1-MIB-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516105" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385552" alias="2024-1-MIC-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516106" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385553" alias="2024-1-MIC-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516107" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385554" alias="2024-1-MIC-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516108" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385555" alias="2024-1-MIC-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516109" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385556" alias="2024-1-MIC-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516110" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385557" alias="2024-1-MIC-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516111" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385558" alias="2024-1-PMB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516112" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385559" alias="2024-1-PMB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516113" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385560" alias="2024-1-PMB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516114" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385561" alias="2024-1-PMB-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516115" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385562" alias="2024-1-PMB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516116" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385563" alias="2024-1-PMB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516117" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385564" alias="2024-1-PMB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516118" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385565" alias="2024-1-PMB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516119" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385566" alias="2024-1-PMB-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516120" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385567" alias="2024-1-PMB-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516121" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385568" alias="2024-1-PMB-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516122" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385569" alias="2024-1-PMP-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516123" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385570" alias="2024-1-PMP-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516124" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385571" alias="2024-1-VBS-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516125" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385572" alias="2024-1-VBS-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516126" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385573" alias="2024-1-VBS-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516127" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385574" alias="2024-1-VBS-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516128" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385575" alias="2024-1-VBS-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516129" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385576" alias="2024-1-VBS-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516130" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385577" alias="2024-1-VBS-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516131" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385578" alias="2024-1-VBS-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516132" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385579" alias="2024-1-VBS-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516133" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385580" alias="2024-2-ASB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516134" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385581" alias="2024-2-ASB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516135" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385582" alias="2024-2-ASB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516136" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385583" alias="2024-2-ASB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516137" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385584" alias="2024-2-ASB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516138" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385585" alias="2024-2-ASB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516139" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385586" alias="2024-2-ASB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516140" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385587" alias="2024-2-ASB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516141" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385588" alias="2024-2-ASB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516142" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385589" alias="2024-2-COM-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516143" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385590" alias="2024-2-COM-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516144" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385591" alias="2024-2-COM-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516145" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385592" alias="2024-2-COM-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516146" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385593" alias="2024-2-COM-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516147" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385594" alias="2024-2-COM-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516148" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385595" alias="2024-2-MIB-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516149" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385596" alias="2024-2-MIB-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516150" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385597" alias="2024-2-MIB-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516151" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385598" alias="2024-2-MIB-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516152" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385599" alias="2024-2-MIB-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516153" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385600" alias="2024-2-MIB-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516154" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385601" alias="2024-2-MIC-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516155" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385602" alias="2024-2-MIC-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516156" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385603" alias="2024-2-MIC-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516157" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385604" alias="2024-2-MIC-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516158" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385605" alias="2024-2-MIC-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516159" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385606" alias="2024-2-MIC-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516160" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385607" alias="2024-2-PMB-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516161" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385608" alias="2024-2-PMB-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516162" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385609" alias="2024-2-PMB-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516163" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385610" alias="2024-2-PMB-HC-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516164" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385611" alias="2024-2-PMB-HC-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516165" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385612" alias="2024-2-PMB-HC-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516166" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385613" alias="2024-2-PMB-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516167" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385614" alias="2024-2-PMB-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516168" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385615" alias="2024-2-PMB-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516169" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385616" alias="2024-2-PMB-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516170" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385617" alias="2024-2-PMB-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516171" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385618" alias="2024-2-PMB-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516172" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385619" alias="2024-2-PMB-SP-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516173" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385620" alias="2024-2-PMB-SP-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516174" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385621" alias="2024-2-PMB-SP-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516175" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385622" alias="2024-2-VBS-CL-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516176" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385623" alias="2024-2-VBS-CL-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516177" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385624" alias="2024-2-VBS-CL-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516178" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385625" alias="2024-2-VBS-LI-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516179" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385626" alias="2024-2-VBS-LI-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516180" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385627" alias="2024-2-VBS-LI-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516181" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385628" alias="2024-2-VBS-PR-LE-1_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516182" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385629" alias="2024-2-VBS-PR-LE-2_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516183" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385630" alias="2024-2-VBS-PR-LE-3_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516184" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385631" alias="ctrl_PCR_neg_LaforestP10_16S" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516185" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385632" alias="2022-1-ASB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516186" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385633" alias="2022-1-ASB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516187" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385634" alias="2022-1-ASB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516188" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385635" alias="2022-1-ASB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516189" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385636" alias="2022-1-ASB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516190" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385637" alias="2022-1-ASB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516191" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385638" alias="2022-1-ASB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516192" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385639" alias="2022-1-ASB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516193" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385640" alias="2022-1-ASB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516194" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385641" alias="2022-1-PMB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516195" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385642" alias="2022-1-PMB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516196" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385643" alias="2022-1-PMB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516197" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385644" alias="2022-1-PMB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516198" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385645" alias="2022-1-PMB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516199" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385646" alias="2022-1-PMB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516200" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385647" alias="2022-1-PMB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516201" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385648" alias="2022-1-PMB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516202" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385649" alias="2022-1-PMB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516203" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385650" alias="2022-1-VBS-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516204" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385651" alias="2022-1-VBS-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516205" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385652" alias="2022-1-VBS-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516206" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385653" alias="2022-1-VBS-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516207" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385654" alias="2022-1-VBS-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516208" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385655" alias="2022-1-VBS-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516209" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385656" alias="2022-1-VBS-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516210" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385657" alias="2022-1-VBS-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516211" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385658" alias="2022-1-VBS-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516212" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385659" alias="2022-2-ASB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516213" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385660" alias="2022-2-ASB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516214" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385661" alias="2022-2-ASB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516215" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385662" alias="2022-2-ASB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516216" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385663" alias="2022-2-ASB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516217" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385664" alias="2022-2-ASB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516218" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385665" alias="2022-2-ASB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516219" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385666" alias="2022-2-ASB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516220" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385667" alias="2022-2-ASB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516221" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385668" alias="2022-2-PMB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516222" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385669" alias="2022-2-PMB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516223" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385670" alias="2022-2-PMB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516224" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385671" alias="2022-2-PMB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516225" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385672" alias="2022-2-PMB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516226" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385673" alias="2022-2-PMB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516227" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385674" alias="2022-2-PMB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516228" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385675" alias="2022-2-PMB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516229" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385676" alias="2022-2-PMB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516230" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385677" alias="2022-2-VBS-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516231" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385678" alias="2022-2-VBS-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516232" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385679" alias="2022-2-VBS-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516233" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385680" alias="2022-2-VBS-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516234" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385681" alias="2022-2-VBS-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516235" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385682" alias="2022-2-VBS-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516236" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385683" alias="2022-2-VBS-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516237" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385684" alias="2022-2-VBS-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516238" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385685" alias="2022-2-VBS-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516239" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385686" alias="2023-1-ASB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516240" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385687" alias="2023-1-ASB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516241" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385688" alias="2023-1-ASB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516242" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385689" alias="2023-1-ASB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516243" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385690" alias="2023-1-ASB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516244" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385691" alias="2023-1-ASB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516245" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385692" alias="2023-1-ASB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516246" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385693" alias="2023-1-ASB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516247" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385694" alias="2023-1-ASB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516248" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385695" alias="2023-1-COM-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516249" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385696" alias="2023-1-COM-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516250" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385697" alias="2023-1-COM-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516251" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385698" alias="2023-1-COM-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516252" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385699" alias="2023-1-COM-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516253" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385700" alias="2023-1-COM-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516254" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385701" alias="2023-1-MIB-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516255" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385702" alias="2023-1-MIB-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516256" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385703" alias="2023-1-MIB-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516257" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385704" alias="2023-1-MIB-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516258" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385705" alias="2023-1-MIB-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516259" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385706" alias="2023-1-MIB-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516260" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385707" alias="2023-1-MIC-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516261" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385708" alias="2023-1-MIC-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516262" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385709" alias="2023-1-MIC-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516263" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385710" alias="2023-1-MIC-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516264" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385711" alias="2023-1-MIC-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516265" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385712" alias="2023-1-MIC-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516266" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385713" alias="2023-1-PMB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516267" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385714" alias="2023-1-PMB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516268" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385715" alias="2023-1-PMB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516269" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385716" alias="2023-1-PMB-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516270" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385717" alias="2023-1-PMB-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516271" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385718" alias="2023-1-PMB-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516272" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385719" alias="2023-1-PMB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516273" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385720" alias="2023-1-PMB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516274" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385721" alias="2023-1-PMB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516275" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385722" alias="2023-1-PMB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516276" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385723" alias="2023-1-PMB-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516277" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385724" alias="2023-1-PMB-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516278" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385725" alias="2023-1-PMB-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516279" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385726" alias="2023-1-PMP-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516280" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385727" alias="2023-1-PMP-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516281" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385728" alias="2023-1-VBS-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516282" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385729" alias="2023-1-VBS-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516283" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385730" alias="2023-1-VBS-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516284" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385731" alias="2023-1-VBS-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516285" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385732" alias="2023-1-VBS-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516286" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385733" alias="2023-1-VBS-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516287" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385734" alias="2023-1-VBS-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516288" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385735" alias="2023-1-VBS-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516289" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385736" alias="2023-1-VBS-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516290" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385737" alias="2023-2-ASB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516291" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385738" alias="2023-2-ASB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516292" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385739" alias="2023-2-ASB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516293" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385740" alias="2023-2-ASB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516294" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385741" alias="2023-2-ASB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516295" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385742" alias="2023-2-ASB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516296" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385743" alias="2023-2-ASB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516297" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385744" alias="2023-2-ASB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516298" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385745" alias="2023-2-ASB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516299" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385746" alias="2023-2-COM-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516300" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385747" alias="2023-2-COM-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516301" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385748" alias="2023-2-COM-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516302" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385749" alias="2023-2-COM-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516303" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385750" alias="2023-2-COM-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516304" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385751" alias="2023-2-COM-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516305" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385752" alias="2023-2-MIB-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516306" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385753" alias="2023-2-MIB-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516307" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385754" alias="2023-2-MIB-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516308" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385755" alias="2023-2-MIB-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516309" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385756" alias="2023-2-MIB-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516310" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385757" alias="2023-2-MIB-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516311" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385758" alias="2023-2-MIC-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516312" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385759" alias="2023-2-MIC-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516313" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385760" alias="2023-2-MIC-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516314" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385761" alias="2023-2-MIC-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516315" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385762" alias="2023-2-MIC-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516316" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385763" alias="2023-2-MIC-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516317" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385764" alias="2023-2-PMB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516318" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385765" alias="2023-2-PMB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516319" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385766" alias="2023-2-PMB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516320" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385767" alias="2023-2-PMB-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516321" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385768" alias="2023-2-PMB-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516322" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385769" alias="2023-2-PMB-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516323" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385770" alias="2023-2-PMB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516324" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385771" alias="2023-2-PMB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516325" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385772" alias="2023-2-PMB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516326" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385773" alias="2023-2-PMB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516327" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385774" alias="2023-2-PMB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516328" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385775" alias="2023-2-PMB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516329" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385776" alias="2023-2-PMB-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516330" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385777" alias="2023-2-PMB-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516331" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385778" alias="2023-2-PMB-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516332" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385779" alias="2023-2-VBS-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516333" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385780" alias="2023-2-VBS-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516334" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385781" alias="2023-2-VBS-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516335" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385782" alias="2023-2-VBS-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516336" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385783" alias="2023-2-VBS-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516337" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385784" alias="2023-2-VBS-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516338" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385785" alias="2023-2-VBS-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516339" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385786" alias="2023-2-VBS-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516340" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385787" alias="2023-2-VBS-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516341" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385788" alias="2024-1-ASB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516342" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385789" alias="2024-1-ASB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516343" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385790" alias="2024-1-ASB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516344" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385791" alias="2024-1-ASB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516345" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385792" alias="2024-1-ASB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516346" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385793" alias="2024-1-ASB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516347" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385794" alias="2024-1-ASB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516348" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385795" alias="2024-1-ASB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516349" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385796" alias="2024-1-ASB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516350" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385797" alias="2024-1-COM-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516351" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385798" alias="2024-1-COM-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516352" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385799" alias="2024-1-COM-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516353" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385800" alias="2024-1-COM-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516354" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385801" alias="2024-1-COM-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516355" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385802" alias="2024-1-COM-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516356" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385803" alias="2024-1-MIB-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516357" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385804" alias="2024-1-MIB-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516358" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385805" alias="2024-1-MIB-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516359" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385806" alias="2024-1-MIB-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516360" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385807" alias="2024-1-MIB-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516361" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385808" alias="2024-1-MIB-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516362" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385809" alias="2024-1-MIC-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516363" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385810" alias="2024-1-MIC-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516364" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385811" alias="2024-1-MIC-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516365" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385812" alias="2024-1-MIC-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516366" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385813" alias="2024-1-MIC-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516367" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385814" alias="2024-1-MIC-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516368" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385815" alias="2024-1-PMB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516369" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385816" alias="2024-1-PMB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516370" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385817" alias="2024-1-PMB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516371" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385818" alias="2024-1-PMB-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516372" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385819" alias="2024-1-PMB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516373" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385820" alias="2024-1-PMB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516374" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385821" alias="2024-1-PMB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516375" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385822" alias="2024-1-PMB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516376" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385823" alias="2024-1-PMB-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516377" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385824" alias="2024-1-PMB-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516378" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385825" alias="2024-1-PMB-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516379" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385826" alias="2024-1-PMP-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516380" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385827" alias="2024-1-PMP-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516381" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385828" alias="2024-1-VBS-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516382" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385829" alias="2024-1-VBS-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516383" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385830" alias="2024-1-VBS-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516384" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385831" alias="2024-1-VBS-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516385" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385832" alias="2024-1-VBS-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516386" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385833" alias="2024-1-VBS-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516387" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385834" alias="2024-1-VBS-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516388" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385835" alias="2024-1-VBS-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516389" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385836" alias="2024-1-VBS-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516390" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385837" alias="2024-2-ASB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516391" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385838" alias="2024-2-ASB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516392" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385839" alias="2024-2-ASB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516393" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385840" alias="2024-2-ASB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516394" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385841" alias="2024-2-ASB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516395" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385842" alias="2024-2-ASB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516396" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385843" alias="2024-2-ASB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516397" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385844" alias="2024-2-ASB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516398" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385845" alias="2024-2-ASB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516399" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385846" alias="2024-2-COM-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516400" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385847" alias="2024-2-COM-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516401" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385848" alias="2024-2-COM-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516402" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385849" alias="2024-2-COM-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516403" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385850" alias="2024-2-COM-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516404" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385851" alias="2024-2-COM-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516405" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385852" alias="2024-2-MIB-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516406" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385853" alias="2024-2-MIB-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516407" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385854" alias="2024-2-MIB-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516408" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385855" alias="2024-2-MIB-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516409" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385856" alias="2024-2-MIB-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516410" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385857" alias="2024-2-MIB-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516411" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385858" alias="2024-2-MIC-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516412" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385859" alias="2024-2-MIC-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516413" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385860" alias="2024-2-MIC-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516414" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385861" alias="2024-2-MIC-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516415" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385862" alias="2024-2-MIC-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516416" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385863" alias="2024-2-MIC-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516417" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385864" alias="2024-2-PMB-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516418" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385865" alias="2024-2-PMB-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516419" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385866" alias="2024-2-PMB-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516420" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385867" alias="2024-2-PMB-HC-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516421" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385868" alias="2024-2-PMB-HC-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516422" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385869" alias="2024-2-PMB-HC-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516423" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385870" alias="2024-2-PMB-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516424" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385871" alias="2024-2-PMB-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516425" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385872" alias="2024-2-PMB-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516426" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385873" alias="2024-2-PMB-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516427" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385874" alias="2024-2-PMB-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516428" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385875" alias="2024-2-PMB-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516429" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385876" alias="2024-2-PMB-SP-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516430" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385877" alias="2024-2-PMB-SP-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516431" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385878" alias="2024-2-PMB-SP-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516432" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385879" alias="2024-2-VBS-CL-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516433" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385880" alias="2024-2-VBS-CL-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516434" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385881" alias="2024-2-VBS-CL-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516435" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385882" alias="2024-2-VBS-LI-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516436" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385883" alias="2024-2-VBS-LI-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516437" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385884" alias="2024-2-VBS-LI-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516438" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385885" alias="2024-2-VBS-PR-LE-1_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516439" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385886" alias="2024-2-VBS-PR-LE-2_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516440" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385887" alias="2024-2-VBS-PR-LE-3_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516441" type="biosample"/>
+     </SAMPLE>
+     <SAMPLE accession="ERS31385888" alias="ctrl_PCR_neg_LaforestP10_ITS" status="PRIVATE" holdUntilDate="2028-09-28+01:00">
+          <EXT_ID accession="SAMEA123516442" type="biosample"/>
+     </SAMPLE>
+     <SUBMISSION accession="ERA37285787" alias="ena-SUBMISSION-TAB-28-09-2026-18:40:51:878-11975"/>
+     <MESSAGES>
+          <INFO>All objects in this submission are set to private status (HOLD).</INFO>
+     </MESSAGES>
+     <ACTIONS>ADD</ACTIONS>
+     <ACTIONS>HOLD</ACTIONS>
+</RECEIPT>
