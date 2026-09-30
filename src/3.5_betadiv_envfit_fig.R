@@ -95,40 +95,42 @@ arrows_3y_ITS <- envfit_arrows(pcoa_3y_wuf_ITS, ps$Fungi_3y)
 pcoa_panel <- function(scores_df, arrows, var_, subtitle) {
   ggplot(scores_df, aes(x = MDS1, y = MDS2, color = t_m, fill = t_m)) +
     
-    geom_point(shape = 21, stroke = 0, size = 2, alpha = 0.5) +
+    geom_point(shape = 21, stroke = 0, size = 3, alpha = 0.6) +
     geom_segment(
       data = arrows, aes(x = 0, y = 0, xend = MDS1, yend = MDS2), inherit.aes = FALSE,
-      arrow = arrow(length = unit(0.2, "cm")), linewidth = 0.3, alpha = 0.8) +
+      arrow = arrow(length = unit(0.2, "cm")),
+      linewidth = 0.3, alpha = 0.5) +
     geom_text_repel(
       data = arrows, inherit.aes = FALSE,
       aes(x = MDS1, y = MDS2, label = Class), 
       force_pull = 1,
-      size = 2, segment.color = NA) +
+      size = 3, segment.color = NA) +
     
     labs(
-      x = paste0("PCoA1 ", var_[1], "%"),
-      y = paste0("PCoA2 ", var_[2], "%"),
+      x = paste0("PCo1 ", var_[1], "%"),
+      y = paste0("PCo2 ", var_[2], "%"),
       subtitle = subtitle) +
     
     scale_color_manual(values = color_timman) +
     scale_fill_manual(values = fill_timman)
 }
 
-p16S_2y <- pcoa_panel(scores_pcoa_2y_wuf_16S, arrows_2y_16S, var_2y_wuf_16S, "Bacteria - 2-years")
-p16S_3y <- pcoa_panel(scores_pcoa_3y_wuf_16S, arrows_3y_16S, var_3y_wuf_16S, "Bacteria - 3-years")
-pITS_2y <- pcoa_panel(scores_pcoa_2y_wuf_ITS, arrows_2y_ITS, var_2y_wuf_ITS, "Fungi - 2-years")
-pITS_3y <- pcoa_panel(scores_pcoa_3y_wuf_ITS, arrows_3y_ITS, var_3y_wuf_ITS, "Fungi - 3-years")
+p16S_2y <- pcoa_panel(scores_pcoa_2y_wuf_16S, arrows_2y_16S, var_2y_wuf_16S, "Bacteria, 2-year samples")
+p16S_3y <- pcoa_panel(scores_pcoa_3y_wuf_16S, arrows_3y_16S, var_3y_wuf_16S, "Bacteria, 3-year samples")
+pITS_2y <- pcoa_panel(scores_pcoa_2y_wuf_ITS, arrows_2y_ITS, var_2y_wuf_ITS, "Fungi, 2-year samples")
+pITS_3y <- pcoa_panel(scores_pcoa_3y_wuf_ITS, arrows_3y_ITS, var_3y_wuf_ITS, "Fungi, 3-year samples")
 
 # Assembled 4-panel figure (Panel A-D) + arrow tables ----------------------------
 
-(p16S_2y + pITS_2y) / (p16S_3y + pITS_3y) +
+(p16S_3y + pITS_3y) / (p16S_2y + pITS_2y) +
   plot_layout(guides = "collect") +
-  plot_annotation(tag_levels = "A") &
-  labs(fill = "Time-Management", color = "Time-Management") &
-  theme_pcoa
+  plot_annotation(tag_levels = "A")  &
+  theme_pcoa &
+  theme(legend.title = element_blank(), 
+        legend.position = 'bottom')
 
-ggsave(file.path(out_dir, "PCoA_wUF_envfit_panels.pdf"),
-       bg = 'white', width = 3000, height = 2300, dpi = 300, units = "px")
+ggsave(file.path(out_dir, "PCoA_wUF_envfit.pdf"),
+       bg = 'white', width = 2800, height = 2900, dpi = 300, units = "px")
 
 save_stat_xlsx(
   file.path(out_dir, "PCoA_wUF_envfit_arrows.xlsx"), 

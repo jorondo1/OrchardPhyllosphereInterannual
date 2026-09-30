@@ -26,18 +26,21 @@ source('src/hiermod/0_INDEX.R')
 # comparable posterior SDs anyway. Worth re-checking here if SBC still
 # shows any residual asymmetry specifically on yr3.
 
-source('src/hiermod/Models/MDSY_model.R') # model_MDSY_16S, means_MDSY(), dq_MDSY
+model_MDSYz_16S <- alist(
+  likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
+  main_model = mu <- loga[Mg] + gamma*(Mo-1) + yr_eff,
+  gamma_def  = gamma <- s_conv + gap_shift*(Mg-1), # interactive Season effect
 
-model_MDSYz_16S <- model_MDSY_16S
-model_MDSYz_16S$main_model <- quote(
-  mu <- loga[Mg] + gamma*(Mo-1) + yr_eff
+  prior_loga = loga[Mg]  ~ dnorm(5,2),
+  prior_s    = s_conv    ~ dnorm(0,1),
+  prior_gs   = gap_shift ~ dnorm(0,1),
+  pr_sigma   = sigma[Mg] ~ dhalfnorm(0,1),
+
+  # Year, sum-to-zero: yr1/yr2 free, yr3 = -(yr1+yr2)
+  yr_eff_def = yr_eff <- yr1*(Yr==1) + yr2*(Yr==2) - (yr1+yr2)*(Yr==3),
+  prior_yr1  = yr1 ~ dnorm(0,1),
+  prior_yr2  = yr2 ~ dnorm(0,1)
 )
-model_MDSYz_16S$yr_eff_def <- quote(
-  yr_eff <- yr1*(Yr==1) + yr2*(Yr==2) - (yr1+yr2)*(Yr==3)
-)
-model_MDSYz_16S$prior_yr  <- NULL # drop MDSY's old yr[Yr] ~ dnorm(0,1)
-model_MDSYz_16S$prior_yr1 <- quote(yr1 ~ dnorm(0,1))
-model_MDSYz_16S$prior_yr2 <- quote(yr2 ~ dnorm(0,1))
 
 attr(model_MDSYz_16S, "name") <- "Elrond the Ageless"
 model_id_MDSYz <- "MDSYz"
@@ -54,10 +57,50 @@ model_MDSYz_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
 attr(model_MDSYz_ITS, "name") <- "Elrond the Ageless"
 
 ## means_MDSYz()/dq_MDSYz -----------------------------------------------------
-# Identical to means_MDSY()/dq_MDSY -- Year still doesn't enter the reported
-# Mg x Mo estimand or its variance, sum-to-zero or not.
-means_MDSYz <- means_MDSY
-dq_MDSYz    <- dq_MDSY
+# Same formulas as means_MDSY()/dq_MDSY -- Year still doesn't enter the
+# reported Mg x Mo estimand or its variance, sum-to-zero or not.
+
+means_MDSYz <- function(post, shift = 0){
+  total_var_conv <- post$sigma[,1]^2
+  total_var_org  <- post$sigma[,2]^2
+
+  s_conv    <- as.vector(post$s_conv)
+  gap_shift <- as.vector(post$gap_shift)
+
+  mu_conv_May  <- post$loga[,1]
+  mu_conv_July <- mu_conv_May + s_conv
+  mu_org_May   <- post$loga[,2]
+  mu_org_July  <- mu_org_May + s_conv + gap_shift
+
+  list(
+    mean = cbind(
+      lognormal_mean(mu_conv_May,  total_var_conv, shift = shift),
+      lognormal_mean(mu_conv_July, total_var_conv, shift = shift),
+      lognormal_mean(mu_org_May,   total_var_org,  shift = shift),
+      lognormal_mean(mu_org_July,  total_var_org,  shift = shift)
+    ),
+    median = cbind(
+      lognormal_mean(mu_conv_May,  0, shift = shift),
+      lognormal_mean(mu_conv_July, 0, shift = shift),
+      lognormal_mean(mu_org_May,   0, shift = shift),
+      lognormal_mean(mu_org_July,  0, shift = shift)
+    )
+  )
+}
+
+dq_MDSYz <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + sigma[2]^2 / 2) -
+    exp(loga[1] + sigma[1]^2 / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + sigma[2]^2 / 2) -
+    exp(loga[1] + s_conv +             sigma[1]^2 / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + sigma[2]^2 / 2) -
+       exp(loga[1] + s_conv +             sigma[1]^2 / 2)) -
+    (exp(loga[2] + sigma[2]^2 / 2) -
+       exp(loga[1] + sigma[1]^2 / 2))
+)
 
 ## Data-generating function ---------------------------------------------------
 # Same balanced Mg x Mo design as sim_div_MDSY(), but takes yr1/yr2 directly

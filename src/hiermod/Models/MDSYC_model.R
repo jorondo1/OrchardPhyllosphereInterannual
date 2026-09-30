@@ -28,16 +28,27 @@ source('src/hiermod/0_INDEX.R')
 # ~ dnorm(0,1) is the one new assumption -- MDLSYC's own choice, carried
 # forward as the hypothesis to validate here.
 
-source('src/hiermod/Models/MDSYz_model.R') # model_MDSYz_16S, means_MDSYz(), dq_MDSYz
+model_MDSYC_16S <- alist(
+  likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
+  main_model = mu <- loga[Mg] + gamma*(Mo-1) + yr_eff +
+    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z,
+  gamma_def  = gamma <- s_conv + gap_shift*(Mg-1), # interactive Season effect
 
-model_MDSYC_16S <- model_MDSYz_16S
-model_MDSYC_16S$main_model <- quote(
-  mu <- loga[Mg] + gamma*(Mo-1) + yr_eff +
-    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z
+  prior_loga = loga[Mg]  ~ dnorm(5,2),
+  prior_s    = s_conv    ~ dnorm(0,1),
+  prior_gs   = gap_shift ~ dnorm(0,1),
+  pr_sigma   = sigma[Mg] ~ dhalfnorm(0,1),
+
+  # Year, sum-to-zero: yr1/yr2 free, yr3 = -(yr1+yr2)
+  yr_eff_def = yr_eff <- yr1*(Yr==1) + yr2*(Yr==2) - (yr1+yr2)*(Yr==3),
+  prior_yr1  = yr1 ~ dnorm(0,1),
+  prior_yr2  = yr2 ~ dnorm(0,1),
+
+  # Covariates (standardized)
+  prior_deg    = b_deg    ~ dnorm(0,1),
+  prior_precip = b_precip ~ dnorm(0,1),
+  prior_seq    = b_seq    ~ dnorm(0,1)
 )
-model_MDSYC_16S$prior_deg    <- quote(b_deg    ~ dnorm(0,1))
-model_MDSYC_16S$prior_precip <- quote(b_precip ~ dnorm(0,1))
-model_MDSYC_16S$prior_seq    <- quote(b_seq    ~ dnorm(0,1))
 
 attr(model_MDSYC_16S, "name") <- "Radagast the Grower"
 model_id_MDSYC <- "MDSYC"
@@ -87,10 +98,22 @@ means_MDSYC <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_dept
   )
 }
 
-# SBC estimands -- identical to dq_MDSYz. b_deg/b_precip/b_seq cancel in the
-# Mg x Mo contrast at the default (z=0) reference level, same reasoning as
-# MDLSYC's own dq_MDLSYC.
-dq_MDSYC <- dq_MDSYz
+# SBC estimands -- same formulas as dq_MDSYz. b_deg/b_precip/b_seq cancel in
+# the Mg x Mo contrast at the default (z=0) reference level, same reasoning
+# as MDLSYC's own dq_MDLSYC.
+dq_MDSYC <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + sigma[2]^2 / 2) -
+    exp(loga[1] + sigma[1]^2 / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + sigma[2]^2 / 2) -
+    exp(loga[1] + s_conv +             sigma[1]^2 / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + sigma[2]^2 / 2) -
+       exp(loga[1] + s_conv +             sigma[1]^2 / 2)) -
+    (exp(loga[2] + sigma[2]^2 / 2) -
+       exp(loga[1] + sigma[1]^2 / 2))
+)
 
 ## Variance partition / Bayesian R2 -------------------------------------------
 # Adapted from the ITS lineage's own variance_partition_MDLSYC()

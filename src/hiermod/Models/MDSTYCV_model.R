@@ -4,38 +4,48 @@
 
 source('src/hiermod/0_INDEX.R')
 
-# This is not a purely mechanical merge. Direct query of the real data
-# confirms Tree is DETERMINISTICALLY NESTED in Cultivar (129/129 trees map
-# to exactly one cultivar) and in Location (129/129, though Location still
-# isn't in any model here). Cultivar's fixed effect (cv_1..cv_4, ~26 trees
-# each) and Tree's own random effect (tr[Tr]*sigma_tr, 2 obs/tree) now
-# share the exact same 129 trees for the first time -- worth testing
-# directly rather than assuming it's fine, especially since sigma_tr
-# already has documented, real fragility of its own (MDST's own SBC:
+# Nested Tree-Location-Cultivar structure, testing because sigma_tree
+# was identified as fragile (MDST's own SBC:
 # divergences + a U-shaped rank histogram tied to sparse per-tree N, see
-# MDST_model.R's header and 3.2_MDST_16S_calibration.R). The calibration
-# script (7.2) is built around exactly this question: does sigma_tr's
-# known fragility get better, worse, or stay the same once Cultivar/Year/
-# covariates are also in the model, and is it identifiable jointly with
-# cv_1..cv_4 (never tested together before)?
+# MDST_model.R and 3.2_MDST_16S_calibration.R). Calibration is made
+# to test whether that nestedness carries the same fragility.
 #
 # loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2/cv_1/cv_3/cv_4/cv_5/b_deg/
 # b_precip/b_seq are MDSYCV's own validated answer, hardcoded as this
-# model's starting point. sigma_tr ~ dhalfnorm(0,1) is MDST's own validated
-# answer for that parameter (the tightened dlnorm(log(0.15),0.5) attempt
-# didn't fully resolve MDST's own fragility either, so no reason to prefer
-# it over the simpler, equally-imperfect dhalfnorm(0,1) as a starting
-# point here) -- tr[Tr] ~ dnorm(0,1) is the standard non-centered form.
+# model's starting point. 
 
-source('src/hiermod/Models/MDSYCV_model.R') # model_MDSYCV_16S, means_MDSYCV(), dq_MDSYCV
+model_MDSTYCV_16S <- alist(
+  likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
+  main_model = mu <- loga[Mg] + gamma*(Mo-1) + yr_eff + cv_eff + tr[Tr]*sigma_tr +
+    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z,
+  gamma_def  = gamma <- s_conv + gap_shift*(Mg-1), # interactive Season effect
 
-model_MDSTYCV_16S <- model_MDSYCV_16S
-model_MDSTYCV_16S$main_model <- quote(
-  mu <- loga[Mg] + gamma*(Mo-1) + yr_eff + cv_eff + tr[Tr]*sigma_tr +
-    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z
+  prior_loga = loga[Mg]  ~ dnorm(5,2),
+  prior_s    = s_conv    ~ dnorm(0,1),
+  prior_gs   = gap_shift ~ dnorm(0,1),
+  pr_sigma   = sigma[Mg] ~ dhalfnorm(0,1),
+
+  # Year, sum-to-zero: yr1/yr2 free, yr3 = -(yr1+yr2)
+  yr_eff_def = yr_eff <- yr1*(Yr==1) + yr2*(Yr==2) - (yr1+yr2)*(Yr==3),
+  prior_yr1  = yr1 ~ dnorm(0,1),
+  prior_yr2  = yr2 ~ dnorm(0,1),
+
+  # Covariates (standardized)
+  prior_deg    = b_deg    ~ dnorm(0,1),
+  prior_precip = b_precip ~ dnorm(0,1),
+  prior_seq    = b_seq    ~ dnorm(0,1),
+
+  # Cultivar, sum-to-zero: cv_1/cv_3/cv_4/cv_5 free, cv_2 (Liberty) derived
+  cv_eff_def = cv_eff <- cv_1*(Cv==1) + cv_3*(Cv==3) + cv_4*(Cv==4) + cv_5*(Cv==5) - (cv_1+cv_3+cv_4+cv_5)*(Cv==2),
+  prior_cv1  = cv_1 ~ dnorm(0,1),
+  prior_cv3  = cv_3 ~ dnorm(0,1),
+  prior_cv4  = cv_4 ~ dnorm(0,1),
+  prior_cv5  = cv_5 ~ dnorm(0,1),
+
+  # Tree, non-centered random effect
+  prior_tr    = tr[Tr]   ~ dnorm(0,1),
+  pr_sigma_tr = sigma_tr ~ dhalfnorm(0,1)
 )
-model_MDSTYCV_16S$prior_tr    <- quote(tr[Tr]   ~ dnorm(0,1))
-model_MDSTYCV_16S$pr_sigma_tr <- quote(sigma_tr ~ dhalfnorm(0,1))
 
 attr(model_MDSTYCV_16S, "name") <- "Saruman the Fool"
 model_id_MDSTYCV <- "MDSTYCV"
@@ -100,35 +110,26 @@ dq_MDSTYCV <- SBC::derived_quantities(
 )
 
 ## variance_partition_MDSTYCV() --------------------------------------------------
-# Reports a marginal ("by margin", order-free) decomposition via the shared
-# variance_partition_panels() engine (postcontrast_helpers.R).
+# Bayesian R2 partition (see doc/R2_methods.txt). Default: Shapley/LMG shares
+# (variance_partition_lmg(), non-negative, sum to the explained fraction) with
+# Management x Season split into effect-coded Management / Season /
+# interaction terms (mgmo_effect_terms(), postcontrast_helpers.R).
 #
-# Management x Season is kept as ONE combined term (loga[Mg] + gamma_term),
-# not split into Management/Season/interaction -- splitting them was tried
-# and produced a strongly negative "by margin" share for the interaction
-# (median ~ -0.33 in the real 16S fit). That's not confounding in the usual
-# ANOVA sense -- it's that this function's "marginal" share is a no-refit
-# shortcut (var(full) - var(full minus term), holding every OTHER
-# coefficient fixed at its joint full-model value), which lacks the
-# projection-based non-negativity guarantee a real refit-based ANOVA/
-# PERMANOVA Type III SS has. Management (loga[Mg]) and the interaction
-# (gap_shift*(Mg-1)*(Mo-1)) are raw 0/1-indicator coded (unlike Year/
-# Cultivar's sum-to-zero coding), so they aren't orthogonal by construction
-# -- in this fit, gap_shift and the loga[Mg] contrast have opposite signs
-# (Organic starts lower in May but climbs more steeply by July), which
-# drives a large negative cross term. Combining them back into one term
-# sidesteps the issue entirely (a term's marginal share vs. itself is just
-# its own variance). method = "lmg" gives the Shapley/LMG version instead
-# (variance_partition_lmg(), non-negative shares).
+# Why effect coding: the model's own Management (loga[Mg]) and interaction
+# (gap_shift*(Mg-1)*(Mo-1)) terms are 0/1-dummy coded, so they overlap
+# heavily -- splitting them as-is gave a strongly negative "by margin"
+# interaction share (median ~ -0.33 in the real 16S fit), and even Shapley
+# over-credits the interaction under dummy coding. Recentring each piece
+# around the grand mean makes the three orthogonal, so the split no longer
+# depends on the reference level.
 #
-# Tree is a proper per-observation term (realized tr[Tr] draws x sigma_tr,
-# like Year/Cultivar's own realized-level construction) instead of the old
-# bulk sigma_tr^2/total bolt-on that was commented out of this model's total
-# entirely -- Tree is included in the explained/total variance here for the
-# first time, matching variance_partition_MDSTYCL()'s own (already-included)
-# treatment for the first time.
+# method = "margin" gives the older no-refit shortcut (variance_partition_panels(),
+# can go negative); split_mgmo = FALSE keeps Management x Season as one term.
+#
+# Tree is a per-observation term (realized tr[Tr] draws x sigma_tr), like
+# Year/Cultivar's own realized-level construction.
 
-variance_partition_MDSTYCV <- function(post, dat, method = c("margin", "lmg")){
+variance_partition_MDSTYCV <- function(post, dat, method = c("lmg", "margin"), split_mgmo = TRUE){
   method <- match.arg(method)
   yr3    <- -(as.vector(post$yr1) + as.vector(post$yr2))
   yr_obs <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]
@@ -152,9 +153,10 @@ variance_partition_MDSTYCV <- function(post, dat, method = c("margin", "lmg")){
     "Precipitation"        = outer(as.vector(post$b_precip), dat$precip_72h_z),
     "Year"                 = yr_obs,
     "Cultivar"             = cv_obs,
-    "Tree"                 = tree_obs,
-    "Management x Season"  = loga_obs + gamma_term
+    "Tree"                 = tree_obs
   )
+  if (split_mgmo) terms <- c(terms, mgmo_effect_terms(loga_obs + gamma_term, dat$Mg, dat$Mo))
+  else terms[["Management x Season"]] <- loga_obs + gamma_term
 
   if (method == "lmg") variance_partition_lmg(terms, residual_var)
   else variance_partition_panels(terms, residual_var)

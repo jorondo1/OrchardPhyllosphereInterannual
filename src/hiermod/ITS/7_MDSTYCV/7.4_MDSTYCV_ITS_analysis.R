@@ -1,7 +1,6 @@
 # MODEL 7 (MDSTYCV, "Saruman the Fool"), ITS, SHIFTED
 
 hiermod_marker <- "ITS"
-source('src/hiermod/0_SETUP.R')
 source('src/hiermod/Models/MDSTYCV_model.R') 
 hiermod_out_dir <- "out/hiermod/ITS_7_tree_full_MDSTYCV"
 
@@ -22,13 +21,13 @@ pc_estimands_medians <- pc_estimands$medians
 
 
 ## Variance partition -----------------------------------------------------------
-# variance_partition_MDSTYCV() needs raw extract.samples(). "By margin"
-# (no-refit shortcut, can go negative) next to Shapley/LMG (non-negative,
-# sums to 1) -- see variance_partition_MDSTYCV()'s own comment (MDSTYCV_model.R).
+# Needs raw extract.samples() (plain matrices), not `pf`. Shapley/LMG shares
+# with Management / Season / interaction effect-coded -- see the model file's
+# variance_partition_*() comment and doc/R2_methods.txt.
 
 post_raw <- extract.samples(fit_MDSTYCV)
 pc_varpart <- 
-  variance_partition_MDSTYCV(post_raw, dat_MDSTYCV, method = "lmg")
+  variance_partition_MDSTYCV(post_raw, dat_MDSTYCV)
 
 p_varpart <- pc_varpart %>%
   ggplot(aes(x = value, y = group, fill = group, height = after_stat(ndensity))) +
@@ -53,7 +52,7 @@ save_gg("fit_variance_partition", model_id_MDSTYCV, p_varpart, width = 12, heigh
 pc_all <- bind_rows(
   compute_contrasts(pf, keep = setdiff(names(pf), c("tr", "mean", "median")), group_levels = idx$Mg$levels),
   pc_estimands_means, pc_estimands_medians, pc_varpart)
-save_posterior_kable("ITS_results_report", model_id_MDSTYCV, pc_all)
+save_posterior_kable("results_report", model_id_MDSTYCV, pc_all)
 
 ## Management x Season contrasts -----------------------------------------------
 
@@ -90,3 +89,8 @@ sigma_contrast_MDSTYCV <- pc_sigma %>% dplyr::filter(group == "Contrast") %>% dp
 cat(sprintf(
   "sigma[Mg] contrast (Organic - Conventional), MDSTYCV: median %.3f, 89%% PI [%.3f, %.3f]\n",
   median(sigma_contrast_MDSTYCV), PI(sigma_contrast_MDSTYCV)[1], PI(sigma_contrast_MDSTYCV)[2]))
+
+
+## Exports for MS plots ----------
+
+saveRDS(pc_varpart, file.path(hiermod_out_dir, paste0('varpart_', model_id_MDSTYCV, '.rds')), compress = 'xz')

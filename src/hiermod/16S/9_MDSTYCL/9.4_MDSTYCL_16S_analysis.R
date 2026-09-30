@@ -22,10 +22,9 @@ pc_estimands_means   <- pc_estimands$means
 pc_estimands_medians <- pc_estimands$medians
 
 ## Variance partition -----------------------------------------------------------
-# Marginal ("by margin") decomposition only -- see
-# variance_partition_MDSTYCL()'s own comment (MDSTYCL_model.R) for why
-# Management x Season stays one combined term rather than splitting into
-# main effects + interaction.
+# Needs raw extract.samples() (plain matrices), not `pf`. Shapley/LMG shares
+# with Management / Season / interaction effect-coded -- see the model file's
+# variance_partition_*() comment and doc/R2_methods.txt.
 
 post_raw <- extract.samples(fit_MDSTYCL)
 pc_varpart <- variance_partition_MDSTYCL(post_raw, dat_MDSTYCL)
@@ -37,7 +36,7 @@ p_varpart <- pc_varpart %>%
   geom_vline(xintercept = 0, colour = "grey50", linetype = "dashed") +
   scale_fill_manual(values = Variance_partition_palette) +
   labs(x = "Fraction of total variance", y = NULL, fill = NULL,
-       title = "Variance partition (Bayesian R2, by margin)") +
+       title = "Variance partition (Bayesian R2)") +
   theme(legend.position = "none"); p_varpart
 
 save_gg("fit_variance_partition", model_id_MDSTYCL, p_varpart, width = 8, height = 4)

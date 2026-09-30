@@ -8,8 +8,6 @@ source('src/utils/postcontrast_helpers.R')
 source('src/utils/predictive_checks.R')
 source('src/0.0_Config.R')
 
-conflicts_prefer(posterior::var)
-
 # for contrast panels:
 Management_palette <- c(fill_mg[c("Conventional", "Organic")], Contrast = "#98494d", Population = "#895a92")
 
@@ -20,6 +18,8 @@ cov_pal    <- setNames(unname(env_var_colors[c("deg_h", "precip_72h", "seq_depth
 
 # Variance-partition panel colours (Model 5+, variance_partition_*()'s own marginal decomposition,
 Variance_partition_palette <- c(
+  "Management"          = "#2E4A7D",
+  "Season"              = "#C9A227",
   "Management x Season" = "#4C72B0",
   "Year"                = "#A95571",
   "Precipitation"       = "#7D702E",

@@ -103,12 +103,14 @@ report_contrasts_full <- function(pc_full, labels = TRUE, all_groups = FALSE){
   # input, so this has to short-circuit before summarise() ever runs, not
   # rely on 0-row grouping to no-op safely (confirmed: it doesn't).
   if (nrow(filtered) == 0) {
-    return(tibble(
+    empty <- tibble(
       statistic = factor(character(0), levels = levels(pc_full$statistic)),
       group = character(0), mean = numeric(0), median = numeric(0),
       HPDI_lower = numeric(0), HPDI_upper = numeric(0),
       PI89_lower = numeric(0), PI89_upper = numeric(0),
-      pd = numeric(0)))
+      pd = numeric(0))
+    # same columns as the non-empty path, so aes(label = label) still resolves
+    return(if (labels) mutate(empty, label = character(0)) else empty)
   }
   # /debug :::::::::::: thank you CLaude
   
@@ -359,10 +361,10 @@ build_pc_estimands <- function(pf, group_levels = c("1", "2")){
 # (not mean-centered) per-observation values are strongly (anti-)correlated
 # with the rest of the linear predictor can come out negative -- this isn't
 # a bug, it's a real signature of non-orthogonal/confounded term coding
-# under this no-refit shortcut, and it's exactly why Management x Season's
-# main effects + interaction get combined back into one term (see
-# variance_partition_MDSTYCV()'s own comment) rather than split three ways.
-# See variance_partition_lmg() below for the order-averaged alternative.
+# under this no-refit shortcut. Management x Season is therefore split via
+# mgmo_effect_terms() (effect-coded, orthogonal) rather than the model's raw
+# dummy coding. See variance_partition_lmg() below for the order-averaged
+# alternative (the default in the model files).
 # /thanks claude :::::::::::::::
 
 variance_partition_panels <- function(terms, residual_var){
@@ -384,38 +386,57 @@ variance_partition_panels <- function(terms, residual_var){
     )
 }
 
+# Effect-coded Management x Season split (Gelman 2005 "batches"): takes the
+# combined per-observation Mg x Mo contribution (draws x n_obs, dummy-coded as
+# in the model: loga[Mg] + gamma*(Mo-1)) and re-expresses it per draw as
+# grand mean + Management main effect + Season main effect + interaction,
+# each main effect = its level's observation-weighted mean minus the grand
+# mean, interaction = the remainder. The three pieces are orthogonal when
+# Mg x Mo cell counts are proportional (every tree sampled in both months),
+# so their shares no longer depend on the model's reference-level coding.
+# The grand mean is dropped: it is constant per draw and carries no variance.
+
+mgmo_effect_terms <- function(mgmo, Mg, Mo){
+  grand <- rowMeans(mgmo)
+  level_means <- function(g){
+    lv <- sort(unique(g))
+    M  <- sapply(lv, function(l) rowMeans(mgmo[, g == l, drop = FALSE]))
+    M[, base::match(g, lv), drop = FALSE] - grand
+  }
+  mg_eff <- level_means(Mg)
+  mo_eff <- level_means(Mo)
+  list(
+    "Management"          = mg_eff,
+    "Season"              = mo_eff,
+    "Management x Season" = mgmo - grand - mg_eff - mo_eff
+  )
+}
+
 # Shapley/LMG version: same inputs and output shape as variance_partition_panels().
-# Per draw, regress the linear predictor on the term contributions (one free
-# slope each); a term's share is its R2 gain averaged over every order of
-# adding terms. Shares are >= 0 and sum to the explained fraction.
-# 2^K regressions per draw, so it runs on n_draws evenly spaced draws.
+# Per draw, sensitivity::lmg() (Lindeman et al. 1980; Groemping 2006) regresses
+# the linear predictor on the term contributions (one column per term) and
+# returns each term's R2 gain averaged over every order of adding terms. The
+# full model's R2 is 1 by construction (the linear predictor IS the sum of the
+# terms), so the LMG values split the explained variance; they are rescaled
+# here to shares of total (explained + residual) variance. Shares are >= 0.
+# 2^K regressions per draw (~0.06 s at K = 9), so it runs on n_draws evenly
+# spaced draws.
 
 variance_partition_lmg <- function(terms, residual_var, n_draws = 1000){
+  if (!requireNamespace("sensitivity", quietly = TRUE)) stop("Needs the 'sensitivity' package.")
   nm <- names(terms)
   K  <- length(nm)
   draws <- unique(round(seq(1, length(residual_var), length.out = n_draws)))
 
-  # all 2^K subsets; row index = 1 + sum(2^(j-1)) over included terms j
-  subsets <- as.matrix(expand.grid(rep(list(c(FALSE, TRUE)), K)))
-  size    <- rowSums(subsets)
-  # Shapley weight of adding a term to a subset of this size
-  w <- ifelse(size < K, factorial(size) * factorial(pmax(K - size - 1, 0)) / factorial(K), 0)
-
   res <- t(vapply(draws, function(s){
-    X <- scale(sapply(terms, function(m) m[s, ]), scale = FALSE)
+    X <- as.data.frame(sapply(terms, function(m) m[s, ]))
     y <- rowSums(X)
-    G <- crossprod(X)
-    b <- crossprod(X, y)
-    r2 <- apply(subsets, 1, function(S)
-      if (!any(S)) 0 else sum(b[S] * solve(G[S, S, drop = FALSE], b[S])) / sum(y^2))
-
-    shapley <- vapply(seq_len(K), function(j){
-      without <- which(!subsets[, j])
-      sum(w[without] * (r2[without + 2^(j - 1)] - r2[without]))
-    }, numeric(1))
+    # every full-model fit is exact (y = sum of X), hence lm()'s "essentially
+    # perfect fit" warnings -- expected here, so muffled
+    lmg_vals <- suppressWarnings(sensitivity::lmg(X, y))$lmg[, 1]
 
     explained <- var(y)
-    c(shapley * explained, residual_var[s]) / (explained + residual_var[s])
+    c(lmg_vals * explained, residual_var[s]) / (explained + residual_var[s])
   }, numeric(K + 1)))
   colnames(res) <- c(nm, "Residual")
 

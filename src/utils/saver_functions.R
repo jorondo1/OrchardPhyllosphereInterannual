@@ -23,9 +23,10 @@ save_fit <- function(name, step, fit, dir = hiermod_out_dir){
 # mcmc_pairs() on tens of thousands of draws): a vector PDF of that many
 # points balloons to tens of MB, a rasterized PNG doesn't.
 save_gg <- function(name, step, plot = ggplot2::last_plot(), width = 10, height = 8,
-                    dir = hiermod_out_dir, type = "pdf", dpi = 150){
+                    dir = hiermod_out_dir, type = "pdf", dpi = 150, prefix = hiermod_marker){
+  
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
-  path <- file.path(dir, paste0(name, "_", step, ".", type))
+  path <- file.path(dir, paste0(prefix, "_", name, "_", step, ".", type))
   ggsave(path, plot = plot, width = width, height = height, dpi = dpi)
   invisible(path)
   message("Saved to ", path)
@@ -35,9 +36,9 @@ save_gg <- function(name, step, plot = ggplot2::last_plot(), width = 10, height 
 # PDF; pass the plotting code as a zero-arg function, e.g.
 #   save_pdf("fit_pairs", "MDL", function() pairs(fit_MDL_sim, pars = c("sigma_loc","b[1]","b[2]")))
 save_pdf <- function(name, step, plot_call, width = 10, height = 8,
-                     dir = hiermod_out_dir){
+                     dir = hiermod_out_dir, prefix = hiermod_marker){
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
-  path <- file.path(dir, paste0(name, "_", step, ".pdf"))
+  path <- file.path(dir, paste0(prefix, "_", name, "_", step, ".pdf"))
   pdf(path, width = width, height = height)
   plot_call()
   dev.off()
@@ -118,9 +119,13 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
 }
 
 # Comprehensive posterior summary 
-save_posterior_kable <- function(name, step, pc_full, dir = hiermod_out_dir, caption = NULL, all_groups = TRUE){
+save_posterior_kable <- function(
+    name, step, pc_full, 
+    dir = hiermod_out_dir, prefix = hiermod_marker,
+    caption = NULL, all_groups = TRUE, three_digits = FALSE){
+  
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
-  path <- file.path(dir, paste0(name, "_", step, ".html"))
+  path <- file.path(dir, paste0(prefix, name, "_", step, ".html"))
   
   base_tbl <- report_contrasts_full(pc_full, all_groups = all_groups) %>% 
     dplyr::select(statistic, group, median, HPDI_lower, HPDI_upper, pd)
@@ -129,13 +134,19 @@ save_posterior_kable <- function(name, step, pc_full, dir = hiermod_out_dir, cap
     bind_rows(
       filter(., str_detect(statistic, "fold")) %>%
         mutate(
-          across(where(is.numeric), ~ 1 / .x),
+          median = 1 / median,
+          # 1/x reverses order, so the bounds swap; pd is not a ratio, left as is
+          HPDI_lower_inv = 1 / HPDI_upper,
+          HPDI_upper     = 1 / HPDI_lower,
+          HPDI_lower     = HPDI_lower_inv,
           statistic = paste(statistic, "(inverse)")
-        )
+        ) %>%
+        dplyr::select(-HPDI_lower_inv)
     )
   
   # digits conditions
-  is_vp <- str_detect(with_inverse$statistic, "Variance partition")
+  # three_digits = TRUE forces 3 decimals on every row (e.g. a variance-partition-only table)
+  is_vp <- three_digits | str_detect(with_inverse$statistic, "Variance partition")
   
   with_inverse %>%
     mutate(across(
