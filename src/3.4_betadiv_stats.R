@@ -4,6 +4,7 @@
 # 2y/3y and their May/July splits.
 
 pacman::p_load(tidyverse, vegan, update = FALSE)
+set.seed(230726)
 
 #source('src/0.0_Config.R')
 source('src/utils/beta_div_saver.R') # save_stat_xlsx()
@@ -103,8 +104,7 @@ disp_specs <- disp_models %>%
   crossing(Kingdom = c("Bacteria", "Fungi")) %>%
   unnest_longer(factors, values_to = "Factor")
 
-set.seed(230726)
-dispersion <- disp_specs %>%
+set.seed(230726); dispersion <- disp_specs %>%
   mutate(res = pmap(list(Kingdom, slot, Factor), \(k, s, f) {
     sub <- betadiv[[k]][[s]]
     stopifnot(identical(labels(sub$Dist$wuf), as.character(sub$Meta$Sample)))
@@ -116,14 +116,14 @@ dispersion <- disp_specs %>%
       p = pt$tab$`Pr(>F)`[1],
       # mean distance to group centroid: which group is more dispersed
       `Mean distance to centroid` = paste(
-        sprintf("%s: %.3f", levels(grp), tapply(bd$distances, grp, mean)), collapse = "; "))
+        sprintf("%s: %.2f", levels(grp), tapply(bd$distances, grp, mean)), collapse = "; "))
   })) %>%
   unnest(res) %>%
-  mutate(`p (BH)` = p.adjust(p, method = "BH"),
+  mutate(`p (BH)` = round(p.adjust(p, method = "BH"), 3),
          Kingdom = factor(Kingdom, levels = c("Bacteria", "Fungi")),
          Model   = factor(Model, levels = disp_models$Model)) %>%
   arrange(Kingdom, Model) %>%
-  select(Kingdom, Model, Factor, F, p, `p (BH)`, `Mean distance to centroid`)
+  select(Kingdom, Model, Factor, `p (BH)`, `Mean distance to centroid`)
 
 save_stat_kable("out/manuscript/betadiv_betadisper.html", dispersion, rownames_to = NULL,
   caption = paste(

@@ -28,10 +28,18 @@ prev <- imap(relab.ls, function(relab.tibble, Kingdom) {
       Species_cluster %in% names(fungi_label_overrides),
       fungi_label_overrides[Species_cluster],
       Species_cluster
-    ))
+    ),
+    Kingdom = case_when(
+      Kingdom == 'Fungi' ~ 'F',
+      TRUE ~ 'B'
+    ), 
+    across(where(is.character),    
+           ~ if_else(str_detect(.x, "Incertae"), "Unclassified", .x)
+))
 }) %>% 
   list_rbind() %>% 
-  arrange(desc(prev))
+  arrange(desc(prev)) %>% 
+  mutate(across(where(is.numeric), ~ round(.x, 3)))
 
 print(prev, n = 100)
 
