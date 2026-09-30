@@ -38,22 +38,35 @@ source('src/hiermod/0_INDEX.R')
 # same prior family as sigma_tr, so any difference in behaviour is about
 # the 5-level cardinality/nesting, not a different prior choice.
 
-source('src/hiermod/Models/MDSTYCV_model.R') # model_MDSTYCV_16S/ITS, means_MDSTYCV(), dq_MDSTYCV
+model_MDSTYCVr_16S <- alist(
+  likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
+  main_model = mu <- loga[Mg] + gamma*(Mo-1) + yr_eff + cv[Cv]*sigma_cv + tr[Tr]*sigma_tr +
+    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z,
+  gamma_def  = gamma <- s_conv + gap_shift*(Mg-1), # interactive Season effect
 
-model_MDSTYCVr_16S <- model_MDSTYCV_16S
-model_MDSTYCVr_16S$main_model <- quote(
-  mu <- loga[Mg] + gamma*(Mo-1) + yr_eff + cv[Cv]*sigma_cv + tr[Tr]*sigma_tr +
-    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z
+  prior_loga = loga[Mg]  ~ dnorm(5,2),
+  prior_s    = s_conv    ~ dnorm(0,1),
+  prior_gs   = gap_shift ~ dnorm(0,1),
+  pr_sigma   = sigma[Mg] ~ dhalfnorm(0,1),
+
+  # Year, sum-to-zero: yr1/yr2 free, yr3 = -(yr1+yr2)
+  yr_eff_def = yr_eff <- yr1*(Yr==1) + yr2*(Yr==2) - (yr1+yr2)*(Yr==3),
+  prior_yr1  = yr1 ~ dnorm(0,1),
+  prior_yr2  = yr2 ~ dnorm(0,1),
+
+  # Covariates (standardized)
+  prior_deg    = b_deg    ~ dnorm(0,1),
+  prior_precip = b_precip ~ dnorm(0,1),
+  prior_seq    = b_seq    ~ dnorm(0,1),
+
+  # Tree, non-centered random effect
+  prior_tr    = tr[Tr]   ~ dnorm(0,1),
+  pr_sigma_tr = sigma_tr ~ dhalfnorm(0,1),
+
+  # Cultivar, non-centered random effect
+  prior_cv    = cv[Cv]   ~ dnorm(0,1),
+  pr_sigma_cv = sigma_cv ~ dhalfnorm(0,1)
 )
-# Drop MDSTYCV's fixed sum-to-zero Cultivar construction.
-model_MDSTYCVr_16S$cv_eff_def <- NULL
-model_MDSTYCVr_16S$prior_cv1  <- NULL
-model_MDSTYCVr_16S$prior_cv3  <- NULL
-model_MDSTYCVr_16S$prior_cv4  <- NULL
-model_MDSTYCVr_16S$prior_cv5  <- NULL
-
-model_MDSTYCVr_16S$prior_cv    <- quote(cv[Cv]   ~ dnorm(0,1))
-model_MDSTYCVr_16S$pr_sigma_cv <- quote(sigma_cv ~ dhalfnorm(0,1))
 
 attr(model_MDSTYCVr_16S, "name") <- "Gimli the Greedy"
 model_id_MDSTYCVr <- "MDSTYCVr"

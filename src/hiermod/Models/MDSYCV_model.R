@@ -31,20 +31,34 @@ source('src/hiermod/0_INDEX.R')
 # MDSYC's own validated answer, hardcoded as this model's starting point.
 # cv_1/cv_3/cv_4/cv_5 ~ dnorm(0,1) is the one new assumption to validate.
 
-source('src/hiermod/Models/MDSYC_model.R') # model_MDSYC_16S, means_MDSYC(), dq_MDSYC
+model_MDSYCV_16S <- alist(
+  likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
+  main_model = mu <- loga[Mg] + gamma*(Mo-1) + yr_eff + cv_eff +
+    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z,
+  gamma_def  = gamma <- s_conv + gap_shift*(Mg-1), # interactive Season effect
 
-model_MDSYCV_16S <- model_MDSYC_16S
-model_MDSYCV_16S$main_model <- quote(
-  mu <- loga[Mg] + gamma*(Mo-1) + yr_eff + cv_eff +
-    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z
+  prior_loga = loga[Mg]  ~ dnorm(5,2),
+  prior_s    = s_conv    ~ dnorm(0,1),
+  prior_gs   = gap_shift ~ dnorm(0,1),
+  pr_sigma   = sigma[Mg] ~ dhalfnorm(0,1),
+
+  # Year, sum-to-zero: yr1/yr2 free, yr3 = -(yr1+yr2)
+  yr_eff_def = yr_eff <- yr1*(Yr==1) + yr2*(Yr==2) - (yr1+yr2)*(Yr==3),
+  prior_yr1  = yr1 ~ dnorm(0,1),
+  prior_yr2  = yr2 ~ dnorm(0,1),
+
+  # Covariates (standardized)
+  prior_deg    = b_deg    ~ dnorm(0,1),
+  prior_precip = b_precip ~ dnorm(0,1),
+  prior_seq    = b_seq    ~ dnorm(0,1),
+
+  # Cultivar, sum-to-zero: cv_1/cv_3/cv_4/cv_5 free, cv_2 (Liberty) derived
+  cv_eff_def = cv_eff <- cv_1*(Cv==1) + cv_3*(Cv==3) + cv_4*(Cv==4) + cv_5*(Cv==5) - (cv_1+cv_3+cv_4+cv_5)*(Cv==2),
+  prior_cv1  = cv_1 ~ dnorm(0,1),
+  prior_cv3  = cv_3 ~ dnorm(0,1),
+  prior_cv4  = cv_4 ~ dnorm(0,1),
+  prior_cv5  = cv_5 ~ dnorm(0,1)
 )
-model_MDSYCV_16S$cv_eff_def <- quote(
-  cv_eff <- cv_1*(Cv==1) + cv_3*(Cv==3) + cv_4*(Cv==4) + cv_5*(Cv==5) - (cv_1+cv_3+cv_4+cv_5)*(Cv==2)
-)
-model_MDSYCV_16S$prior_cv1 <- quote(cv_1 ~ dnorm(0,1))
-model_MDSYCV_16S$prior_cv3 <- quote(cv_3 ~ dnorm(0,1))
-model_MDSYCV_16S$prior_cv4 <- quote(cv_4 ~ dnorm(0,1))
-model_MDSYCV_16S$prior_cv5 <- quote(cv_5 ~ dnorm(0,1))
 
 attr(model_MDSYCV_16S, "name") <- "Bombadil the Eldest"
 model_id_MDSYCV <- "MDSYCV"
@@ -58,12 +72,54 @@ model_MDSYCV_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
 attr(model_MDSYCV_ITS, "name") <- "Bombadil the Eldest"
 
 ## means_MDSYCV()/dq_MDSYCV ----------------------------------------------------
-# Identical to means_MDSYC()/dq_MDSYC -- Cultivar, like Year, doesn't enter
-# the reported Mg x Mo estimand or its variance (assigned independently of
-# Mg x Mo in the simulator, reported at the default/average level on real
-# data).
-means_MDSYCV <- means_MDSYC
-dq_MDSYCV    <- dq_MDSYC
+# Same formulas as means_MDSYC()/dq_MDSYC -- Cultivar, like Year, doesn't
+# enter the reported Mg x Mo estimand or its variance (assigned
+# independently of Mg x Mo in the simulator, reported at the default/average
+# level on real data).
+
+means_MDSYCV <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
+  total_var_conv <- post$sigma[,1]^2
+  total_var_org  <- post$sigma[,2]^2
+
+  s_conv    <- as.vector(post$s_conv)
+  gap_shift <- as.vector(post$gap_shift)
+  covariate_offset <- as.vector(post$b_deg)*deg_h_z + as.vector(post$b_precip)*precip_72h_z +
+    as.vector(post$b_seq)*seq_depth_z
+
+  mu_conv_May  <- post$loga[,1] + covariate_offset
+  mu_conv_July <- mu_conv_May + s_conv
+  mu_org_May   <- post$loga[,2] + covariate_offset
+  mu_org_July  <- mu_org_May + s_conv + gap_shift
+
+  list(
+    mean = cbind(
+      lognormal_mean(mu_conv_May,  total_var_conv, shift = shift),
+      lognormal_mean(mu_conv_July, total_var_conv, shift = shift),
+      lognormal_mean(mu_org_May,   total_var_org,  shift = shift),
+      lognormal_mean(mu_org_July,  total_var_org,  shift = shift)
+    ),
+    median = cbind(
+      lognormal_mean(mu_conv_May,  0, shift = shift),
+      lognormal_mean(mu_conv_July, 0, shift = shift),
+      lognormal_mean(mu_org_May,   0, shift = shift),
+      lognormal_mean(mu_org_July,  0, shift = shift)
+    )
+  )
+}
+
+dq_MDSYCV <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + sigma[2]^2 / 2) -
+    exp(loga[1] + sigma[1]^2 / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + sigma[2]^2 / 2) -
+    exp(loga[1] + s_conv +             sigma[1]^2 / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + sigma[2]^2 / 2) -
+       exp(loga[1] + s_conv +             sigma[1]^2 / 2)) -
+    (exp(loga[2] + sigma[2]^2 / 2) -
+       exp(loga[1] + sigma[1]^2 / 2))
+)
 
 ## variance_partition_MDSYCV() --------------------------------------------------
 # Same as variance_partition_MDSYC() plus Cultivar as its own group,

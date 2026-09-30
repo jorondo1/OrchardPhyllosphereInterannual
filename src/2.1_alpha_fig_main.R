@@ -1,56 +1,46 @@
 # Alpha diversity figuress
 
-pacman::p_load(tidyverse, purrr, patchwork)
+pacman::p_load(tidyverse, patchwork)
+
+source('src/hiermod/0_SETUP.R') # also loads postcontrast_helpers.R, saver_functions.R
 
 ## Setup -----------------------------------------------
 
 pc_MDSTYCV_16S <- readRDS("out/hiermod/16S_7_tree_full_MDSTYCV/pc_MDSTYCV.rds")
 pc_MDSTYCV_ITS <- readRDS("out/hiermod/ITS_7_tree_full_MDSTYCV/pc_MDSTYCV.rds")
 
-source('src/utils/postcontrast_helpers.R')
-source('src/hiermod/0_SETUP.R')
-
-# Old plot version:
-contrast_plot_panels(
-  pc_MDSTYCV_16S$means, quant = c(0.001, 0.999), scales = 'free_y',
-  group_pal = Management_palette,
-  legend_title = "Posteriors (population medians)",
-  ratio_stats = names(Fold_change_palette), ratio_pal = Fold_change_palette)
-
-
 ## Data wrangling --------------------
 
-# Merge both datasets
-plot_dat_raw <- rbind(
+plot_dat <- rbind(
   pc_MDSTYCV_16S$means %>% mutate(Barcode = 'Bacteria'),
   pc_MDSTYCV_ITS$means %>% mutate(Barcode = 'Fungi')
-) 
-
-# Make contrasts Conventional - Organic
-plot_dat <- plot_dat_raw %>% 
+) %>%
   mutate(
+    # contrasts as Conventional - Organic
     value = case_when(
       group == 'Contrast' & str_detect(statistic, 'mean') ~ -value,
-      TRUE~value
+      TRUE ~ value
     ),
+    # split fold changes from diversity quantities
     Dataset = case_when(
       str_detect(statistic, 'fold difference') ~ 'Fold',
       TRUE ~ 'Diversity'
     )
   )
 
-# and create column to split datasets (fold vs quantities)
+## Summary tables, one per kingdom ---------------------
+# Same format as the *_results_report_MDSTYCV.html reports
 
-# 89% Hpdi per group
-
-summary_stats <- plot_dat %>% 
-  group_by(Barcode, group, statistic) %>% 
-  summarise(median = median(value),
-            HPDI_lower = HPDI(value)[1],
-            HPDI_upper = HPDI(value)[2],
-            pd = max(mean(value > 0), mean(value<0)),
-            .groups = 'drop')
-
+for (kingdom in c("Bacteria", "Fungi")) {
+  save_posterior_kable(
+    "1_alpha_contrasts_report_MDSTYCV", kingdom,
+    filter(plot_dat, Barcode == kingdom) %>% select(statistic, group, value),
+    dir = "out/manuscript", prefix = "",
+    caption = paste0(
+      kingdom, ": posterior medians and 89% HPDI of population-mean effective number of ASVs. ",
+      "Mean contrasts = Conventional - Organic (as plotted); fold differences as plotted, ",
+      "with their inverse on separate rows. pd = probability of direction."))
+}
 
 # Unified legend colours (group + statistic variable)
 combined_pal <- c(
@@ -149,19 +139,14 @@ adiv_plot <- patchwork::wrap_plots(
   theme(
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    legend.position = 'bottom',
-    axis.title = element_text(size = 8)) & 
+    axis.title = element_text(size = 8),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    legend.position = 'bottom'
+    ) & 
   labs(y = 'Density'); adiv_plot 
 
 
-ggsave(plot = adiv_plot , filename = "out/manuscript/1_contrasts.pdf", bg = 'white', 
-       width = 2400, height = 1800, units = 'px', dpi = 250)
-
-
-
-
-
-
-
-
-
+ggsave(plot = adiv_plot , filename = "out/manuscript/1_alpha_contrasts.pdf", bg = 'white', 
+       width = 2800, height = 1400, units = 'px', dpi = 300)

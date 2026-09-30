@@ -37,6 +37,7 @@ fit_MDSTYCV <- ulam(
   chains = 6, cores = 6, iter = 10000,
   control = list(adapt_delta = 0.99)
 )
+
 save_fit("fit", model_id_MDSTYCV, fit_MDSTYCV)
 saveRDS(dat_MDSTYCV, file.path(hiermod_out_dir, "dat_MDSTYCV.rds"))
 
@@ -63,7 +64,9 @@ save_gg("postpred_density", model_id_MDSTYCV, p_postpred)
 (p_ppc <- plot_ppc_season_contrast_stats(fit_MDSTYCV, dat_MDSTYCV))
 save_gg("postpred_stat", model_id_MDSTYCV, p_ppc)
 
-## Year effect (fixed, not pooled) ---------------------------------------------
+## Posterior estimates ---------------------------
+
+### Year effect (fixed, not pooled) ---------------------------------------------
 # yr1/yr2 free; yr3 = -(yr1+yr2) by construction.
 
 pf <- post_full(fit_MDSTYCV)
@@ -75,9 +78,6 @@ pc_year <- bind_rows(
   tibble(group = idx$Yr$levels[3], value = yr3)
 ) %>% mutate(statistic = "Year effect (log scale)")
 
-p_year <- variance_component_panels(
-  pc_year, quant = c(0, 1), palette = idx$Yr$palette); p_year
-
 ## Covariate effects (b_deg, b_precip, b_seq) ----------------------------------
 
 pc_covariates <- bind_rows(
@@ -85,9 +85,6 @@ pc_covariates <- bind_rows(
   tibble(group = cov_labels[2], value = pf$b_precip$b_precip),
   tibble(group = cov_labels[3], value = pf$b_seq$b_seq)
 ) %>% mutate(statistic = "Covariate effects (log scale)")
-
-p_covariates <- variance_component_panels(
-  pc_covariates, quant = c(0, 1), palette = cov_pal); p_covariates
 
 ## Cultivar effect (fixed, not pooled) -----------------------------------------
 # cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = -(cv_1+cv_3+cv_4+cv_5) by
@@ -103,9 +100,6 @@ pc_cultivar <- bind_rows(
   tibble(group = idx$Cv$levels[5], value = pf$cv_5$cv_5)
 ) %>% mutate(statistic = "Cultivar effect (log scale)")
 
-p_cultivar <- variance_component_panels(
-  pc_cultivar, quant = c(0, 1), palette = idx$Cv$palette); p_cultivar
-
 ## Tree effect: how much tree-to-tree spread is there in the real fit? --------
 
 pc_sigma_tr <- bind_rows(
@@ -113,14 +107,27 @@ pc_sigma_tr <- bind_rows(
   tibble(statistic = "sigma_tr", group = "Population", value = pf$sigma_tr$sigma_tr)
 ) %>% mutate(statistic = factor(statistic, levels = c("sigma", "sigma_tr")))
 
-p_sigma_tr <- variance_component_panels(
-  pc_sigma_tr, quant = c(0, 1),
-  palette = Management_palette, # already carries Population's colour
-  sd_stats = c("sigma", "sigma_tr")); p_sigma_tr
-
 ## Year/Covariate/Cultivar/Tree effects, combined ---------------------------------
+# Data only, one row per panel: its draws (pc_full) + the palette/sd_stats
+# variance_component_panels() needs, so any subset can be re-plotted
+# elsewhere, e.g. from the saved rds:
+#   filter(effect_panels, panel %in% c("year", "cultivar")) %>%
+#     purrr::pmap(\(pc_full, palette, sd_stats, ...)
+#       variance_component_panels(pc_full, quant = c(0, 1), palette = palette, sd_stats = sd_stats))
 
-p_effects <- p_year / p_covariates / p_cultivar / p_sigma_tr
+effect_panels <- tribble(
+  ~panel,       ~pc_full,      ~palette,           ~sd_stats,
+  "year",       pc_year,       idx$Yr$palette,     character(0),
+  "covariates", pc_covariates, cov_pal,            character(0),
+  "cultivar",   pc_cultivar,   idx$Cv$palette,     character(0),
+  "sigma_tr",   pc_sigma_tr,   Management_palette, c("sigma", "sigma_tr") # palette carries Population's colour
+)
+saveRDS(effect_panels, file.path(hiermod_out_dir, "effect_panels_MDSTYCV.rds"))
+
+p_effects <- effect_panels %>%
+  purrr::pmap(\(pc_full, palette, sd_stats, ...)
+    variance_component_panels(pc_full, quant = c(0, 1), palette = palette, sd_stats = sd_stats)) %>%
+  purrr::reduce(`/`); p_effects
 save_gg("fit_effects", model_id_MDSTYCV, p_effects, width = 8, height = 14)
 
 ## Full pairwise parameter check ------------------------------------------------

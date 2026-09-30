@@ -49,52 +49,98 @@ source('src/hiermod/0_INDEX.R')
 # ITS variant deliberately NOT built yet -- same discipline as Model 8:
 # validate on 16S first.
 
-source('src/hiermod/Models/MDSTYCV_model.R') # model_MDSTYCV_16S, means_MDSTYCV(), dq_MDSTYCV
+model_MDSTYCL_16S <- alist(
+  likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
+  main_model = mu <- loga[Mg] + gamma*(Mo-1) + yr_eff + lo_eff + tr[Tr]*sigma_tr +
+    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z,
+  gamma_def  = gamma <- s_conv + gap_shift*(Mg-1), # interactive Season effect
 
-model_MDSTYCL_16S <- model_MDSTYCV_16S
-model_MDSTYCL_16S$main_model <- quote(
-  mu <- loga[Mg] + gamma*(Mo-1) + yr_eff + lo_eff + tr[Tr]*sigma_tr +
-    b_deg*deg_h_z + b_precip*precip_72h_z + b_seq*seq_depth_z
-)
-# Drop MDSTYCV's fixed Cultivar construction -- can't coexist with
-# Location in the real B/D subset (see header).
-model_MDSTYCL_16S$cv_eff_def <- NULL
-model_MDSTYCL_16S$prior_cv1  <- NULL
-model_MDSTYCL_16S$prior_cv3  <- NULL
-model_MDSTYCL_16S$prior_cv4  <- NULL
-model_MDSTYCL_16S$prior_cv5  <- NULL
+  prior_loga = loga[Mg]  ~ dnorm(5,2),
+  prior_s    = s_conv    ~ dnorm(0,1),
+  prior_gs   = gap_shift ~ dnorm(0,1),
+  pr_sigma   = sigma[Mg] ~ dhalfnorm(0,1),
 
-# Location: 2 levels within the real B/D subset -- 1 free scalar, 1
-# derived as its negative, same construction as every other sum-to-zero
-# fixed effect in this family (Year: N-1=2 free; Cultivar: N-1=4 free;
-# here N-1=1 free).
-model_MDSTYCL_16S$lo_eff_def <- quote(
-  lo_eff <- lo1*(Lo==1) - lo1*(Lo==2)
+  # Year, sum-to-zero: yr1/yr2 free, yr3 = -(yr1+yr2)
+  yr_eff_def = yr_eff <- yr1*(Yr==1) + yr2*(Yr==2) - (yr1+yr2)*(Yr==3),
+  prior_yr1  = yr1 ~ dnorm(0,1),
+  prior_yr2  = yr2 ~ dnorm(0,1),
+
+  # Covariates (standardized)
+  prior_deg    = b_deg    ~ dnorm(0,1),
+  prior_precip = b_precip ~ dnorm(0,1),
+  prior_seq    = b_seq    ~ dnorm(0,1),
+
+  # Tree, non-centered random effect
+  prior_tr    = tr[Tr]   ~ dnorm(0,1),
+  pr_sigma_tr = sigma_tr ~ dhalfnorm(0,1),
+
+  # Location (2 levels within the real B/D subset), sum-to-zero: lo1 free,
+  # lo2 = -lo1 -- same construction as Year/Cultivar, N-1=1 free here
+  lo_eff_def = lo_eff <- lo1*(Lo==1) - lo1*(Lo==2),
+  prior_lo1  = lo1 ~ dnorm(0,1)
 )
-model_MDSTYCL_16S$prior_lo1 <- quote(lo1 ~ dnorm(0,1))
 
 attr(model_MDSTYCL_16S, "name") <- "Faramir the Judicious"
 model_id_MDSTYCL <- "MDSTYCL"
 
 ## means_MDSTYCL()/dq_MDSTYCL ----------------------------------------------------
-# Identical to means_MDSTYCV()/dq_MDSTYCV -- Location, like Year, is a
+# Same formulas as means_MDSTYCV()/dq_MDSTYCV -- Location, like Year, is a
 # fixed effect held at its own observed-level average and doesn't enter
 # the reported Mg x Mo estimand or its variance (same reasoning as
 # means_MDSYCV() dropping Cultivar).
-means_MDSTYCL <- means_MDSTYCV
-dq_MDSTYCL    <- dq_MDSTYCV
+
+means_MDSTYCL <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
+  total_var_conv <- post$sigma[,1]^2 + as.vector(post$sigma_tr)^2
+  total_var_org  <- post$sigma[,2]^2 + as.vector(post$sigma_tr)^2
+  
+  s_conv    <- as.vector(post$s_conv)
+  gap_shift <- as.vector(post$gap_shift)
+  covariate_offset <- as.vector(post$b_deg)*deg_h_z + as.vector(post$b_precip)*precip_72h_z +
+    as.vector(post$b_seq)*seq_depth_z
+  
+  mu_conv_May  <- post$loga[,1] + covariate_offset
+  mu_conv_July <- mu_conv_May + s_conv
+  mu_org_May   <- post$loga[,2] + covariate_offset
+  mu_org_July  <- mu_org_May + s_conv + gap_shift
+  
+  list(
+    mean = cbind(
+      lognormal_mean(mu_conv_May,  total_var_conv, shift = shift),
+      lognormal_mean(mu_conv_July, total_var_conv, shift = shift),
+      lognormal_mean(mu_org_May,   total_var_org,  shift = shift),
+      lognormal_mean(mu_org_July,  total_var_org,  shift = shift)
+    ),
+    median = cbind(
+      lognormal_mean(mu_conv_May,  0, shift = shift),
+      lognormal_mean(mu_conv_July, 0, shift = shift),
+      lognormal_mean(mu_org_May,   0, shift = shift),
+      lognormal_mean(mu_org_July,  0, shift = shift)
+    )
+  )
+}
+
+dq_MDSTYCL <- SBC::derived_quantities(
+  may_gap =
+    exp(loga[2] + (sigma[2]^2 + sigma_tr^2) / 2) -
+    exp(loga[1] + (sigma[1]^2 + sigma_tr^2) / 2),
+  july_gap =
+    exp(loga[2] + s_conv + gap_shift + (sigma[2]^2 + sigma_tr^2) / 2) -
+    exp(loga[1] + s_conv +             (sigma[1]^2 + sigma_tr^2) / 2),
+  seasonal_change =
+    (exp(loga[2] + s_conv + gap_shift + (sigma[2]^2 + sigma_tr^2) / 2) -
+       exp(loga[1] + s_conv +             (sigma[1]^2 + sigma_tr^2) / 2)) -
+    (exp(loga[2] + (sigma[2]^2 + sigma_tr^2) / 2) -
+       exp(loga[1] + (sigma[1]^2 + sigma_tr^2) / 2))
+)
 
 ## variance_partition_MDSTYCL() --------------------------------------------------
-# Same redesign as variance_partition_MDSTYCV() (see its own comment for the
-# by-margin rationale and why Management x Season stays one combined term) --
-# Location swapped in for Cultivar, in the same slot (coarser grouping
-# before the Tree it nests, same 129/129 deterministic mapping as Cultivar).
-# Tree was already folded into this model's own total (unlike MDSTYCV's,
-# until its own redesign) via the bulk sigma_tr^2 bolt-on; now a proper
-# per-observation term like every other entry here, via
-# variance_partition_panels()'s shared engine.
+# Same as variance_partition_MDSTYCV() (see its own comment: Shapley/LMG
+# default, effect-coded Management / Season / interaction split) -- Location
+# swapped in for Cultivar, in the same slot (coarser grouping before the
+# Tree it nests, same 129/129 deterministic mapping as Cultivar).
 
-variance_partition_MDSTYCL <- function(post, dat){
+variance_partition_MDSTYCL <- function(post, dat, method = c("lmg", "margin"), split_mgmo = TRUE){
+  method <- match.arg(method)
   yr3    <- -(as.vector(post$yr1) + as.vector(post$yr2))
   yr_obs <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]
 
@@ -122,11 +168,13 @@ variance_partition_MDSTYCL <- function(post, dat){
     "Precipitation"        = outer(as.vector(post$b_precip), dat$precip_72h_z),
     "Year"                 = yr_obs,
     "Location"             = lo_obs,
-    "Tree"                 = tree_obs,
-    "Management x Season"  = loga_obs + gamma_term
+    "Tree"                 = tree_obs
   )
+  if (split_mgmo) terms <- c(terms, mgmo_effect_terms(loga_obs + gamma_term, dat$Mg, dat$Mo))
+  else terms[["Management x Season"]] <- loga_obs + gamma_term
 
-  variance_partition_panels(terms, residual_var)
+  if (method == "lmg") variance_partition_lmg(terms, residual_var)
+  else variance_partition_panels(terms, residual_var)
 }
 
 ## Data-generating function ---------------------------------------------------

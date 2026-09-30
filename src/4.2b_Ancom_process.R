@@ -13,7 +13,7 @@ source('src/0.0_Config.R')
 
 ANCOMResults <- readRDS("data/ancom/ANCOMResults.rds")
 
-# 1.Tibble: taxon x term stats + taxonomy + May/July abundance -------
+# 1. Format ANCOM -----------------------
 
 # Mean/SD relative abundance (%) per taxon, overall and by sampling month
 abund_summary <- function(ps) {
@@ -35,6 +35,7 @@ abund_summary <- function(ps) {
   )
 }
 
+# Parse ANCOM output into long tibble
 tidy_fit <- function(fit, ps, year_dataset, dataset_name) {
   
   res <- as.data.frame(fit$res)
@@ -48,41 +49,35 @@ tidy_fit <- function(fit, ps, year_dataset, dataset_name) {
                  names_pattern = "^(lfc|se|W|p|q|diff|passed_ss)_(.*)$") %>%
     filter(Term %in% terms) %>% # drops e.g. diff_robust_* parsed as term "robust_*"
     pivot_wider(names_from = stat, values_from = value) %>%
+    filter(as.logical(passed_ss)) %>% 
     arrange(match(Term, terms)) %>%
-    transmute(taxon, Year_Dataset = year_dataset, Dataset = dataset_name, Term,
-              LFC = lfc, SE = se, W_stat = W, p_val = p, q_val = q,
-              diff_abn = as.logical(diff), passed_ss = as.logical(passed_ss)) %>%
+    transmute(
+      taxon,  Term,
+      Year_Dataset = year_dataset, 
+      Dataset = dataset_name, 
+      LFC = lfc, SE = se, q_val = q) %>%
+    # add abundance for filtering
     left_join(abund_summary(ps), 'taxon') %>%
     filter(
       !is.na(taxon),
       trimws(taxon) != "",
       tolower(trimws(taxon)) != "overall",
-      q_val < ANCOMResults$alpha, 
-      passed_ss) %>% 
-    select(-passed_ss, -W_stat, -p_val, -diff_abn)
+      q_val < ANCOMResults$alpha) 
 }
 
+# Execute
 ancom_long <- imap_dfr(
   ANCOMResults$ancom_results, \(fits, yd)
   imap_dfr(
     fits, \(fit, dn) tidy_fit(fit, ANCOMResults$ps_final[[yd]][[dn]], yd, dn))) %>% 
   filter(Term %in% c('TimeMay', 'ManagementOrganic'))
 
-# 2. ALL SIGNIFICANT TERMS (incl. seq_depth_z) ----------------------------------
+# 2. Write full table ----------------------------------
 
 all_ancom_table <- ancom_long %>% select(-starts_with(c("mean_relab", "sd_relab")))
-write_csv(all_ancom_table, "data/ancom/all_ancom_results.csv")
+write_csv(all_ancom_table, "out/manuscript/all_ancom_results.csv")
 
-# 3. HEATMAP DATA: Time/Management hits,
-
-fungi_label_overrides <- c( # determined from BLAST
-  "NA_sp_clust_4"                              = "Cladosporium_4*",
-  "Ascomycota_sp_clust_5"                      = "Didymellaceae_5*",
-  "Pleosporales_gen_Incertae_sedis_sp_clust_7" = "Alternaria_7 *",
-  "Ascomycota_sp_clust_14"                     = "Melanommataceae_14*",
-  "NA_sp_clust_15"                             = "Filobasidium_15*",
-  "Helotiales_sp_clust_17"                     = "Lemonniera_17*"
-)
+# 3. Plot data -------------------------
 
 heatmap_all <- ancom_long %>%
   mutate(
@@ -115,8 +110,8 @@ plot_heatmap <- function(df, title) {
     # Force fully square data:
     complete(taxLabel, X_label) %>% 
     mutate(
-      #      Year_Dataset = factor(Year_Dataset, levels = c('Years3', 'Years2')),
-      taxLabel = factor(taxLabel, levels = sort(unique(taxLabel), decreasing = TRUE ))) %>% 
+      taxLabel = factor(taxLabel, levels = sort(unique(taxLabel), decreasing = TRUE )),
+      X_label = factor(X_label, levels = c("July\n(3Y)", "July\n(2Y)", 'Organic\n(2Y)' ) )) %>% 
     ggplot(
       aes(x = X_label, y = taxLabel, fill = LFC)) +
     geom_tile(color = "black", linewidth = 0.2) +
@@ -142,12 +137,13 @@ plots_by_dataset <- heatmap_all %>%
   split(.$Dataset) %>%
   imap(plot_heatmap)
 
-wrap_plots(plots_by_dataset)+
+wrap_plots(plots_by_dataset) +
+  plot_layout(guides = 'collect') +
   plot_annotation(tag_levels = "A") &
   theme(plot.tag.position = c(0, 0.98))
 
 
-ggsave('out/manuscript/DA.pdf', bg = 'white', 
+ggsave('out/manuscript/4_DA.pdf', bg = 'white', 
        width = 2500, height = 2000, units = 'px', dpi = 300)
 
 
@@ -155,15 +151,20 @@ ggsave('out/manuscript/DA.pdf', bg = 'white',
 # 5. REPORTING TABLE -------------------------------------------------------------
 
 final_table <- heatmap_all %>%
+  filter(!X_label == 'NOT_PLOTTED') %>%
+  # Wald 95% CI, LFC +/- 1.96 SE, from unrounded values (LFC already sign-flipped
+  # for TimeMay above; SE is unaffected by the flip)
+  mutate(ci_low  = LFC - qnorm(0.975) * SE,
+         ci_high = LFC + qnorm(0.975) * SE) %>%
   transmute(
-    Year_Dataset, Dataset, Group, Contrast, taxon,
-    LFC = round(LFC, 3),
-    SE  = round(SE, 3),
-    `q-value` = signif(q_val, 3),
-    `Passed sensitivity test` = passed_ss,
+    X_label, Dataset, taxLabel,
+    LFC = round(LFC, 2),
+    #SE  = round(SE, 3),
+    `95% CI` = sprintf("[%.2f, %.2f]", ci_low, ci_high),
+    #`q-value` = signif(q_val, 3),
     `May %  (mean +/- SD)` = sprintf("%.2f +/- %.2f", mean_relab_may, sd_relab_may),
     `July % (mean +/- SD)` = sprintf("%.2f +/- %.2f", mean_relab_july, sd_relab_july)
   ) %>%
-  arrange(Year_Dataset, Dataset, Group, desc(abs(LFC)))
+  arrange(Dataset, X_label, taxLabel, desc(abs(LFC)))
 
-write_csv(final_table, "data/ancom/differential_abundance_table.csv")
+writexl::write_xlsx(final_table, "out/manuscript/supp/differential_abundance_table.xlsx")

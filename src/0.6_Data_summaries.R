@@ -17,16 +17,19 @@ count_dat <- dat %>%
 count_dat %>% 
   ggplot(aes(x = Time, y = N_samples, fill = Code)) +
   geom_col(position = "dodge") +
-  ggh4x::facet_nested(Barcode+Year ~ Dataset + Management + Cultivar) +  # Facet by 2 variables
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  ggh4x::facet_nested(
+    Barcode+Year ~ Dataset + Management + Cultivar) +  # Facet by 2 variables
   theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.y = element_text(size = 5),
     legend.position = 'bottom',
     panel.grid = element_blank()) +
   guides(fill = guide_legend(nrow = 1)) +
+  scale_fill_manual(values = fill_site) +
   labs(fill = 'Orchard')
 
-ggsave('out/summaries/sample_count_by_metadata.pdf',
-       bg = 'white', width = 2200, height = 2000, 
+ggsave('out/manuscript/supp/sample_count_by_metadata.pdf',
+       bg = 'white', width = 2200, height = 1700, 
        units = 'px', dpi = 220)
 
 # Classification rates -------------------

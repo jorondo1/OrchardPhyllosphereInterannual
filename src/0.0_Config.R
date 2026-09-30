@@ -4,20 +4,35 @@ source('src/0.0_ggplot_themes.R')
 
 
 ## Cross-package function-name conflicts ---------------------------------------
-# Resolves dplyr/base functions masked by other loaded packages (e.g.
-# MASS::select, stats::filter) .quiet = TRUE since this is deliberate
+# Resolves dplyr/base functions masked by other loaded packages 
 pacman::p_load(conflicted, update = FALSE)
-conflicted::conflicts_prefer(base::intersect,  .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::filter,    .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::select,    .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::rename,    .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::slice,     .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::combine,   .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::desc,      .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::count,     .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::first,     .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::mutate,    .quiet = TRUE)
-conflicted::conflicts_prefer(dplyr::arrange,   .quiet = TRUE)
+conflicted::conflicts_prefer(
+  base::intersect,
+  base::match,
+  bayesplot::rhat,
+  stats::sd,
+  purrr::map,
+  stats::var,
+  dplyr::filter,  
+  dplyr::select,  
+  dplyr::rename,  
+  dplyr::slice,   
+  dplyr::combine, 
+  dplyr::desc,    
+  dplyr::count,   
+  dplyr::first,   
+  dplyr::mutate,  
+  dplyr::arrange, .quiet = TRUE)
+
+# Fungi Species clusters overrides, determined from BLAST
+fungi_label_overrides <- c( 
+  "NA_sp_clust_4"                              = "Cladosporium_4*",
+  "Ascomycota_sp_clust_5"                      = "Didymellaceae_5*",
+  "Pleosporales_gen_Incertae_sedis_sp_clust_7" = "Alternaria_7*",
+  "Ascomycota_sp_clust_14"                     = "Melanommataceae_14*",
+  "NA_sp_clust_15"                             = "Filobasidium_15*",
+  "Helotiales_sp_clust_17"                     = "Lemonniera_17*"
+)
 
 ## Year -----------------------------------------------------------------------
 color_year <- c(`2022` = "black", `2023` = "black", `2024` = "black")
@@ -60,8 +75,8 @@ fill_timman  <- c(
 
 color_site <- c(A = "black", B1 = "black", B2 = "black", C = "black", D1 = "black", D2 = "black")
 shape_site <- c(A = 22, B1 = 21, B2 = 21, C = 22, D1 = 23, D2 = 23)
-fill_site  <- c(A = "#D17913", B1 = "#F3A44A", B2 = "#096EA4",
-                C = "#1C9EE4", D1 = "#FFC787", D2 = "#89CEF3") # colors adopted from Sophie
+fill_site  <- c(A = "#5DB63B", B1 = "#2C9EE3", B2 = "#096EA4",
+                C = "gold", D1 = "#FCB452", D2 = "#F8A11C") # colors adopted from Sophie
 
 ## Location -----------------------------------------------------------------------------
 color_loc <- c(A = "black", B = "black", C = "black", D = "black", other = "black")
@@ -69,7 +84,7 @@ color_loc <- c(A = "black", B = "black", C = "black", D = "black", other = "blac
 # uniform placeholders) -- needed wherever Location has to be told apart by
 # shape alone, e.g. src/2.5_betadiv_envfit_fig.R's Time-coloured panel.
 shape_loc <- c(A = 21, B = 22, C = 23, D = 24, other = 25)
-fill_loc  <- c(A = "#5DB63B", B = "#2C9EE3", C = "gold", D = "#F8A11C", other = "grey90")
+fill_loc  <- c(A = "#5DB63B", B = "#1B86C4", C = "gold", D = "#FAAB37", other = "grey90")
 
 ## Cultivar -----------------------------------------------------------------------------
 # Canonical level order: Cortland, Liberty, Paulared, Honeycrisp, Spartan --
