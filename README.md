@@ -2,13 +2,13 @@
 
 ### Code (`src/`)
 
-Scripts are numbered in run order; run them from the repository root.
+Scripts are numbered in run order and many are interdependent.
 
 | Prefix | Content |
 |---|---|
 | `0.*` | Setup and data preparation: config/themes (`0.0`), DADA2 (`0.1.x`), phyloseq post-processing (`0.2`), weather and sample metadata incl. standardised covariates (`0.3.x`), diversity indices (`0.4`), checks and summaries (`0.5`, `0.6`) |
 | `1.*` | Community composition barplots and core microbiome |
-| `2.*` | Alpha diversity figures and tables from the Bayesian models: main management × season contrasts (`2.1`), variance partition and posterior parameters (`2.2`) |
+| `2.*` | Alpha diversity figures and tables from the Bayesian models (model built under a separate set of scripts under `src/hiermod`; see below): main management × season contrasts (`2.1`), variance partition and posterior parameters (`2.2`) |
 | `3.*` | Beta diversity: distances, figures, statistics, envfit |
 | `4.*` | Differential abundance (ANCOM) |
 | `utils/` | Shared functions: model helpers (`hiermod_core.R`), posterior summaries, contrasts and variance partition (`postcontrast_helpers.R`), posterior predictive checks (`predictive_checks.R`), SBC workflow (`sbc_workflow.R`), output savers (`saver_functions.R`) |
@@ -31,7 +31,7 @@ Scripts are numbered in run order; run them from the repository root.
 | 8 | `MDSTYCVr` | cultivar as a random effect (16S only; failed calibration) |
 | 9 | `MDSTYCL` | location instead of cultivar, two-location subset (16S only; sensitivity check) |
 
-### Reports (`out/hiermod/<marker>_<N>_<name>_<ID>/`)
+#### Reports (`out/hiermod/<marker>_<N>_<name>_<ID>/`)
 
 Only the plain-text reports are tracked:
 
