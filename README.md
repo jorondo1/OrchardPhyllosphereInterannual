@@ -1,7 +1,10 @@
 Complete scripts for _Bacterial and fungal communities of apple tree leaves follow different seasonal and interannual trajectories under organic and conventional management_ [Manuscript in preparation, submitted 30-10-2026]
 
 Authors: Jonathan Rondeau-Leclaire, Anja Werz, Amy Heim, Isabelle Laforest-Lapointe.
-Claude Caude was used to assist coding. All authors agree with the code contents therein. 
+_Claude Caude was used to assist, comment, clean, and optimize scripts._
+_All authors agree with the code contents therein._
+
+The Dada2 scripts (`0.1*`) were executed on the Mammoth HPC at Université de Sherbrooke. All other scripts were executed on a Macbook Pro running MacOS Sonoma 14.8.7 with an 8-core Apple M3 chip.
 
 ## Repository guide
 
