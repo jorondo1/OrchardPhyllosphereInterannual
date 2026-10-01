@@ -1,12 +1,6 @@
-# MODEL 6 (MDSYCV, "Bombadil the Eldest"), 16S: MDSYC plus Cultivar as a
-# FIXED, sum-to-zero effect (5 levels).
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2/b_deg/b_precip/b_seq priors are
-# MDSYC's own validated answer, hardcoded here as this model's starting
-# point. cv_1/cv_3/cv_4/cv_5 ~ dnorm(0,1) is the one new assumption --
-# sum-to-zero applied from the start this time (see MDSYCV_model.R header),
-# so this is testing the construction itself, not the leak Year already
-# taught us to avoid.
+# MODEL 6 (MDSYCV, "Bombadil the Eldest"), 16S: calibration
+# Aim: Cultivar, fixed and sum-to-zero from the start (see MDSYCV_model.R)
+# To validate: cv_1, cv_3, cv_4, cv_5 ~ dnorm(0,1)
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -19,8 +13,7 @@ model_id <- model_id_MDSYCV
 hiermod_out_dir <- "out/hiermod/16S_6_cultivar_MDSYCV/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# Same baseline/gap/year/covariate values as MDSYC's own calibration, plus
-# modest cultivar offsets, so results stay comparable.
+# Same baseline/gap/year/covariate values as MDSYC, plus modest cultivar offsets
 
 may_conv <- 180
 may_org  <- 120
@@ -89,9 +82,7 @@ post_sim <- extract.samples(fit_sim)
     cv_1 = post_sim$cv_1, cv_3 = post_sim$cv_3, cv_4 = post_sim$cv_4, cv_5 = post_sim$cv_5)))
 
 ### Contrast recovery -------------
-# cv_1/cv_3/cv_4/cv_5 cancel at the default (z=0/average-cultivar)
-# reference level, same reasoning as Year/covariates -- unaffected recovery
-# estimand vs MDSYC.
+# Cultivar at its average cancels: same estimand as MDSYC
 
 cr <- contrast_recovery(
   fit_sim, means_MDSYCV, may_conv, may_org, july_conv_shift, july_org_shift, shift = 1)
@@ -126,15 +117,8 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## Full pairwise parameter check -----------------------------------------------
-# Replaces the old hand-picked plot() grid (which spot-checked loga[1] only,
-# never loga[2], against a few chosen partners -- a panel-count shortcut,
-# not a principled choice, and this project has already seen miscalibration
-# land on loga[1] in one model and loga[2] in another). mcmc_pairs()
-# (plot_mcmc_pairs()/thin_for_pairs(), hiermod_core.R) gives every parameter
-# against every other in one grid, with any divergent transitions
-# highlighted directly on it. 13x13 is a lot of panels -- if it's too dense
-# to read in practice, worth trimming back to a representative subset, but
-# starting from the full grid rather than a hand-picked one.
+# Full pairs grid (every parameter vs every other), divergences highlighted
+# - not a hand-picked subset: loga[1] and loga[2] have each been miscalibrated before
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "yr1", "yr2",
                  "cv_1", "cv_3", "cv_4", "cv_5", "b_deg", "b_precip", "b_seq")
@@ -174,8 +158,7 @@ save_sbc_health_report(model_id, sbc_MDSYCV, n_sbc, n_iter,
                                       "may_gap", "july_gap", "seasonal_change"),
                         hiermod_out_dir = hiermod_out_dir)
 
-# Same stress test as every model in this rebuild before trusting an "ok"
-# result at n=100.
+# n = 400 stress test (n = 100 alone not trusted)
 
 n_sbc <- 400
 

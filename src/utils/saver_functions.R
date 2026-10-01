@@ -1,9 +1,7 @@
-# saver_functions.R -- consistent, per-fit output helpers (fits, plots,
-# text reports) so every model script writes to the same place the same way.
+# saver_functions.R -- output helpers (fits, plots, reports), same paths/naming everywhere
 
-# Saves a ulam fit to .rds. Forces cmdstanr's lazy accessors first, since a
-# plain saveRDS() otherwise loses the fit once its temp Stan CSV output is
-# gone (breaks extract.samples()/precis() in a later session).
+# Save a ulam fit to .rds
+# - loads cmdstanr's lazy fields first; otherwise lost with the temp CSVs
 save_fit <- function(name, step, fit, dir = hiermod_out_dir){
   dir.create(dir, recursive = TRUE, showWarnings = FALSE)
   cs <- attr(fit, "cstanfit")
@@ -19,9 +17,7 @@ save_fit <- function(name, step, fit, dir = hiermod_out_dir){
   message("Saved to ", path)
 }
 
-# Saves a ggplot to file. Use type = "png" for point-heavy plots (e.g.
-# mcmc_pairs() on tens of thousands of draws): a vector PDF of that many
-# points balloons to tens of MB, a rasterized PNG doesn't.
+# Save a ggplot; type = "png" for point-heavy plots (PDFs get huge)
 save_gg <- function(name, step, plot = ggplot2::last_plot(), width = 10, height = 8,
                     dir = hiermod_out_dir, type = "pdf", dpi = 150, prefix = hiermod_marker){
   
@@ -32,8 +28,7 @@ save_gg <- function(name, step, plot = ggplot2::last_plot(), width = 10, height 
   message("Saved to ", path)
 }
 
-# Saves base-graphics output (dens(), hist(), pairs(), traceplot()) to a
-# PDF; pass the plotting code as a zero-arg function, e.g.
+# Save base-graphics output to PDF; plotting code passed as a zero-arg function, e.g.
 #   save_pdf("fit_pairs", "MDL", function() pairs(fit_MDL_sim, pars = c("sigma_loc","b[1]","b[2]")))
 save_pdf <- function(name, step, plot_call, width = 10, height = 8,
                      dir = hiermod_out_dir, prefix = hiermod_marker){
@@ -46,22 +41,11 @@ save_pdf <- function(name, step, plot_call, width = 10, height = 8,
   message("Saved to ", path)
 }
 
-# Writes one plain-text report (model spec, precis() table, parameter
-# recovery, posterior contrasts) per fit. All three optional pieces are
-# assembled in one place so nothing needs re-deriving to read the numbers
-# back later. post_counts: the long statistic/group/value tibble from
-# compute_contrasts()/estimand_panels()/estimand_rows() (not post_full()'s
-# raw list -- wrong shape); recovery: a check_recovery() tibble. Header
-# name resolution: model_name= override > attr(model, "name") (set once
-# per model in its own model file, e.g.
-# attr(model_MD_16S, "name") <- "Samwise the Steadfast" -- an attribute,
-# not a list element, since ulam() iterates every element of its `model`
-# argument expecting a formula quote() and errors on anything else, same
-# reason fits carry cstanfit as attr(fit, "cstanfit") rather than a slot)
-# > deparse(substitute(model)) (always just prints "model" -- every call
-# site names its variable that -- so only a fallback for a model object
-# that hasn't been given a name yet). model_name= stays available for the
-# rare script that reports two models at once.
+# Plain-text fit report: model spec, precis(), optional recovery + contrasts
+# - post_counts: long statistic/group/value tibble (not post_full()'s list)
+# - recovery: check_recovery() tibble
+# - header name: model_name > attr(model, "name") > variable name
+#   (name is an attribute: ulam() errors on non-formula list elements)
 save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
                         recovery = NULL, depth = 2, dir = hiermod_out_dir,
                         model_name = NULL){
@@ -82,11 +66,7 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
   
   cat("==== precis:", deparse(substitute(fit)), "====\n\n")
   precis_fit <- precis(fit, depth = depth)
-  # ess_bulk as a fraction of total post-warmup draws -- can exceed 1 under
-  # negative autocorrelation (a real, documented feature of rank-normalized
-  # ESS, not a bug: HMC sometimes samples weakly-identified parameters
-  # slightly anti-correlated, which is *more* efficient than i.i.d.).
-  # Values well below ~0.1-0.2 are the ones worth a second look.
+  # ess_bulk / total draws; > 1 possible (anti-correlated draws); < ~0.1-0.2 worth a look
   precis_fit$ess_ratio <- precis_fit$ess_bulk / NROW(extract.samples(fit)[[1]])
   print(round(precis_fit, 3))
   
@@ -118,7 +98,9 @@ save_report <- function(name, step, fit, post_counts = NULL, model = NULL,
   
 }
 
-# Comprehensive posterior summary 
+# HTML posterior summary table: median, 89% HPDI, pd per statistic x group
+# - "fold" statistics also get an inverted row
+# - 3 decimals for variance-partition rows (or all rows with three_digits = TRUE)
 save_posterior_kable <- function(
     name, step, pc_full, 
     dir = hiermod_out_dir, prefix = hiermod_marker,
@@ -135,7 +117,7 @@ save_posterior_kable <- function(
       filter(., str_detect(statistic, "fold")) %>%
         mutate(
           median = 1 / median,
-          # 1/x reverses order, so the bounds swap; pd is not a ratio, left as is
+          # 1/x swaps the bounds; pd unchanged
           HPDI_lower_inv = 1 / HPDI_upper,
           HPDI_upper     = 1 / HPDI_lower,
           HPDI_lower     = HPDI_lower_inv,
@@ -144,8 +126,6 @@ save_posterior_kable <- function(
         dplyr::select(-HPDI_lower_inv)
     )
   
-  # digits conditions
-  # three_digits = TRUE forces 3 decimals on every row (e.g. a variance-partition-only table)
   is_vp <- three_digits | str_detect(with_inverse$statistic, "Variance partition")
   
   with_inverse %>%
@@ -154,7 +134,7 @@ save_posterior_kable <- function(
       ~ ifelse(
         is_vp, 
         sprintf("%.3f", .x), 
-        ifelse( # starts with 0 : 
+        ifelse( # 2 decimals below 1, else 1
           (abs(.x) < 1 & .x != 0),sprintf("%.2f", .x), sprintf("%.1f", .x)))
     )) %>%
     kableExtra::kable("html", caption = caption %||% paste0(

@@ -1,53 +1,15 @@
-# MDSTYCL_model.R --- MODEL 9 (MDSTYCL, "Faramir the Judicious"), 16S:
-# MDSTYCV with Cultivar's fixed effect (cv[Cv]) REPLACED by Location's
-# fixed effect (lo[Lo]), same sum-to-zero recipe.
+# MDSTYCL_model.R --- MODEL 9 (MDSTYCL, "Faramir the Judicious"): MDSTYCV with
+# Location replacing Cultivar (fixed, sum-to-zero)
 
 source('src/hiermod/0_INDEX.R')
 
-# Why this exists: Model 8 (MDSTYCVr, "Gimli the Greedy") tried making
-# Cultivar a RANDOM effect instead and failed badly -- real SBC
-# (n_sbc=500): 297 divergences, 154/500 (30.8%) fits Rhat>1.01, and
-# loga[1]/loga[2] themselves severely MISCALIBRATED (z=-11.96/-14.22),
-# not just sigma_cv (z=-5.76). Nesting sigma_cv with sigma_tr over the
-# same 129 trees didn't just fail to identify sigma_cv cleanly -- it
-# leaked into the headline estimand. Back to a fixed-effect design instead
-# of trying to fix that nesting.
-#
-# Location is a natural next fixed effect to test (never in this rebuild's
-# family before -- Tree is deterministically nested in Location, same
-# 129/129 mapping as Cultivar, so structurally this is the same "does
-# Tree's random effect coexist with a coarser fixed grouping over the same
-# trees" question MDSTYCV already answered cleanly for Cultivar).
-#
-# Cultivar can NOT coexist with Location here, though -- confirmed by
-# direct query of the real data, not just assumed: restricted to the two
-# Locations with both Management levels present (B, D -- see this
-# model's own calibration/fit scripts for why), Location D has ONLY
-# Honeycrisp and Spartan (0 Cortland/Liberty/Paulared) -- i.e. within that
-# subset, 3 of Cultivar's 5 levels are perfectly aliased with "Location B",
-# not just correlated with it. Cultivar is dropped entirely for this
-# model, not added alongside Location.
-#
-# Real-data motivation for the subset (see 9.2/9.3's own headers for the
-# full numbers): Location x Management in the full data is A=Conventional-
-# only (50), C=Organic-only (51), B and D have both -- fitting Location
-# on the full 4-level factor would confound Location with Management for
-# A/C. Model 9's real fit (9.3, not yet built) will restrict to the B/D
-# subset (141/242 rows) for exactly this reason. This calibration-stage
-# model file itself doesn't know about that restriction -- Lo is just a
-# 2-level index, assigned independently of Mg in the simulator, same
-# "recoverable in principle" scope as every other calibration script in
-# this family.
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2/tr[Tr]*sigma_tr/b_deg/
-# b_precip/b_seq are MDSTYCV's own validated answer, hardcoded as this
-# model's starting point. lo1 ~ dnorm(0,1) is the one new assumption to
-# validate -- same sum-to-zero recipe as yr1/yr2 and cv_1/cv_3/cv_4/cv_5,
-# just 2 levels (1 free parameter, 1 derived as its negative) instead of
-# 3 or 5.
-#
-# ITS variant deliberately NOT built yet -- same discipline as Model 8:
-# validate on 16S first.
+# Why: cultivar as random effect failed (model 8); location as a fixed alternative
+# - Location confounded with Management on the full data (A conventional-only,
+#   C organic-only) -> real fit restricted to B/D (141/242 samples)
+# - within B/D, cultivar aliased with location -> cultivar dropped
+# - simulator: Lo just a 2-level index, independent of Mg
+# Priors: as MDSTYCV; lo1 ~ dnorm(0,1), lo2 = -lo1
+# 16S only
 
 model_MDSTYCL_16S <- alist(
   likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
@@ -74,8 +36,7 @@ model_MDSTYCL_16S <- alist(
   prior_tr    = tr[Tr]   ~ dnorm(0,1),
   pr_sigma_tr = sigma_tr ~ dhalfnorm(0,1),
 
-  # Location (2 levels within the real B/D subset), sum-to-zero: lo1 free,
-  # lo2 = -lo1 -- same construction as Year/Cultivar, N-1=1 free here
+  # Location (B/D), sum-to-zero: lo1 free, lo2 = -lo1
   lo_eff_def = lo_eff <- lo1*(Lo==1) - lo1*(Lo==2),
   prior_lo1  = lo1 ~ dnorm(0,1)
 )
@@ -84,10 +45,7 @@ attr(model_MDSTYCL_16S, "name") <- "Faramir the Judicious"
 model_id_MDSTYCL <- "MDSTYCL"
 
 ## means_MDSTYCL()/dq_MDSTYCL ----------------------------------------------------
-# Same formulas as means_MDSTYCV()/dq_MDSTYCV -- Location, like Year, is a
-# fixed effect held at its own observed-level average and doesn't enter
-# the reported Mg x Mo estimand or its variance (same reasoning as
-# means_MDSYCV() dropping Cultivar).
+# Same formulas as MDSTYCV: Location doesn't enter the reported estimands
 
 means_MDSTYCL <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
   total_var_conv <- post$sigma[,1]^2 + as.vector(post$sigma_tr)^2
@@ -134,10 +92,7 @@ dq_MDSTYCL <- SBC::derived_quantities(
 )
 
 ## variance_partition_MDSTYCL() --------------------------------------------------
-# Same as variance_partition_MDSTYCV() (see its own comment: Shapley/LMG
-# default, effect-coded Management / Season / interaction split) -- Location
-# swapped in for Cultivar, in the same slot (coarser grouping before the
-# Tree it nests, same 129/129 deterministic mapping as Cultivar).
+# As variance_partition_MDSTYCV(), Location in Cultivar's place
 
 variance_partition_MDSTYCL <- function(post, dat, method = c("lmg", "margin"), split_mgmo = TRUE){
   method <- match.arg(method)
@@ -145,12 +100,7 @@ variance_partition_MDSTYCL <- function(post, dat, method = c("lmg", "margin"), s
   yr_obs <- cbind(post$yr1, post$yr2, yr3)[, dat$Yr]
 
   lo2    <- -(as.vector(post$lo1))
-  # NB: was `[dat$Lo]` (no comma) -- linear/column-major indexing on a
-  # matrix, not column selection by dat$Lo like every other realized-level
-  # term here (yr_obs, cv_obs). That silently returned near-constant
-  # garbage instead of each observation's actual Location coefficient --
-  # the likely cause of Location's R2 share collapsing to ~0 (and sometimes
-  # negative).
+  # [, dat$Lo]: column per observation (not [dat$Lo], which indexes the matrix linearly)
   lo_obs <- cbind(post$lo1, lo2)[, dat$Lo]
 
   tree_obs <- sweep(post$tr[, dat$Tr], 1, as.vector(post$sigma_tr), "*")
@@ -178,11 +128,7 @@ variance_partition_MDSTYCL <- function(post, dat, method = c("lmg", "margin"), s
 }
 
 ## Data-generating function ---------------------------------------------------
-# Same Tree-as-study-unit design as sim_div_MDSTYCV(), Lo assigned per
-# tree (2 levels) exactly like Cv was -- independently of Mg here (tests
-# recoverability in principle; the real B/D subset's actual Location x
-# Cultivar aliasing is a real-fit-stage concern, not a calibration one,
-# see this file's own header).
+# As sim_div_MDSTYCV(), location (2 levels) per tree instead of cultivar
 
 sim_div_MDSTYCL <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
                              lo1, sigma_tr, b_deg, b_precip, b_seq, shift = NULL){
@@ -212,6 +158,7 @@ sim_div_MDSTYCL <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
   dat
 }
 
+# Simulate one dataset from one prior draw (draw_true() output)
 simulate_from_priors_MDSTYCL <- function(true_params, N_samples = 250, shift = NULL){
   sim_div_MDSTYCL(
     N_samples = N_samples,

@@ -1,23 +1,6 @@
-# MODEL 1 (MD, constant variance), ITS: mirrors 1.2_MD_16S_calibration.R's
-# own floor-test role for the 16S rebuild, on ITS (Fungi) data instead.
-# model_MD_ITS already carries its own priors (loga[Mg] ~ dnorm(2,2),
-# sigma ~ dexp(1)) -- no local override needed, unlike 16S's own script
-# (which had to patch MD's file-level ITS-import priors to 16S's own
-# established starting point). Here those ARE the priors under test.
-#
-# dexp(1)/dexp(2)-family sigma priors are exactly what the 16S rebuild
-# found miscalibrated in MDv (mode-at-zero, extract.prior()-safe but
-# systematically shrunk under SBC) -- worth actually checking whether the
-# same pathology shows up for ITS, rather than assuming it does and
-# pre-patching it away. MD itself (single shared sigma, no per-group
-# split) needed no correction in the 16S investigation; if the same holds
-# here, that isolates the issue to per-group sigma[Mg] again, not the
-# base loga[Mg]/lognormal-likelihood structure.
-#
-# True values below are ITS's own real, season-pooled Hill_1 scale
-# (Conventional mean ~11.8, Organic ~14.9, CV ~0.99/0.60 -- much smaller
-# and more right-skewed than 16S's bacterial diversity), not a copy of
-# 16S's own numbers.
+# MODEL 1 (MD, shared sigma), ITS: calibration (floor test, as 16S)
+# - priors as in model_MD_ITS (dnorm(2,2), dexp(1)), tested as-is
+# - true values on the ITS scale (conventional ~11.8, organic ~14.9; CV ~0.99/0.60)
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -31,7 +14,7 @@ save_pdf("hill1_hist", "raw", function() hist(div$Hill_1, breaks = 30))
 ## MD -- Mean difference by Management, constant variance ====================
 
 ### Effect-size sanity check ----------------------------------------------------
-# Eyeball whether the assumed group means look like plausible Hill_1 values.
+# Informal check: plausible Hill_1 values?
 
 dat_sim_con <- sim_div_M(rep(1,100), mean_ = 12, cv_ = 0.8)
 dat_sim_org <- sim_div_M(rep(1,100), mean_ = 15, cv_ = 0.6)
@@ -142,8 +125,7 @@ save_sbc_health_report(model_id_MD, sbc_MD, n_sbc, n_iter,
                         variables = c("loga[1]", "loga[2]", "sigma", "median_contrast", "mean_contrast"),
                         hiermod_out_dir = hiermod_out_dir)
 
-# n_sbc=400 stress test, same discipline as every model in this rebuild
-# before trusting an n=100 "ok".
+# n = 400 stress test
 n_sbc <- 400
 sbc_MD_2 <- run_sbc_pipeline(
   generator = sbc_gen_MD$generator, globals = sbc_gen_MD$globals,

@@ -1,16 +1,6 @@
-# MODEL 3 (MDST, "Treebeard the Skeptic"), ITS, SHIFTED (Hill_1 - 1): real
-# fit and PPC. Mirrors 3.3_MDST_16S_fit.R.
-#
-# Calibration caveat: 2.2/3.2's own n_sbc=500 run flagged loga[2] and
-# sigma_tr MISCALIBRATED (z=-2.67/+2.64; 0 divergences, so a rank-fraction
-# issue, not a sampling failure) -- consistent with why Tree was dropped
-# again after this model in the 16S rebuild too (not merged back in until
-# Model 7, once Cultivar/Year/Covariates are also in the model to help
-# stabilize sigma_tr). Models 1-6 in this family are scaffolding toward
-# Model 7, not independently-interpreted results -- 16S's own MDST showed
-# comparable SBC fragility (a small-sigma_tr funnel, sparse 1-2 obs/tree)
-# yet fit real data cleanly (0 divergences, Rhat=1.000) anyway, so this
-# real fit is still worth having as a documented data point, same as 16S's.
+# MODEL 3 (MDST, "Treebeard the Skeptic"), ITS: real fit (Hill_1 - 1) and PPC
+# Caveat: SBC flagged loga[2], sigma_tr (z ~ +/-2.6, 0 divergences)
+# - intermediate step toward model 7, not interpreted on its own
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -41,10 +31,10 @@ save_pdf("fit_trankplot", model_id_MDST,
          function() trankplot(fit_MDST, n_cols = 8, max_rows = 30),
          width = 30, height = 50)
 
-# num_divergent/num_max_treedepth/ebfmi per chain directly:
+# Per-chain divergences, max treedepth, E-BFMI
 attr(fit_MDST, "cstanfit")$diagnostic_summary(
   diagnostics = c("divergences", "treedepth", "ebfmi"), quiet = TRUE)
-# ebfmi should be comfortably >0.3
+# E-BFMI should be > 0.3
 
 ## Posterior predictive check --------------------------------------------------
 

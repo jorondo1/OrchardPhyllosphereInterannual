@@ -1,18 +1,5 @@
-# MODEL 6 (MDSYCV, "Bombadil the Eldest"), ITS: MDSYC plus Cultivar as a
-# FIXED, sum-to-zero effect (5 levels: Cortland, Liberty, Paulared,
-# Honeycrisp, Spartan). Mirrors 6.2_MDSYCV_16S_calibration.R.
-#
-# Cv index order/derived slot (idx$Cv$levels, Liberty=2 derived) is the
-# SAME physical Cultivar factor as 16S -- same trees, same samples, just a
-# different sequencing barcode -- so the "data-richest level in the
-# derived slot" choice carries over unchanged (Liberty: 53 ITS samples,
-# still the most, matching 16S's own count).
-#
-# model_MDSYCV_ITS: loga[Mg] ~ dnorm(2,2) is ITS's own scale;
-# cv_1/cv_3/cv_4/cv_5 ~ dnorm(0,1) carry over unchanged from
-# model_MDSYCV_16S. True cv_* values reused directly from 16S -- additive
-# log-scale offsets, not tied to Hill_1's own baseline, and the simulator
-# draws Cultivar independently of Mg/Mo either way.
+# MODEL 6 (MDSYCV, "Bombadil the Eldest"), ITS: calibration
+# - same cultivar factor and derived level (Liberty) as 16S; true cv_* as 16S
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')

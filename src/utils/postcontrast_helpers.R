@@ -1,11 +1,10 @@
 # ---- Full posterior, model-agnostic -----------------------------------
 
-# Every model parameter's raw posterior draws, plus whatever means_fn()
-# derives from them, as a named list of small tibbles.
+# All posterior draws + means_fn() derived quantities, as a named list of tibbles
 post_full <- function(fit, means_fn = NULL, ...){
   post <- extract.samples(fit)
   if (!is.null(means_fn)) post <- c(post, means_fn(post, ...))
-  
+
   purrr::imap(post, function(x, name){
     x <- as.matrix(x)
     colnames(x) <- if (ncol(x) == 1) name else paste0(name, "_", seq_len(ncol(x)))
@@ -13,41 +12,37 @@ post_full <- function(fit, means_fn = NULL, ...){
   })
 }
 
-# Reshapes post_full() out into  long statistic/group/value tibble,
-# add 'contrast' row for any 2-category parameter (or a single Population
-# row for a scalar, or one row per column for >2 categories with no single
-# well-defined contrast). 
-# Used by contrast_plot_panels() 
-
+# post_full() -> long statistic/group/value tibble
+# - 2 categories: both + "Contrast" (2nd - 1st)
+# - scalar: one "Population" row
+# - >2 categories: one row per column, no contrast
 compute_contrasts <- function(pf, keep = NULL, labels = NULL, group_levels = c("1", "2")){
   if (is.null(keep))   keep   <- names(pf)
   if (is.null(labels)) labels <- character(0)
-  
+
   stat_tibble <- function(name){
     x <- as.matrix(pf[[name]])
     n_cat <- ncol(x)
-    
-    # Compute contrast when 2 categories
-    if (n_cat == 2){ 
+
+    if (n_cat == 2){
       bind_rows(
         tibble(statistic = name, group = group_levels[1], value = x[,1]),
         tibble(statistic = name, group = group_levels[2], value = x[,2]),
         tibble(statistic = name, group = "Contrast",       value = x[,2] - x[,1])
       )
-    } else if (n_cat == 1){ # otherwise it's population level
+    } else if (n_cat == 1){
       tibble(statistic = name, group = "Population", value = x[,1])
-    } else { # if multiple categories, one per, but no contrast
+    } else {
       map_dfr(seq_len(n_cat), function(i)
         tibble(statistic = name, group = colnames(x)[i], value = x[,i]))
     }
   }
-  
-  # only keep specified vars
+
   long <- map_dfr(keep, stat_tibble)
-  
+
+  # optional display labels; factor order = labelled first, then the rest
   display <- function(nm) unname(ifelse(nm %in% names(labels), labels[nm], nm))
   level_order <- unique(c(intersect(names(labels), keep), setdiff(keep, names(labels))))
-  # Add stat 
   long %>%
     mutate(statistic = display(statistic)) %>%
     mutate(statistic = factor(statistic, levels = display(level_order)))
@@ -55,29 +50,24 @@ compute_contrasts <- function(pf, keep = NULL, labels = NULL, group_levels = c("
 
 # ---- Management-Month interaction contrasts -----------------
 
-# Helper:
-# Wraps a named list of posterior vectors (one per estimand) into
-# compute_contrasts()'s statistic/group/value shape
+# Named list of posterior vectors -> "Contrast"-only rows
 estimand_rows <- function(named_values){
   purrr::imap_dfr(named_values, function(v, stat)
     tibble(statistic = factor(stat, levels = names(named_values)),
            group = "Contrast", value = v))
 }
 
-# Combines paired group1/group2 estimands (e.g. May/July) Contrast-only ones 
-# (e.g. a seasonal change) into tibble
-
-# Pairs is a list of named lists of two long posterior tibble columns 
-# e.g. two columns of a tibble from the output of post_full
-
+# Paired estimands (e.g. May/July, group 1 vs 2) + their Contrast, plus
+# optional Contrast-only extras (e.g. fold differences)
+# - pairs: named list of list(group1_draws, group2_draws)
 estimand_panels <- function(pairs, extra = NULL, group_levels = c("1", "2")){
-  
+
   paired <- purrr::imap_dfr(pairs, function(v, name) bind_rows(
     tibble(statistic = name, group = group_levels[1], value = v[[1]]),
     tibble(statistic = name, group = group_levels[2], value = v[[2]]),
     tibble(statistic = name, group = "Contrast",       value = v[[2]] - v[[1]])
   ))
-  
+
   full <- if (is.null(extra)) paired else bind_rows(paired, estimand_rows(extra))
   full %<>% mutate(statistic = factor(statistic, levels = c(names(pairs), names(extra))))
   message('Statistic factor levels :')
@@ -85,23 +75,15 @@ estimand_panels <- function(pairs, extra = NULL, group_levels = c("1", "2")){
   return(full)
 }
 
-# One summary row (mean/median/89% PI/HPDI/pd) per statistic, from a
-# compute_contrasts() output  tibble.
-
-# pd ("probability of direction", Makowski et al. 2019): fraction of
-# posterior mass on the same side of 0 as the median 
-
+# Summary per statistic x group: mean, median, 89% PI, 89% HPDI, pd
+# - pd (probability of direction, Makowski et al. 2019): posterior mass on the median's side of 0
+# - default: Contrast/Population rows only; all_groups = TRUE for every row
 report_contrasts_full <- function(pc_full, labels = TRUE, all_groups = FALSE){
   filtered <- if (all_groups) pc_full else pc_full %>% filter(group %in% c("Contrast", "Population"))
-  
-  # Debug with Claude Code::::::::::::::
-  # summarise() still probes these aggregation expressions on a degenerate
-  # 0/1-row input to infer output types even when `filtered` has 0 matching
-  # rows (e.g. every variance_component_panels() call whose groups are
-  # custom labels like Year/Cultivar/Location, not literally "Contrast"/
-  # "Population") . HPDI() throws ("obj must have nsamp > 1") on that probe
-  # input, so this has to short-circuit before summarise() ever runs, not
-  # rely on 0-row grouping to no-op safely (confirmed: it doesn't).
+
+  # Empty input: return an empty table directly
+  # - summarise() probes HPDI() on 0 rows, which errors
+  # - same columns as below, so aes(label = label) still resolves
   if (nrow(filtered) == 0) {
     empty <- tibble(
       statistic = factor(character(0), levels = levels(pc_full$statistic)),
@@ -109,11 +91,9 @@ report_contrasts_full <- function(pc_full, labels = TRUE, all_groups = FALSE){
       HPDI_lower = numeric(0), HPDI_upper = numeric(0),
       PI89_lower = numeric(0), PI89_upper = numeric(0),
       pd = numeric(0))
-    # same columns as the non-empty path, so aes(label = label) still resolves
     return(if (labels) mutate(empty, label = character(0)) else empty)
   }
-  # /debug :::::::::::: thank you CLaude
-  
+
   filtered %>%
     group_by(statistic, group) %>%
     summarise(
@@ -132,72 +112,67 @@ report_contrasts_full <- function(pc_full, labels = TRUE, all_groups = FALSE){
           "\n89% PI: [", round(PI89_lower,2), ", ", round(PI89_upper,2), "]",
           "\n89% HPDI: [", round(HPDI_lower,2), ", ", round(HPDI_upper,2), "]"))
       } else {.}
-    } 
-  
+    }
+
 }
 
-# Standardised plot for reporting in model building:
-
-# One density panel per statistic, both groups plus their Contrast
-# overlaid, with a median/PI/HPDI label and an optional true-value
-# reference line (for predictive checks). 
-
+# Model-building report plot: one density panel per statistic
+# - groups + Contrast overlaid, median/PI/HPDI label
+# - optional true-value lines (calibration)
+# - ratio_stats: fold-change statistics, drawn in a separate bottom panel
 contrast_plot_panels <- function(
     pc_full, quant, group_pal, scales = "free",
     true_vals = NULL, true_vals_label = "True value",
     legend_title = "Posteriors (population mean/median)",
     ratio_stats = character(0), ratio_pal = NULL){
-  
+
   if(length(quant)!=2){
     stop("quant is not a two-value numeric vector.")
   }
   if(sum(quant<=1)!=2 | sum(quant>=0)!=2) {
     stop("quant values must be in [0,1]; lower and upper desired quantiles, e.g. c(0.005, 0.995)")
   }
-  
+
+  # crop each statistic to its own quantile range
   trimmed <- pc_full %>%
     group_by(statistic) %>%
     filter(value >= quantile(value, quant[1]), value <= quantile(value, quant[2])) %>%
     ungroup()
-  
+
   prop_dropped <- 100 * (1 - nrow(trimmed) / nrow(pc_full))
-  
-  # Stats label for reporting;
+
   labels <- report_contrasts_full(pc_full)
-  
+
   refactor_statistic <- function(df) df %>% mutate(statistic = factor(statistic, levels = levels(pc_full$statistic)))
-  
+
   main_levels  <- setdiff(levels(pc_full$statistic), ratio_stats)
   ratio_levels <- intersect(levels(pc_full$statistic), ratio_stats)
-  
-  # Unified legend across main_plot + ratio_plot (e.g. Contrast/Conventional/
-  # Organic + May/July fold difference, 5 entries)
+
+  # one legend across main + ratio panels
   main_groups <- trimmed %>% filter(statistic %in% main_levels) %>% pull(group) %>% unique()
   combined_pal <- c(group_pal[intersect(names(group_pal), main_groups)], ratio_pal)
-  
-  # Main plot
+
   main_plot <- trimmed %>%
     filter(statistic %in% main_levels) %>%
     ggplot(aes(x = value, fill = group, colour = group)) +
     geom_density(alpha = 0.5, linewidth = 0.2) +
     geom_vline(xintercept = 0, colour = "grey50") +
-    
-    # Add true valus if provided:
+
+    # true values: per group if a group column is given, else one line
     { if (!is.null(true_vals)) {
       tv <- refactor_statistic(true_vals)
       if ("group" %in% names(tv)) {
         geom_vline(
-          data = tv, 
+          data = tv,
           aes(xintercept = value, colour = group, linetype = true_vals_label),
           linewidth = 0.7, show.legend = c(colour = FALSE, linetype = TRUE))
       } else {
         geom_vline(
-          data = tv, 
+          data = tv,
           aes(xintercept = value, linetype = true_vals_label),
           colour = "grey20", linewidth = 0.7, show.legend = c(linetype = TRUE))
       }}} +
-    # contrast labels 
-    geom_text(data = labels %>% filter(statistic %in% main_levels), 
+    geom_text(data = labels %>% filter(statistic %in% main_levels),
               aes(label = label), x = Inf, y = Inf,
               hjust = 1.05, vjust = 1.3, size = 2.8, colour = "grey20",
               inherit.aes = FALSE, family = "mono") +
@@ -205,47 +180,36 @@ contrast_plot_panels <- function(
     scale_fill_manual(values = combined_pal, limits = names(combined_pal), guide = "none") +
     scale_colour_manual(values = combined_pal, limits = names(combined_pal), guide = "none") +
     labs(x = "Effective number of ASVs", y = NULL)
-  
-  # Custom caption if dropping thin tails with quant parameter
+
   caption <- paste0(
     "Each panel cropped independently to its own ", 100*quant[1], "th-", 100*quant[2],
     "th percentile range. ~", signif(prop_dropped, 3), "% of draws overall fall outside ",
     "their panel's range and are not shown.")
-  
+
   if (length(ratio_levels) == 0) return(main_plot + labs(caption = caption))
-  
-  # Ratio/fold-change statistics: Median and 89% HPDI
-  
+
+  # ratio panel annotation: one line per statistic, median + 89% HPDI
   ratio_label_text <- report_contrasts_full(pc_full, labels = FALSE) %>%
     filter(statistic %in% ratio_levels) %>%
     arrange(statistic) %>%
-    # one-liner stats per statistic 
     mutate(line = paste0(
       statistic, " posterior median: ", round(median, 2),
       " (89% HPDI [", round(HPDI_lower, 2), ", ", round(HPDI_upper, 2), "])")) %>%
     pull(line) %>%
     paste(collapse = "\n")
-  
-  # ratio_plot (last panel in the stack) 
-  
-  # Claude debug :::::::::::::: 
-  # collect legends in a patchwork where each plot shares the levels, but 
-  # the input data has 0 lines for some of these levels; will produce a 
-  # blank/uncoloured legend, even when using explicit scale_* statements
-  # with the same palettes.
+
+  # Dummy rows for the main panel's groups
+  # - otherwise their keys in the collected legend are blank (no data here)
   ratio_dummy <- tibble(group = main_groups, x = 1, y = 0)
-  
+
   ratio_plot <- trimmed %>%
     filter(statistic %in% ratio_levels) %>%
     mutate(group = as.character(statistic)) %>%
     ggplot(aes(x = value, fill = group, colour = group)) +
     geom_density(alpha = 0.5, linewidth = 0.2) +
-    # this is the fix: 
-    # add a geom_area with same aes, but with other plot's data:
     geom_area(
       data = ratio_dummy, aes(x = x, y = y, fill = group, colour = group),
       alpha = 0.5, linewidth = 0.2, inherit.aes = FALSE) +
-    #/debug :::::::: thanks claude
     geom_vline(xintercept = 1, colour = "grey50") +
     annotate("text", x = Inf, y = Inf, label = ratio_label_text,
              hjust = 1.05, vjust = 1.3, size = 2.8, colour = "grey20", family = "mono") +
@@ -253,41 +217,38 @@ contrast_plot_panels <- function(
     scale_colour_manual(values = combined_pal, limits = names(combined_pal)) +
     theme(legend.position = "bottom") +
     labs(x = "Fold change", y = NULL, fill = legend_title, colour = legend_title)
-  
-  # robust patchwork
+
   patchwork::wrap_plots(list(main_plot, ratio_plot), ncol = 1,
                         heights = c(length(main_levels), 1)) +
     patchwork::plot_annotation(caption = caption)
 }
 
-# Same idea as contrast_plot_panels(), but one plot per statistic with its
-# own legend, stacked via patchwork. palette: one combined named vector covering
-# every group across every statistic; each panel looks up only its own subset.
-
+# Like contrast_plot_panels(), but one plot per statistic, each with its own legend
+# - palette: one named vector for all groups; each panel uses its own subset
+# - sd_stats: SD panels, no mean line
 variance_component_panels <- function(pc_full, quant, palette, sd_stats = character(0)){
   if (length(quant) != 2) stop("quant is not a two-value numeric vector.")
   if (sum(quant <= 1) != 2 | sum(quant >= 0) != 2) {
     stop("quant values must be in [0,1]; lower and upper desired quantiles, e.g. c(0.005, 0.995)")
   }
-  
+
   trimmed <- pc_full %>%
     group_by(statistic) %>%
     filter(value >= quantile(value, quant[1]), value <= quantile(value, quant[2])) %>%
     ungroup()
-  
+
   prop_dropped <- 100 * (1 - nrow(trimmed) / nrow(pc_full))
-  
-  labels <- report_contrasts_full(pc_full) 
-  
+
+  labels <- report_contrasts_full(pc_full)
+
   panels <- trimmed %>%
-    # one standalone ggplot per statistic:
     group_split(statistic) %>%
     purrr::map(function(df){
       stat_name <- as.character(df$statistic[[1]])
       pal_here  <- palette[intersect(names(palette), unique(df$group))]
-      
+
       labels_here <- labels %>% filter(statistic == stat_name)
-      
+
       p <- df %>%
         ggplot(aes(x = value, fill = group, colour = group)) +
         geom_density(alpha = 0.5, linewidth = 0.2) +
@@ -299,9 +260,8 @@ variance_component_panels <- function(pc_full, quant, palette, sd_stats = charac
         scale_colour_manual(values = pal_here) +
         theme(legend.position = "right") +
         labs(x = NULL, y = NULL, title = stat_name, fill = NULL, colour = NULL)
-      
-      # Dashed per-group mean line: a non-centered product (e.g. b[Lo]*
-      # sigma_loc) is often skewed.Skipped for SD panels.
+
+      # dashed per-group mean line (non-centered products are often skewed)
       if (!stat_name %in% sd_stats) {
         means_here <- df %>% group_by(group) %>% summarise(m = mean(value), .groups = "drop")
         p <- p + geom_vline(data = means_here, aes(xintercept = m, colour = group),
@@ -309,9 +269,9 @@ variance_component_panels <- function(pc_full, quant, palette, sd_stats = charac
       }
       p
     })
-  
+
   final_plot <- patchwork::wrap_plots(panels, ncol = 1)
-  
+
   if(sum(quant)<1) {
     final_plot <- final_plot +
       patchwork::plot_annotation(caption = paste0(
@@ -324,11 +284,9 @@ variance_component_panels <- function(pc_full, quant, palette, sd_stats = charac
 
 # ---- Parameter-recovery contrast tables (Mg x Mo models) -------------------
 
-
-# One call replaces the copy-pasted means/medians estimand_panels() pair in
-# every *.4_*_analysis.R script. pf: post_full() output (needs $mean/$median,
-# each a 4-column tibble in means_*()'s own cbind order: cols 1/3 = the May
-# pair, cols 2/4 = the July pair, for whatever two groups means_*() cbinds).
+# Mean- and median-based Mg x Mo estimands from post_full()
+# - pf$mean / pf$median: 4 columns in means_*() order (1/3 = May pair, 2/4 = July pair)
+# - adds May/July fold differences (col 1 / col 3, col 2 / col 4)
 build_pc_estimands <- function(pf, group_levels = c("1", "2")){
   one <- function(x, label){
     pair_names <- paste(c("May", "July"), label)
@@ -342,40 +300,24 @@ build_pc_estimands <- function(pf, group_levels = c("1", "2")){
 }
 
 # ---- Variance partition ------------------------------------
+# Inputs for both partition functions:
+# - terms: named list, each a (draws x n_obs) matrix of that term's contribution
+#   to the linear predictor
+# - residual_var: residual variance per draw
 
-# terms: named list, each a (draws x n_obs) matrix of that term's
-# per-observation contribution to the linear predictor. 
-#
-# residual_var: length-draws vector (the noise term)
-#
-# Reports a marginal ("by margin": var(full) - var(full minus this term),
-# order-free) share for every term, plus Residual. NB this is NOT the same
-# guarantee as a real ANOVA/PERMANOVA Type III SS! 
-
-# !!!!! THIS IS A SHORTCUT
-
-# CLAUDE explains::::::::::::::
-# every term's coefficients are already fixed at their joint
-# full-model posterior values, and we just zero out one term's own
-# contribution rather than re-estimating anything. So a term whose raw
-# (not mean-centered) per-observation values are strongly (anti-)correlated
-# with the rest of the linear predictor can come out negative -- this isn't
-# a bug, it's a real signature of non-orthogonal/confounded term coding
-# under this no-refit shortcut. Management x Season is therefore split via
-# mgmo_effect_terms() (effect-coded, orthogonal) rather than the model's raw
-# dummy coding. See variance_partition_lmg() below for the order-averaged
-# alternative (the default in the model files).
-# /thanks claude :::::::::::::::
-
+# "By margin" shortcut: var(full) - var(full minus term), per term
+# - no refit: coefficients fixed at their joint posterior values
+# - NOT a Type III SS; correlated terms can come out negative
+# - superseded by variance_partition_lmg() (default in model files)
 variance_partition_panels <- function(terms, residual_var){
   message('Warning: This is a shortcut, not true type III ANOVA SS !!!! ')
   nm   <- names(terms)
   full <- Reduce(`+`, terms)
   explained <- apply(full, 1, var)
   total <- explained + residual_var
-  
+
   marg_vals <- purrr::imap(terms, function(mat, name) explained - apply(full - mat, 1, var))
-  
+
   bind_rows(
     purrr::imap_dfr(marg_vals, ~ tibble(group = .y, value = .x / total)),
     tibble(group = "Residual", value = residual_var / total)
@@ -386,16 +328,11 @@ variance_partition_panels <- function(terms, residual_var){
     )
 }
 
-# Effect-coded Management x Season split (Gelman 2005 "batches"): takes the
-# combined per-observation Mg x Mo contribution (draws x n_obs, dummy-coded as
-# in the model: loga[Mg] + gamma*(Mo-1)) and re-expresses it per draw as
-# grand mean + Management main effect + Season main effect + interaction,
-# each main effect = its level's observation-weighted mean minus the grand
-# mean, interaction = the remainder. The three pieces are orthogonal when
-# Mg x Mo cell counts are proportional (every tree sampled in both months),
-# so their shares no longer depend on the model's reference-level coding.
-# The grand mean is dropped: it is constant per draw and carries no variance.
-
+# Effect-coded Management x Season split (Gelman 2005 "batches")
+# - input: combined Mg x Mo contribution (loga[Mg] + gamma*(Mo-1)), draws x n_obs
+# - output: Management, Season main effects (level mean - grand mean) + interaction (remainder)
+# - orthogonal when cell counts are proportional; independent of reference levels
+# - grand mean dropped (constant per draw, no variance)
 mgmo_effect_terms <- function(mgmo, Mg, Mo){
   grand <- rowMeans(mgmo)
   level_means <- function(g){
@@ -412,16 +349,11 @@ mgmo_effect_terms <- function(mgmo, Mg, Mo){
   )
 }
 
-# Shapley/LMG version: same inputs and output shape as variance_partition_panels().
-# Per draw, sensitivity::lmg() (Lindeman et al. 1980; Groemping 2006) regresses
-# the linear predictor on the term contributions (one column per term) and
-# returns each term's R2 gain averaged over every order of adding terms. The
-# full model's R2 is 1 by construction (the linear predictor IS the sum of the
-# terms), so the LMG values split the explained variance; they are rescaled
-# here to shares of total (explained + residual) variance. Shares are >= 0.
-# 2^K regressions per draw (~0.06 s at K = 9), so it runs on n_draws evenly
-# spaced draws.
-
+# LMG/Shapley partition (Lindeman et al. 1980; Groemping 2007), per draw
+# - sensitivity::lmg(): R2 gain of each term, averaged over all entry orders
+# - full R2 = 1 (linear predictor = sum of terms) -> shares of explained variance,
+#   rescaled to shares of total (explained + residual)
+# - shares >= 0; 2^K regressions per draw, so run on n_draws evenly spaced draws
 variance_partition_lmg <- function(terms, residual_var, n_draws = 1000){
   if (!requireNamespace("sensitivity", quietly = TRUE)) stop("Needs the 'sensitivity' package.")
   nm <- names(terms)
@@ -431,8 +363,7 @@ variance_partition_lmg <- function(terms, residual_var, n_draws = 1000){
   res <- t(vapply(draws, function(s){
     X <- as.data.frame(sapply(terms, function(m) m[s, ]))
     y <- rowSums(X)
-    # every full-model fit is exact (y = sum of X), hence lm()'s "essentially
-    # perfect fit" warnings -- expected here, so muffled
+    # exact fit by construction -> lm() "perfect fit" warnings, muffled
     lmg_vals <- suppressWarnings(sensitivity::lmg(X, y))$lmg[, 1]
 
     explained <- var(y)

@@ -1,7 +1,6 @@
-# PCoA (weighted UniFrac) figures, both barcodes, 2- and 3-year subsets.
-# Main figure: points/ellipses coloured by Time x Management.
-# Supplementary figures, same ordinations: coloured by Year; and Cultivar /
-# Location highlighted one month at a time (panel A = May, B = July).
+# PCoA (weighted UniFrac) figures, both barcodes, 2- and 3-year subsets
+# - main: coloured by Time x Management
+# - supp: by Year; Cultivar / Location highlighted per month
 
 pacman::p_load(tidyverse, vegan, patchwork, update = FALSE)
 
@@ -69,9 +68,8 @@ pcoa_panel <- function(ord, colour_by, color_pal, fill_pal, limits,
     scale_fill_manual(values = fill_pal, limits = limits, breaks = breaks, name = legend_title)
 }
 
-# Helper: assembled 4-panel figure (Panel A-D: 3-year on top, 2-year below).
-# Legend limits = levels present in any panel, so all four panels share one
-# legend (e.g. the 2-year subsets have no 2022 samples).
+# Helper: 4-panel figure (A-B 3-year, C-D 2-year), one shared legend
+# - legend limits = levels present in any panel
 pcoa_figure <- function(colour_by, color_pal, fill_pal) {
   present <- unique(unlist(map(ordinations, \(o) as.character(o$scores[[colour_by]]))))
   limits  <- intersect(names(fill_pal), present)
@@ -96,9 +94,8 @@ month_pals <- list(
   Cultivar = highlight_pal(color_cult, fill_cult),
   Location = highlight_pal(color_loc,  fill_loc))
 
-# Helper: one ordination, `var` shown for one month's samples only; the other
-# month's samples stay in grey ("other", drawn underneath, not in the legend).
-# No title: months/subsets are identified in the figure caption.
+# Helper: `var` shown for one month only; other month in grey ("other", not in legend)
+# - no title: identified in the caption
 month_panel <- function(ord, var, month, limits) {
   pals <- month_pals[[var]]
   ord$scores <- ord$scores %>%
@@ -111,10 +108,9 @@ month_panel <- function(ord, var, month, limits) {
              breaks = setdiff(limits, "other"), legend_title = var, ellipses = FALSE)
 }
 
-# Helper: all 8 month-highlight ordinations of one barcode, May left / July right:
-# A/B Cultivar 3Y, C/D Cultivar 2Y, E/F Location 3Y, G/H Location 2Y.
-# Each row is its own patchwork with its legend collected to the right, so each
-# legend sits beside (and lists only the levels of) its own plot pair.
+# Helper: 8 month-highlight panels of one barcode, May left / July right
+# - A/B Cultivar 3Y, C/D Cultivar 2Y, E/F Location 3Y, G/H Location 2Y
+# - each row its own patchwork, legend beside its pair
 month_figure <- function(barcode) {
   rows <- tribble(
     ~var,       ~subset,

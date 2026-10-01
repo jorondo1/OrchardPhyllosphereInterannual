@@ -1,7 +1,4 @@
-# MODEL 2 (MDS), 16S, SHIFTED (Hill_1 - 1): real fit and PPC.
-# model_MDS_16S already carries its own validated priors (see MDS_model.R),
-# no local override needed here (unlike MDv's fit script, whose file
-# default is deliberately left at the pre-calibration starting point).
+# MODEL 2 (MDS), 16S: real fit (Hill_1 - 1) and PPC
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')

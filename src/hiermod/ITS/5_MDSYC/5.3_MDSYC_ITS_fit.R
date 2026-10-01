@@ -1,9 +1,4 @@
-# MODEL 5 (MDSYC, "Radagast the Grower"), ITS, SHIFTED (Hill_1 - 1): real
-# fit and PPC. Mirrors 5.3_MDSYC_16S_fit.R. model_MDSYC_ITS already carries
-# its own validated priors (loga[Mg] ~ dnorm(2,2), everything else
-# inherited from model_MDSYC_16S) -- no local override needed, confirmed
-# clean by 5.2_MDSYC_ITS_calibration.R's own n_sbc=500 run (0 divergences,
-# "Overall: OK").
+# MODEL 5 (MDSYC, "Radagast the Grower"), ITS: real fit (Hill_1 - 1) and PPC
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -50,7 +45,7 @@ save_gg("postpred_density", model_id_MDSYC, p_postpred)
 save_gg("postpred_stat", model_id_MDSYC, p_ppc)
 
 ## Year effect (fixed, not pooled) ---------------------------------------------
-# yr1/yr2 free; yr3 = -(yr1+yr2) by construction.
+# yr1/yr2 free; yr3 = -(yr1 + yr2)
 
 pf <- post_full(fit_MDSYC)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)
@@ -67,8 +62,7 @@ p_year <- variance_component_panels(
 save_gg("fit_year_effects", model_id_MDSYC, p_year, width = 8, height = 4)
 
 ## Covariate effects (b_deg, b_precip, b_seq) ----------------------------------
-# The new thing to actually look at this model for: are any of these
-# credibly away from 0, and in which direction?
+# New here: covariate slopes, direction and credibility
 
 pc_covariates <- bind_rows(
   tibble(group = cov_labels[1], value = pf$b_deg$b_deg),

@@ -1,14 +1,5 @@
-# MODEL 2 (MDS), 16S: Management x Season interaction, no random effects.
-#
-# Next step in the from-scratch bottom-up rebuild after Model 1 (MD/MDv):
-# tackles the actual scientific-target estimand (Mg x Mo interaction)
-# before reintroducing any random effect. 
-#
-# loga[Mg]/sigma[Mg] priors hardcode Model 1's own validated answer
-# (dnorm(5,2) / dhalfnorm(0,1), see 1.2_MDv_16S_calibration.R) as this
-# model's starting point, not a fresh guess. s_conv/gap_shift's dnorm(0,1)
-# is new territory for this rebuild -- MDS2's own (untested by our SBC)
-# choice, kept here as the hypothesis to validate.
+# MODEL 2 (MDS), 16S: calibration
+# Aim: Management x Season interaction, before any random effect
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -21,8 +12,7 @@ model_id <- model_id_MDS
 hiermod_out_dir <- "out/hiermod/16S_2_interaction_MDS/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# Same baseline/gap values as MDS2's own calibration, so results stay
-# comparable across the model family.
+# Same baseline/gap values throughout the model family (comparability)
 
 may_conv <- 180
 may_org  <- 120
@@ -98,8 +88,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga/gamma x sigma[Mg] funnel check ---------------------------------------
-# s_conv/gap_shift are new parameters sharing the same likelihood term, 
-# so check them against sigma[Mg] too.
+# New s_conv/gap_shift share the likelihood term: check vs sigma[Mg] too
 
 p_funnel <- function(){
   par(mfrow = c(2,2))

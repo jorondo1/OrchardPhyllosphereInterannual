@@ -1,15 +1,7 @@
-# MODEL 6 (MDSYCV): collinearity-aware SBC stress test. 
-
-#  real weather/sequencing-depth collinearity: cor(deg_h_z, Mo)=0.73, 
-# cor(precip_72h_z, Mo)=0.55, cor(seq_depth_z, Mg)=0.31 (src/check_seq_depth_confound.R,
-# src/hiermod/16S/TODO.md). Every calibration script up to now (including
-# MDSYCV's own 6.2) drew covariates independently of Mg/Mo -- this checks
-# whether b_deg/b_precip/b_seq/s_conv/gap_shift stay identifiable once the
-# simulator matches the real data's own collinearity structure, using
-# sim_div_MDSYCV()'s new rho_deg_season/rho_precip_season/rho_seq_mg
-# arguments (MDSYCV_model.R, template borrowed from the ITS lineage's own
-# MDLSYC_model.R, adapted to the specific correlations actually confirmed
-# in this data rather than the generic "correlate with mu" version there).
+# MODEL 6 (MDSYCV), 16S: SBC under realistic covariate collinearity
+# - real data: cor(deg_h, Mo) = 0.73, cor(precip, Mo) = 0.55, cor(seq_depth, Mg) = 0.31
+# - earlier calibrations drew covariates independently of Mg/Mo
+# - uses sim_div_MDSYCV()'s rho_* arguments
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -21,10 +13,7 @@ model_id <- "MDSYCV_collin"
 hiermod_out_dir <- "out/hiermod/16S_6_cultivar_MDSYCV/Calibration"
 
 ## Parameter recovery, under realistic collinearity ----------------------------
-# Same baseline/gap/year/cultivar/covariate values as 6.2's own calibration
-# (comparable), but deg_h_z/precip_72h_z correlated with Season and
-# seq_depth_z correlated with Management at the real data's own measured
-# strength -- not independent draws.
+# Same values as 6.2, covariates correlated with Season/Management at the real strength
 
 may_conv <- 180
 may_org  <- 120
@@ -44,7 +33,7 @@ true_b_deg    <- 0.2
 true_b_precip <- -0.15
 true_b_seq    <- 0.3
 
-# Real, measured correlations (see header) -- not guesses.
+# Measured correlations (see header)
 rho_deg_season    <- 0.735
 rho_precip_season <- 0.547
 rho_seq_mg        <- 0.310
@@ -72,7 +61,7 @@ dat_sim <- sim_div_MDSYCV(
   rho_seq_mg = rho_seq_mg
 )
 
-# Sanity check: did the simulator actually achieve the intended collinearity?
+# Did the simulator reach the intended correlations?
 cat("Achieved cor(deg_h_z, Mo):", cor(dat_sim$deg_h_z, dat_sim$Mo), "(target", rho_deg_season, ")\n")
 cat("Achieved cor(precip_72h_z, Mo):", cor(dat_sim$precip_72h_z, dat_sim$Mo), "(target", rho_precip_season, ")\n")
 cat("Achieved cor(seq_depth_z, Mg):", cor(dat_sim$seq_depth_z, dat_sim$Mg), "(target", rho_seq_mg, ")\n")
@@ -88,9 +77,7 @@ precis(fit_sim, depth = 2)
 ### Fixed effect + sigma recovery ---------
 post_sim <- extract.samples(fit_sim)
 
-# The parameters most at risk under this specific collinearity: s_conv/
-# gap_shift (share Season with deg_h_z/precip_72h_z) and loga/sigma[Mg]
-# (share Management with seq_depth_z).
+# Most at risk: s_conv/gap_shift (vs weather), loga/sigma[Mg] (vs read count)
 
 (param_recovery <- check_recovery(
   true = list(
@@ -109,7 +96,7 @@ post_sim <- extract.samples(fit_sim)
     b_deg = post_sim$b_deg, b_precip = post_sim$b_precip, b_seq = post_sim$b_seq)))
 
 ## Collinearity check: does the correlation show up in the posterior too? ------
-# The direct question -- b_deg vs s_conv/gap_shift, b_seq vs loga/sigma[Mg].
+# b_deg vs s_conv/gap_shift, b_seq vs loga/sigma[Mg]
 
 pairs_vars <- c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
                  "b_deg", "b_precip", "b_seq")
@@ -122,9 +109,7 @@ cat("cor(b_seq, loga[1]):", cor(post_sim$b_seq, post_sim$loga[,1]), "\n")
 cat("cor(b_seq, sigma[1]):", cor(post_sim$b_seq, post_sim$sigma[,1]), "\n")
 
 ## Simulation-based calibration (SBC), under realistic collinearity ------------
-# extra_globals doesn't need anything new -- rho_* are passed as fixed
-# extra args via make_sbc_generator()'s own `...` (identical to how `shift`
-# is already forwarded), applied identically on every replicate.
+# rho_* forwarded as fixed simulator args (like shift)
 
 sbc_gen_collin <- make_sbc_generator(
   fit = fit_sim, simulate_fn = simulate_from_priors_MDSYCV,
@@ -157,8 +142,5 @@ save_sbc_health_report(model_id, sbc_collin, n_sbc, n_iter,
                                       "may_gap", "july_gap", "seasonal_change"),
                         hiermod_out_dir = hiermod_out_dir)
 
-# No divergences, rhats look good
-# Most importantly:
-# b_deg~s_convr=-0.61 doesn't translate into actual miscalibration:
-# b_deg, s_conv, and gap_shift all pass under when using sim data that
-# has the same kind of collinearity as our data
+# Result: no divergences, Rhat fine
+# - posterior cor(b_deg, s_conv) = -0.61, but no miscalibration under realistic collinearity

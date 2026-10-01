@@ -1,4 +1,4 @@
-# MODEL 1 (MD) + MODEL 2 (MDv), 16S: posterior contrast, run against the saved fits.
+# MODEL 1 (MD) + MDv, 16S: posterior contrast from saved fits
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -7,7 +7,7 @@ source('src/hiermod/Models/MD_model.R') # model_MD_16S/model_MDv_16S, means_MD/m
 model_MD  <- model_MD_16S
 model_MDv <- model_MDv_16S
 
-# Updated priors (see MDv calibration)
+# Calibrated sigma prior (see 1.2_MDv)
 model_MDv$prior_sigma <- quote(sigma[Mg] ~ dhalfnorm(0,1))
 hiermod_out_dir <- "out/hiermod/16S_1_lognormal_MD"
 

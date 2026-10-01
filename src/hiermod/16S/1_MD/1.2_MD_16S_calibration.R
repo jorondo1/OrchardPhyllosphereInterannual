@@ -1,23 +1,8 @@
-# MODEL 1 (MD, constant variance), 16S: same model as ITS, on 16S's own
-# data. MDv (Management-specific variance) is a separate sibling script
-# (1.2_MDv_16S_calibration.R) -- split out since each now has its own full
-# recovery/prior-PC/SBC investigation rather than sharing one file.
-#
-# Formal prior-PC/SBC added here specifically as the floor test in a wider
-# investigation: SBC on every later model in this family (MDLS2v, MDLS2vz,
-# MDL, MDS2) found loga[]'s posterior systematically shrunk toward its
-# prior mean (rank-fraction well below 0.5), and that bias persisted
-# identically after removing Location entirely (MDS2) -- ruling out any
-# random-effect cardinality issue as the cause. MD (no per-group sigma, no
-# random effects at all) is the simplest possible version of the shared
-# loga[Mg]/lognormal-likelihood structure; if it calibrates cleanly, a
-# base-level prior/likelihood shrinkage effect is ruled out too, pointing
-# the remaining investigation at per-group sigma[Mg] and/or the random
-# effects specifically (see 1.2_MDv_16S_calibration.R for the next isolating
-# step). loga/sigma priors patched to this investigation's established 16S
-# values (dnorm(5,2)/dexp(2)) rather than the original, never-validated ITS
-# import (dnorm(2,2)/dexp(1)) -- scoped to this script's own model_MD only,
-# not 1.3's real-data fit.
+# MODEL 1 (MD, shared sigma), 16S: calibration
+# Aim: floor test -- later models showed loga shrunk toward its prior
+# - does it already happen with no per-group sigma and no random effects?
+# - next isolating step: 1.2_MDv_16S_calibration.R
+# Priors: 16S starting values (dnorm(5,2), dexp(2))
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -34,9 +19,7 @@ save_pdf("hill1_hist", "raw", function() hist(div$Hill_1, breaks = 30))
 ## MD -- Mean difference by Management, constant variance ====================
 
 ### Effect-size sanity check ----------------------------------------------------
-# Eyeball whether the assumed group means look like plausible Hill_1 values.
-# Informal (hand-picked mean_/cv_, not drawn from priors) -- see the Prior
-# predictive check below for the real, prior-driven version. Mean diff of 4:
+# Informal check: do hand-picked group means look like plausible Hill_1 values?
 dat_sim_con <- sim_div_M(rep(1,100), mean_ = 180, cv_ = 1)
 dat_sim_org <- sim_div_M(rep(1,100), mean_ = 120, cv_ = 1)
 
@@ -49,10 +32,7 @@ save_pdf("prior_pred_dens", model_id_MD, function(){
 })
 
 ### Parameter + contrast recovery -------------------------------------------
-# One simulated dataset with loga/sigma given directly (sim_div_MD(), not
-# sim_div_M()'s mean_/cv_ round-trip), matching every later model's own
-# convention -- lets check_recovery() test the raw parameters directly
-# against their true values, not just the derived contrast.
+# One simulated dataset on the model's own scale (loga, sigma)
 
 true_conv <- 180
 true_org  <- 120
@@ -97,9 +77,7 @@ save_gg("sim_contrast_density", model_id_MD, p_MD_cal_contrast)
 ## MD -- formal calibration (loga-shrinkage floor test) =======================
 
 ### loga x sigma funnel check ----------------------------------------------
-# sigma is a single SHARED scalar here (no per-Mg split at all), the
-# cleanest possible check of whether loga trades off against the residual
-# scale even with no group-specific variance to entangle with.
+# Single shared sigma: does loga trade off against it?
 
 p_funnel_MD <- function(){
   par(mfrow = c(1,2))
@@ -129,9 +107,7 @@ p_prior_pc_MD <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id_MD, p_prior_pc_MD)
 
 ### Simulation-based calibration (SBC), via the SBC package --------------------
-# The floor test: does loga[] still show the ~0.15-0.35 rank-fraction skew
-# found in every other model in this family, even with no random effects,
-# no Season/Tree/Year, and a single shared (not per-group) sigma?
+# Floor test: loga rank skew without random effects, Season, Tree, Year?
 sbc_gen_MD <- make_sbc_generator(
   fit = fit_MD_cal, simulate_fn = simulate_from_priors_MD,
   keep = c("loga", "sigma"), gen_cols = c("Dv", "Mg"),
@@ -157,7 +133,4 @@ save_sbc_health_report(model_id_MD, sbc_MD, n_sbc, n_iter,
                         variables = c("loga[1]", "loga[2]", "sigma", "median_contrast", "mean_contrast"),
                         hiermod_out_dir = hiermod_out_dir)
 
-# MD result: 0 divergences, 0 low-EBFMI, only 1 fit barely over the Rhat
-# threshold at 1.011, treedepth totals negligible compared to MDS2's
-# 145,523. MD is properly calibrated (loga[1]/loga[2] rank-fractions
-# 0.508/0.456, both well within n=100 noise).
+# Result: calibrated (0 divergences, loga rank fractions 0.51/0.46)

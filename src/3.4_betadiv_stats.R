@@ -1,7 +1,6 @@
-# PERMANOVA/betadisper tests (weighted UniFrac) behind the main+supp PCoA
-# figures, both barcodes: dispersion homogeneity per grouping variable, and
-# the two adonis2() formulas (with/without environmental covariates), for
-# 2y/3y and their May/July splits.
+# Beta-diversity statistics (weighted UniFrac), both barcodes
+# - PERMANOVA (adonis2) on all data and per subset x month
+# - dispersion homogeneity (betadisper) for each PERMANOVA factor
 
 pacman::p_load(tidyverse, vegan, update = FALSE)
 set.seed(230726)
@@ -85,11 +84,10 @@ perms[["2Y - July ITS"]] <- adonis2(
 save_stat_xlsx("out/manuscript/betadiv_permanova.xlsx", perms)
 
 # DISPERSION (betadisper) ------------------
-# Homogeneity of multivariate dispersion for each categorical factor of the
-# PERMANOVA models above, on the same subsets: a significant PERMANOVA term
-# can reflect a difference in spread (dispersion) rather than in location
-# (centroid). Centroid-based, to match PERMANOVA; permutation test.
-# Continuous covariates are not tested -- betadisper needs a grouping factor.
+# Homogeneity of dispersion for each categorical PERMANOVA factor, same subsets
+# - a significant PERMANOVA term can reflect spread rather than centroid shift
+# - centroid-based (as PERMANOVA), permutation test
+# - continuous covariates not tested (betadisper needs groups)
 
 disp_models <- tribble(
   ~Model,      ~slot,     ~factors,

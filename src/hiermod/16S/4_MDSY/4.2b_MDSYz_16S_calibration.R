@@ -1,9 +1,5 @@
-# MODEL 4 (MDSYz), 16S: MDSY + sum-to-zero constraint on Year. MDSY's own
-# SBC (4.2) found loga[1]/loga[2] severely miscalibrated (biased high) and
-# all three yr[] miscalibrated in the opposite direction (biased low) -- a
-# one-directional leak, not noise. See MDSYz_model.R's header for the fix
-# (2 free scalars yr1/yr2, third level = -(yr1+yr2) by construction) and
-# its direct precedent (Location's own MDLS2v -> MDLS2vz history).
+# MODEL 4 (MDSYz), 16S: calibration
+# Aim: does sum-to-zero Year fix MDSY's loga/yr leak? (see MDSYz_model.R)
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -16,11 +12,7 @@ model_id <- model_id_MDSYz
 hiermod_out_dir <- "out/hiermod/16S_4_year_MDSY/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# Same baseline/gap values as MDSY's own calibration, so results stay
-# comparable. true_yr1/true_yr2 chosen so the implied yr3 = -(yr1+yr2)
-# matches MDSY's own true_yr[3] = -0.2 as closely as possible while keeping
-# all three comparable in magnitude (0, 0.3, -0.2 doesn't sum to zero, so
-# it can't be reused verbatim under this constraint).
+# Same baseline/gap values as MDSY; yr1/yr2 chosen so yr3 = -(yr1 + yr2) stays similar
 
 may_conv <- 180
 may_org  <- 120
@@ -102,8 +94,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga/gamma x yr1/yr2 correlation check ------------------------------------
-# The check that actually matters this time -- did the sum-to-zero
-# constraint kill the loga/yr collinearity MDSY showed?
+# Key check: is the loga/yr collinearity gone?
 
 p_funnel <- function(){
   par(mfrow = c(2,2))
@@ -153,8 +144,7 @@ save_sbc_health_report(
   hiermod_out_dir = hiermod_out_dir)
 
 
-# Same stress test as every model in this rebuild before trusting an "ok"
-# result at n=100.
+# n = 400 stress test (n = 100 alone not trusted)
 
 n_sbc <- 400
 

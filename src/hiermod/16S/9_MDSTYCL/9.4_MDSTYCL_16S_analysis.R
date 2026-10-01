@@ -1,8 +1,4 @@
-# MODEL 7 (MDSTYCL, "Saruman the Fool"), 16S, SHIFTED: posterior contrast,
-# run against the saved fit. Year/covariate/cultivar/Tree effect panels are
-# already covered in 7.3's own fit script -- this one mirrors
-# 2.4/3.4/4.4/5.4/6.4's Management x Season contrast reporting so every
-# model in the family stays directly comparable.
+# MODEL 9 (MDSTYCL, "Faramir the Judicious"), 16S: estimands, variance partition, results report (effect panels in 9.3)
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -22,9 +18,7 @@ pc_estimands_means   <- pc_estimands$means
 pc_estimands_medians <- pc_estimands$medians
 
 ## Variance partition -----------------------------------------------------------
-# Needs raw extract.samples() (plain matrices), not `pf`. Shapley/LMG shares
-# with Management / Season / interaction effect-coded -- see the model file's
-# variance_partition_*() comment and doc/R2_methods.txt.
+# Needs raw extract.samples() matrices; LMG shares, effect-coded Mg x Season (see model file)
 
 post_raw <- extract.samples(fit_MDSTYCL)
 pc_varpart <- variance_partition_MDSTYCL(post_raw, dat_MDSTYCL)
@@ -69,10 +63,7 @@ p_contrast_median <- contrast_plot_panels(
 save_gg("fit_contrast_median", model_id_MDSTYCL, p_contrast_median)
 
 ## Residual variance (sigma[Mg]) -------------------------------------------------
-# Does the still-open Organic-vs-Conventional sigma asymmetry (unexplained
-# by Cultivar in Model 6: 0.285 vs MDSYC's own 0.31) change once Tree is
-# estimated separately? Possible either direction -- Tree could absorb some
-# of what looked like residual noise, or leave it untouched.
+# Does the organic vs conventional sigma gap change on the B/D subset?
 
 pc_sigma <- compute_contrasts(pf, keep = "sigma", group_levels = idx$Mg$levels)
 

@@ -1,18 +1,10 @@
-# MDSTYCV_model.R --- MODEL 7 (MDSTYCV), 16S: MDSYCV plus Tree, merging the
-# two branches this rebuild has kept separate since Model 3 (MDST, Tree)
-# and Model 4 (MDSYz, Year, later +Covariates +Cultivar).
+# MDSTYCV_model.R --- MODEL 7 (MDSTYCV, "Saruman the Fool"): MDSYCV + Tree -- final model
+# - merges the Tree branch (model 3) with Year/Covariates/Cultivar (models 4-6)
 
 source('src/hiermod/0_INDEX.R')
 
-# Nested Tree-Location-Cultivar structure, testing because sigma_tree
-# was identified as fragile (MDST's own SBC:
-# divergences + a U-shaped rank histogram tied to sparse per-tree N, see
-# MDST_model.R and 3.2_MDST_16S_calibration.R). Calibration is made
-# to test whether that nestedness carries the same fragility.
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2/cv_1/cv_3/cv_4/cv_5/b_deg/
-# b_precip/b_seq are MDSYCV's own validated answer, hardcoded as this
-# model's starting point. 
+# Tree nested in Cultivar (and Location): does the Tree fragility of MDST persist?
+# Priors: as MDSYCV; Tree as in MDST
 
 model_MDSTYCV_16S <- alist(
   likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
@@ -51,16 +43,13 @@ attr(model_MDSTYCV_16S, "name") <- "Saruman the Fool"
 model_id_MDSTYCV <- "MDSTYCV"
 
 ## ITS variant -----------------------------------------------------------------
-# Same rationale as MDS_ITS/MDST_ITS. tr[Tr]/sigma_tr carry over unchanged
-# -- same Tree factor (idx$Tr), same non-centered form, same CV-like
-# sigma_tr scale reasoning.
+# Intercept prior only (as MDS_ITS)
 model_MDSTYCV_ITS <- model_MDSTYCV_16S
 model_MDSTYCV_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
 attr(model_MDSTYCV_ITS, "name") <- "Saruman the Fool"
 
 ## means_MDSTYCV() -------------------------------------------------------------
-# Same as means_MDSYCV(), plus sigma_tr^2 folded into total_var -- matching
-# MDST's own means_MDST() convention (sigma[Mg]^2 + sigma_tr^2).
+# As means_MDSYCV(); mean variance = sigma[Mg]^2 + sigma_tr^2
 
 means_MDSTYCV <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
   total_var_conv <- post$sigma[,1]^2 + as.vector(post$sigma_tr)^2
@@ -92,9 +81,7 @@ means_MDSTYCV <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_de
   )
 }
 
-# SBC estimands -- same formula as MDST's own dq_MDST (sigma[Mg]^2 +
-# sigma_tr^2; yr/cv/covariates all cancel in the Mg x Mo contrast, same
-# reasoning as dq_MDSYCV).
+# SBC estimands: as dq_MDST (year, cultivar, covariates cancel)
 dq_MDSTYCV <- SBC::derived_quantities(
   may_gap =
     exp(loga[2] + (sigma[2]^2 + sigma_tr^2) / 2) -
@@ -110,24 +97,12 @@ dq_MDSTYCV <- SBC::derived_quantities(
 )
 
 ## variance_partition_MDSTYCV() --------------------------------------------------
-# Bayesian R2 partition (see doc/R2_methods.txt). Default: Shapley/LMG shares
-# (variance_partition_lmg(), non-negative, sum to the explained fraction) with
-# Management x Season split into effect-coded Management / Season /
-# interaction terms (mgmo_effect_terms(), postcontrast_helpers.R).
-#
-# Why effect coding: the model's own Management (loga[Mg]) and interaction
-# (gap_shift*(Mg-1)*(Mo-1)) terms are 0/1-dummy coded, so they overlap
-# heavily -- splitting them as-is gave a strongly negative "by margin"
-# interaction share (median ~ -0.33 in the real 16S fit), and even Shapley
-# over-credits the interaction under dummy coding. Recentring each piece
-# around the grand mean makes the three orthogonal, so the split no longer
-# depends on the reference level.
-#
-# method = "margin" gives the older no-refit shortcut (variance_partition_panels(),
-# can go negative); split_mgmo = FALSE keeps Management x Season as one term.
-#
-# Tree is a per-observation term (realized tr[Tr] draws x sigma_tr), like
-# Year/Cultivar's own realized-level construction.
+# Bayesian R2 partition, default: LMG/Shapley (variance_partition_lmg())
+# - Management x Season split into effect-coded Management / Season / interaction
+#   (mgmo_effect_terms()); the model's 0/1 dummy coding makes them overlap
+# - method = "margin": older shortcut (can go negative)
+# - split_mgmo = FALSE: Management x Season as one term
+# - Tree term: realised tr[Tr] * sigma_tr per observation
 
 variance_partition_MDSTYCV <- function(post, dat, method = c("lmg", "margin"), split_mgmo = TRUE){
   method <- match.arg(method)
@@ -163,14 +138,8 @@ variance_partition_MDSTYCV <- function(post, dat, method = c("lmg", "margin"), s
 }
 
 ## Data-generating function ---------------------------------------------------
-# Tree is the study unit (as in sim_div_MDST()): each tree gets one
-# Management, one Cultivar, one Year, and exactly one May + one July row.
-# Cv and Yr are assigned PER TREE, not per row (real, confirmed nesting for
-# Cv; already the de facto behaviour for Yr in sim_div_MDSYCV()'s own
-# per-unit assignment, just renamed now that "unit" is explicitly Tree).
-# This is the one genuine design change from a mechanical merge: MDSYCV's
-# own simulator drew Cv independently per unit because Tree wasn't in that
-# model at all, so there was no nesting to represent.
+# Tree = study unit: one Management, Cultivar, Year; one May + one July row
+# - cultivar and year assigned per tree (real nesting)
 
 sim_div_MDSTYCV <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
                             cv_1, cv_3, cv_4, cv_5, sigma_tr,
@@ -201,6 +170,7 @@ sim_div_MDSTYCV <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
 }
 
 ## Prior simulation wrapper ---------------
+# Simulate one dataset from one prior draw (draw_true() output)
 simulate_from_priors_MDSTYCV <- function(true_params, N_samples = 250, shift = NULL){
   sim_div_MDSTYCV(
     N_samples = N_samples,

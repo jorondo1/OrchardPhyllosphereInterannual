@@ -1,7 +1,4 @@
-# MODEL 2 (MDS), ITS, SHIFTED: posterior contrast, run against the saved
-# fit. Mirrors 2.4_MDS_16S_analysis.R. No random-effect variance-component
-# section (MDS has none yet) -- but sigma[Mg] itself is still a modeled
-# variance component worth its own panel.
+# MODEL 2 (MDS), ITS: posterior contrasts and summaries from the saved fit
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -12,20 +9,12 @@ fit_MDS <- readRDS(file.path(hiermod_out_dir, "fit_MDS.rds"))
 dat_MDS <- readRDS(file.path(hiermod_out_dir, "dat_MDS.rds"))
 
 pf <- post_full(fit_MDS, means_MDS, shift = 1)
-m  <- pf$mean
-md <- pf$median
 
 ## Management x Season contrasts -----------------------------------------------
 
-pc_estimands_means <- estimand_panels(
-  pairs = list(`May mean`  = list(m$mean_1, m$mean_3),
-               `July mean` = list(m$mean_2, m$mean_4)),
-  extra = setNames(
-    list(m$mean_1 / m$mean_3, m$mean_2 / m$mean_4),
-    names(Fold_change_palette)
-  ),
-  group_levels = idx$Mg$levels
-)
+pc_estimands <- build_pc_estimands(pf, group_levels = idx$Mg$levels)
+pc_estimands_means   <- pc_estimands$means
+pc_estimands_medians <- pc_estimands$medians
 
 save_report("fit_summary", model_id_MDS, fit_MDS, model = model_MDS_ITS)
 
@@ -37,15 +26,6 @@ p_contrast_mean <- contrast_plot_panels(
 
 save_gg("fit_contrast_mean", model_id_MDS, p_contrast_mean)
 
-pc_estimands_medians <- estimand_panels(
-  pairs = list(`May median`  = list(md$median_1, md$median_3),
-               `July median` = list(md$median_2, md$median_4)),
-  extra = setNames(
-    list(md$median_1 / md$median_3, md$median_2 / md$median_4),
-    names(Fold_change_palette)
-  ),
-  group_levels = idx$Mg$levels
-)
 
 p_contrast_median <- contrast_plot_panels(
   pc_estimands_medians, quant = c(0.001, 0.999), scales = 'free_y',

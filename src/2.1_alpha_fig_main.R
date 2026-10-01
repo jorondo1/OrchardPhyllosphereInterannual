@@ -28,7 +28,7 @@ plot_dat <- rbind(
     )
   )
 
-## Summary tables, one per kingdom ---------------------
+## Summary tables, one per barcode ---------------------
 # Same format as the *_results_report_MDSTYCV.html reports
 
 for (kingdom in c("Bacteria", "Fungi")) {
@@ -84,10 +84,8 @@ mean_plot <- (bact_means + fung_means) &
     guide = "none")
 
 
-# Fold-diff plots
-# scale_*_manual still draws legend keys for the Management-palette entries; 
-# a legend key for a level absent from every plotted layer's data doesn't
-# pick up the scale's assigned aesthetic).
+# Fold-difference plots
+# - dummy layer: legend keys for Management levels absent from these panels
 
 fold_dummy <- tibble(group = names(Management_palette[1:3]), value = 1,
                      Barcode = plot_dat$Barcode[1])

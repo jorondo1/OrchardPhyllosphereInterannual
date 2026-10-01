@@ -44,8 +44,7 @@ meteo <- meteo_raw %>%
 meta_out <- meta_formatted %>%
   left_join(meteo, by = c('Year', 'Time', 'Site')) %>%
   rename(Sample = Unique)
-# Site (PMB/ASB/VBS/COM/MIB/MIC) kept -- src/1.4_Fig_BetaDiv_Envfit.R needs
-# it for its own per-site subsetting.
+# Site (PMB/ASB/VBS/COM/MIB/MIC) kept: weather is matched per site
 
 # Subsets by barcode ---------------------------------------------------------
 ps.ls.in <- read_rds('data/ps_objects_preproc.rds')
@@ -68,12 +67,10 @@ meta_bact <- meta_out %>%
 meta_bact$Seq_depth <- rowSums(otu_table(ps_bact))[rownames(meta_bact)]
 meta_fung$Seq_depth <- rowSums(otu_table(ps_fung))[rownames(meta_fung)]
 
-# Add centered/scaled covariates (hiermod models, src/hiermod/0_SETUP.R) ----
-# deg_h_z: centered WITHIN Time (July is reliably warmer than May every
-# year -- a seasonal identity kept separate from the covariate).
-# precip_72h_z/seq_depth_z: centered globally -- precip has no reliable
-# May-vs-July direction, and seq_depth's Management correlation is a
-# confound to remove, not preserve.
+# Centered/scaled covariates for the hiermod models ----
+# - deg_h_z: centered within Time (July always warmer: seasonal shift kept in the season term)
+# - precip_72h_z: centered globally (no consistent May vs July direction)
+# - seq_depth_z: log read count, centered globally (management confound to remove)
 
 add_centered_covariates <- function(dat){
   deg_h_season_mean <- tapply(dat$deg_h, dat$Time, mean)

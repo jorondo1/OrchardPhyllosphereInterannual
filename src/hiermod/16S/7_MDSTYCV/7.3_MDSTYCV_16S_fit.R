@@ -1,6 +1,5 @@
-# MODEL 7 (MDSTYCV, "Saruman the Fool"), 16S, SHIFTED (Hill_1 - 1): real fit
-# and PPC. model_MDSTYCV_16S already carries its own validated priors, no
-# local override needed here.
+# MODEL 7 (MDSTYCV, "Saruman the Fool")
+# 16S: real fit (Hill_1 - 1), PPC, effect panels
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -51,7 +50,7 @@ save_gg("postpred_density", model_id_MDSTYCV, p_postpred)
 save_gg("postpred_stat", model_id_MDSTYCV, p_ppc)
 
 ## Year effect (fixed, not pooled) ---------------------------------------------
-# Same as 4.3/5.3/6.3's own panel -- yr1/yr2 free, yr3 = -(yr1+yr2) by construction.
+# yr1/yr2 free; yr3 = -(yr1 + yr2)
 
 pf <- post_full(fit_MDSTYCV)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)
@@ -71,8 +70,7 @@ pc_covariates <- bind_rows(
 ) %>% mutate(statistic = "Covariate effects (log scale)")
 
 ## Cultivar effect (fixed, not pooled) -----------------------------------------
-# cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = -(cv_1+cv_3+cv_4+cv_5) by
-# construction (Liberty has the most combined observations).
+# cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = minus their sum
 
 cv_2 <- -(pf$cv_1$cv_1 + pf$cv_3$cv_3 + pf$cv_4$cv_4 + pf$cv_5$cv_5)
 
@@ -85,10 +83,7 @@ pc_cultivar <- bind_rows(
 ) %>% mutate(statistic = "Cultivar effect (log scale)")
 
 ## Tree effect: how much tree-to-tree spread is there in the real fit? --------
-# sigma_tr's own posterior magnitude, next to sigma[Mg] for scale -- same
-# diagnostic as 3.3_MDST_16S_fit.R's own "added value of Tree" section.
-# tr[Tr] itself (~129 levels) isn't plotted individually -- too many for a
-# readable panel; precis()/the trankplot above cover those if ever needed.
+# sigma_tr next to sigma[Mg] (as in 3.3); individual trees not plotted
 
 pc_sigma_tr <- bind_rows(
   compute_contrasts(pf, keep = "sigma", group_levels = idx$Mg$levels),
@@ -96,9 +91,8 @@ pc_sigma_tr <- bind_rows(
 ) %>% mutate(statistic = factor(statistic, levels = c("sigma", "sigma_tr")))
 
 ## Year/Covariate/Cultivar/Tree effects, combined ---------------------------------
-# Data only, one row per panel: its draws (pc_full) + the palette/sd_stats
-# variance_component_panels() needs, so any subset can be re-plotted
-# elsewhere, e.g. from the saved rds:
+# Data only, one row per panel (draws + palette + sd_stats), saved to rds
+# - re-plot any subset elsewhere, e.g.:
 #   filter(effect_panels, panel %in% c("year", "cultivar")) %>%
 #     purrr::pmap(\(pc_full, palette, sd_stats, ...)
 #       variance_component_panels(pc_full, quant = c(0, 1), palette = palette, sd_stats = sd_stats))
@@ -119,8 +113,7 @@ p_effects <- effect_panels %>%
 save_gg("fit_effects", model_id_MDSTYCV, p_effects, width = 8, height = 14)
 
 ## Full pairwise parameter check ------------------------------------------------
-# Same rationale/settings as 7.2's own calibration-stage check -- the
-# combination that mattered most there: sigma_tr vs cv_1..cv_4.
+# As in 7.2 (key pair: sigma_tr vs cv_*)
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_tr",
                  "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",

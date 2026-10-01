@@ -40,8 +40,7 @@ plot_rarecurve <- function(seqtab, thresholds, dataset) {
   invisible(rc)
 }
 
-# open/close the per-dataset console+file summary sink (mirrors the sink()
-# same pattern as chimera report in DADA2 scripts)
+# Open the per-dataset summary sink (console + file), as in the DADA2 scripts
 sink_16S <- function(append = TRUE) sink(file.path(path_summary, "16S_summary.txt"), append = append, split = TRUE)
 sink_ITS <- function(append = TRUE) sink(file.path(path_summary, "ITS_summary.txt"), append = append, split = TRUE)
 
@@ -245,14 +244,13 @@ ps.ITS.tree <- mgx.tools::ASV_tree_for_physeq(ps_filt_ITS, ncores = 7)
 ps.16S.clust <- mgx.tools::cluster_ASVs_physeq(ps.16S.tree, threshold = 0.03)
 ps.ITS.clust <- mgx.tools::cluster_ASVs_physeq(ps.ITS.tree, threshold = 0.0295)
 
-# 16S clustering can't fully resolve some inconsistencies; checked their
-# relative abundance and kept them as-is (only "important" ones by mean/n/max
-# were Unclassified anyway)
+# Remaining 16S cluster inconsistencies checked by abundance: kept as-is (mostly Unclassified)
 
 # 8. Species cluster majority consensus taxonomy ----------------------------
 
 ranks <- c("Phylum", "Class", "Order", "Family", "Genus")
 
+# Consensus taxonomy per species cluster (abundance-weighted across its ASVs)
 species_cluster_consensus_tax <- function(ps, barcode){
   
   # 1. Relative abundance of each ASV within each sample

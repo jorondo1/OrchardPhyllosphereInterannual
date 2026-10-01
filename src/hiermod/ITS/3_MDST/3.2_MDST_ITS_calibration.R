@@ -1,19 +1,6 @@
-# MODEL 3 (MDST, "Treebeard the Skeptic"), ITS: MDS plus a Tree random
-# effect, non-centered (tr[Tr]*sigma_tr). Mirrors 3.2_MDST_16S_calibration.R.
-#
-# model_MDST_ITS: loga[Mg] ~ dnorm(2,2) is ITS's own scale; s_conv/gap_shift/
-# sigma[Mg]/sigma_tr carry over unchanged from model_MDST_16S (additive
-# log-scale/CV-like quantities, not baseline-dependent). sigma_tr's own
-# known fragility (16S's own SBC: divergences + a U-shaped rank histogram
-# tied to sparse per-tree N, see MDST_model.R's header) is a property of
-# the non-centered parameterization and the 2-obs/tree design, not of
-# bacteria specifically -- worth watching for the same pattern here, not
-# assumed away.
-#
-# True s_conv/gap_shift match Model 2's own ITS values (see
-# 2.2_MDS_ITS_calibration.R's header for the real-data rationale);
-# true_sigma_tr=0.3 reused directly from 16S -- an additive log-scale SD,
-# not tied to Hill_1's own baseline.
+# MODEL 3 (MDST, "Treebeard the Skeptic"), ITS: calibration
+# - watch for the same sigma_tr fragility as 16S (design property, not bacterial)
+# - true values: s_conv/gap_shift as ITS model 2; sigma_tr = 0.3 as 16S
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -102,8 +89,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## Simulation-based calibration (SBC), via the SBC package -----------------------
-# tr[Tr] stays out of `keep` (cardinality scales with N_samples) -- every
-# other parameter, including sigma_tr, is tracked directly.
+# tr[Tr] not tracked; everything else incl. sigma_tr tracked
 
 sbc_gen_MDST <- make_sbc_generator(
   fit = fit_sim, simulate_fn = simulate_from_priors_MDST,

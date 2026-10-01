@@ -1,22 +1,12 @@
-# MDST_model.R --- MODEL 3 (MDST, "Treebeard the Skeptic"), 16S: MDS plus a
-# Tree random effect, non-centered (tr[Tr]*sigma_tr), mirroring the archived
-# MDLS_model.R's proven form for isolating Tree cleanly (historically only
-# mild underconfidence there, not the severe bias Location caused).
-#
-# Motivation: every tree contributes one May row and one July row that MDS
-# treats as independent draws from dlnorm(mu, sigma[Mg]).
-# Not modelling that overstates effective N and risks absorbing real
-# tree-to-tree variation into sigma[Mg] as pure noise. 
+# MDST_model.R --- MODEL 3 (MDST, "Treebeard the Skeptic"): MDS + Tree random effect
+# - non-centered: tr[Tr]*sigma_tr
+# Why: each tree gives a May and a July sample, treated as independent in MDS
+# - overstates effective N; tree-to-tree variation ends up in sigma[Mg]
+# Known fragility: small sigma_tr + 1-2 obs/tree -> funnel (divergences, Rhat)
 
 source('src/hiermod/0_INDEX.R')
 
-# Priors: loga[Mg]/s_conv/gap_shift/sigma[Mg] are hardcoded at MDS's own
-# validated answer (this model's starting point, per the rolling
-# "each model bakes in what the previous one learned" convention) --
-# sigma_tr ~ dhalfnorm(0,1) is new territory, but uses the same validated
-# scale-parameter family (light-tailed, mode off zero, extract.prior()-safe)
-# rather than reaching back for dexp() (MDS2's own original, untested,
-# choice for sigma_tr was dexp(2)).
+# Priors: as MDS; new sigma_tr ~ dhalfnorm(0,1) (same family as sigma[Mg])
 
 model_MDST_16S <- alist(
   likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
@@ -36,16 +26,13 @@ attr(model_MDST_16S, "name") <- "Treebeard the Skeptic"
 model_id_MDST <- "MDST"
 
 ## ITS variant -----------------------------------------------------------------
-# Same rationale as MDS_ITS (MDS_model.R): only loga[Mg] is scale-dependent
-# and gets ITS's own dnorm(2,2) starting point; sigma_tr ~ dhalfnorm(0,1)
-# carries over unchanged (a CV-like quantity, not baseline-dependent).
+# Intercept prior only (as MDS_ITS)
 model_MDST_ITS <- model_MDST_16S
 model_MDST_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
 attr(model_MDST_ITS, "name") <- "Treebeard the Skeptic"
 
 ## Backtransform wrapper ------------------------------------------------------
-# Same 4-cell shape as means_MDS(), total_var now includes sigma_tr^2
-# (matching MDS2's own total_var convention: sigma[Mg]^2 + sigma_tr^2).
+# 4-cell means/medians; mean variance = sigma[Mg]^2 + sigma_tr^2
 
 means_MDST <- function(post, shift = 0){
   total_var_conv <- post$sigma[,1]^2 + as.vector(post$sigma_tr)^2
@@ -75,8 +62,7 @@ means_MDST <- function(post, shift = 0){
   )
 }
 
-# SBC estimands -- may_gap/july_gap/seasonal_change, matching means_MDST()'s
-# own total_var convention (sigma[Mg]^2 + sigma_tr^2).
+# SBC estimands: May gap, July gap, seasonal change (variance incl. sigma_tr^2)
 dq_MDST <- SBC::derived_quantities(
   may_gap =
     exp(loga[2] + (sigma[2]^2 + sigma_tr^2) / 2) -
@@ -92,10 +78,7 @@ dq_MDST <- SBC::derived_quantities(
 )
 
 ## Data-generating function ---------------------------------------------------
-# Tree is the study unit: each gets one Management + exactly one May and one
-# July row (the actual repeated-measures design), plus its own offset
-# tree_offset[Tr] shared by both its rows -- the non-independence MDS's own
-# simulator deliberately didn't have.
+# Tree = study unit: one Management, one May + one July row, shared tree offset
 
 sim_div_MDST <- function(N_samples, loga, s_conv, gap_shift, sigma, sigma_tr, shift = NULL){
   n_tree <- N_samples %/% 2 # 2 rows/tree (May + July)
@@ -113,6 +96,7 @@ sim_div_MDST <- function(N_samples, loga, s_conv, gap_shift, sigma, sigma_tr, sh
   dat
 }
 
+# Simulate one dataset from one prior draw (draw_true() output)
 simulate_from_priors_MDST <- function(true_params, N_samples = 250, shift = NULL){
   sim_div_MDST(
     N_samples = N_samples,

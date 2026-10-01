@@ -1,32 +1,14 @@
-# MDSYC_model.R --- MODEL 5 (MDSYC), 16S: MDSYz plus three standardized
-# control covariates (deg_h_z, precip_72h_z, seq_depth_z) as additive fixed
-# slopes -- degree-hours and 72h precipitation before sampling (recent
-# growing conditions), and log sequencing depth (technical: deeper
-# sequencing detects more taxa, inflating diversity metrics independent of
-# any real biological effect). All three already computed in 0_SETUP.R.
+# MDSYC_model.R --- MODEL 5 (MDSYC): MDSYz + 3 standardised covariates (additive slopes)
+# - deg_h_z: degree-hours before sampling (centred within season)
+# - precip_72h_z: precipitation, 72 h before sampling
+# - seq_depth_z: log read count (technical: deeper sequencing -> more taxa)
+# - computed in 0.3.2_Metadata_phyloseq.R
 
 source('src/hiermod/0_INDEX.R')
 
-# Continues the MDS -> MDSYz branch specifically (Year, sum-to-zero fixed),
-# not yet merged with the separate MDST (Tree) branch -- one thing at a
-# time, same discipline as the rest of this rebuild. Location stays out
-# entirely for now, deferred to its own later sensitivity check (see
-# MDS2_model.R's header on why: Location A/C are single-management,
-# confounded with Management itself, not a random-effect identifiability
-# problem like Year's was).
-#
-# Direct precedent: the ITS lineage's own Model 7 (MDLSYC,
-# src/hiermod/Models/MDLSYC_model.R) added the identical three covariates
-# the identical way (b_deg/b_precip/b_seq ~ dnorm(0,1), additive in mu).
-# That model's own "K stays at 4" comment applies here too, even more
-# simply: these are additive mu-level fixed effects, not new summed
-# variance terms, so sigma[Mg]'s own already-validated dhalfnorm(0,1) prior
-# needs no rescaling at all.
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2 are MDSYz's own validated
-# answer, hardcoded as this model's starting point. b_deg/b_precip/b_seq
-# ~ dnorm(0,1) is the one new assumption -- MDLSYC's own choice, carried
-# forward as the hypothesis to validate here.
+# - no Tree yet (separate branch, merged in model 7)
+# - no Location: confounded with Management (A/C single-management)
+# Priors: as MDSYz; new b_deg, b_precip, b_seq ~ dnorm(0,1)
 
 model_MDSYC_16S <- alist(
   likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
@@ -54,19 +36,13 @@ attr(model_MDSYC_16S, "name") <- "Radagast the Grower"
 model_id_MDSYC <- "MDSYC"
 
 ## ITS variant -----------------------------------------------------------------
-# Same rationale as MDS_ITS. b_deg/b_precip/b_seq ~ dnorm(0,1) carry over
-# unchanged -- these are additive log-scale slopes on standardized (z-score)
-# covariates, not tied to Hill_1's own baseline scale, and the old ITS
-# lineage's own MDLSYC_model.R already used the identical dnorm(0,1) choice.
+# Intercept prior only (as MDS_ITS)
 model_MDSYC_ITS <- model_MDSYC_16S
 model_MDSYC_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
 attr(model_MDSYC_ITS, "name") <- "Radagast the Grower"
 
 ## Backtransform wrapper ------------------------------------------------------
-# Same 4-cell shape as means_MDSYz(), plus a covariate_offset term
-# (deg_h_z/precip_72h_z/seq_depth_z default to 0, i.e. this sample's own
-# average weather and sequencing depth -- same convention as MDLSYC's own
-# means_fn).
+# 4-cell means/medians at reference covariates (z = 0 by default)
 
 means_MDSYC <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
   total_var_conv <- post$sigma[,1]^2
@@ -98,9 +74,7 @@ means_MDSYC <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_dept
   )
 }
 
-# SBC estimands -- same formulas as dq_MDSYz. b_deg/b_precip/b_seq cancel in
-# the Mg x Mo contrast at the default (z=0) reference level, same reasoning
-# as MDLSYC's own dq_MDLSYC.
+# SBC estimands: same as dq_MDSYz (covariates at z = 0 cancel)
 dq_MDSYC <- SBC::derived_quantities(
   may_gap =
     exp(loga[2] + sigma[2]^2 / 2) -
@@ -116,23 +90,9 @@ dq_MDSYC <- SBC::derived_quantities(
 )
 
 ## Variance partition / Bayesian R2 -------------------------------------------
-# Adapted from the ITS lineage's own variance_partition_MDLSYC()
-# (MDLSYC_model.R). Residual is sigma[Mg]^2 -- genuinely heteroscedastic by
-# Management, unlike the old lineage's single pooled/cell-level sigma --
-# weighted by each group's share of the sample (mirrors the old
-# cell_n/sum(cell_n) weighting).
-#
-# Fixed effects split by GROUP (Management x Season, Year, Covariates), not
-# lumped into one "Explained" bucket -- via a sequential (Type I)
-# decomposition: each group's share is the variance ADDED by including it,
-# in this model family's own build order (Mg x Season, Model 2 -> Year,
-# Model 4 -> Covariates, Model 5). This telescopes exactly to the same total
-# as the old lumped version (Var(A) + [Var(A+B)-Var(A)] + [Var(A+B+C)-
-# Var(A+B)] = Var(A+B+C)), so it's a genuine refinement, not a different
-# number -- order-dependent in principle if predictors are correlated
-# (close to orthogonal here by design), and an individual increment can
-# come out slightly negative if a later term happens to reduce a given
-# draw's cumulative variance.
+# Sequential (type I) partition, build order: Mg x Season -> Year -> Covariates
+# - each share = variance added by that group; residual = size-weighted sigma[Mg]^2
+# - order-dependent; increments can be slightly negative
 
 variance_partition_MDSYC <- function(post, dat){
   loga_obs   <- post$loga[, dat$Mg]                                # n_draws x N
@@ -167,12 +127,7 @@ variance_partition_MDSYC <- function(post, dat){
 }
 
 ## Data-generating function ---------------------------------------------------
-# Same balanced Mg x Mo x Year design as sim_div_MDSYz(), plus three
-# independent standard-normal covariate draws per row (tests whether
-# b_deg/b_precip/b_seq are recoverable in principle, not how identifiable
-# they are under any real-world collinearity with season/structural mu --
-# MDLSYC_model.R's own rho_deg_season/rho_seq_mu stress test is the
-# template if that's worth adding here later).
+# As sim_div_MDSYz() + 3 independent N(0,1) covariates per row
 
 sim_div_MDSYC <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
                            b_deg, b_precip, b_seq, shift = NULL){
@@ -196,6 +151,7 @@ sim_div_MDSYC <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
   dat
 }
 
+# Simulate one dataset from one prior draw (draw_true() output)
 simulate_from_priors_MDSYC <- function(true_params, N_samples = 250, shift = NULL){
   sim_div_MDSYC(
     N_samples = N_samples,

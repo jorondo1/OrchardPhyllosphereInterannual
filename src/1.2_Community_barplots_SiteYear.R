@@ -24,6 +24,7 @@ family_summary <- family_class %>%
 
 legend_titles <- c(Bacteria = "Bacterial families", Fungi = "Fungal families")
 
+# Stacked family barplot for one barcode, families in fixed order
 plot_family_bar <- function(df) {
   
   kingdom <- df$Kingdom[1]

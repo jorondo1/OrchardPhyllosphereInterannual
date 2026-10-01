@@ -1,24 +1,8 @@
-# MODEL 2 (MDv, Management-specific variance), 16S: allows heteroscedasticity
-# across Mg groups (sigma[Mg] instead of MD's shared sigma). Sibling script
-# to 1.2_MD_16S_calibration.R (split out of what used to be one combined
-# file) -- both share the "16S_1_lognormal_MD" output directory and the
-# 1.3 real-data fit script (MDv gets its own real-data fit there; see that
-# script's own header for the current state of that split).
-#
-# Two purposes here: (1) demonstrate why MDv exists at all (MD's shared
-# sigma gives a biased contrast under heteroscedastic truth, MDv's
-# per-group sigma fixes it) (2) the next isolating step in the wider
-# loga-miscalibration investigation (see 1.2_MD_16S_calibration.R's header):
-# MD (no per-group sigma, no random effects) calibrated cleanly under SBC.
-# MDL and MDS2 (both per-group sigma[Mg] PLUS random effects) both showed
-# severe loga miscalibration. MDv isolates which addition is responsible:
-# per-group sigma[Mg], with STILL no random effects at all. If MDv
-# calibrates cleanly like MD, the cause is specifically the random effects
-# (Location/Tree/Year); if it's already biased here, it's the
-# loga[Mg]-sigma[Mg] per-group interaction itself. loga/sigma priors
-# patched to this investigation's established 16S values (dnorm(5,2)/
-# dexp(2)) rather than the original, never-validated ITS import
-# (dnorm(2,2)/dexp(1)) 
+# MODEL 1b (MDv, Management-specific sigma), 16S: calibration
+# Aims:
+# - show why MDv: MD's shared sigma biases the contrast under heteroscedastic truth
+# - isolate the loga miscalibration: per-group sigma alone, still no random effects
+# Priors: 16S starting values (dnorm(5,2), dexp(2)); sigma prior revised below
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -31,10 +15,7 @@ model_MDv$prior_sigma <- quote(sigma[Mg] ~ dexp(2))
 hiermod_out_dir <- "out/hiermod/16S_1_lognormal_MD/Calibration"
 
 ## MDv -- Allow Management-specific variance (heteroscedasticity) ============
-# One simulated dataset under heteroscedastic truth (cv_ 0.5/0.8), fit
-# under BOTH models: MD's shared sigma should give a biased contrast, MDv's
-# per-group sigma should recover it -- the actual justification for MDv
-# existing as its own model.
+# One heteroscedastic dataset (CV 0.5 / 0.8), fit with MD and MDv
 
 true_conv <- 180
 true_org  <- 120
@@ -91,11 +72,10 @@ save_report("sim_summary", model_id_MDv, recovery = param_recovery_MDv, fit_MDv_
 save_gg("sim_contrast_density", model_id_MDv, p_MDv_sim_contrast, width = 8, height = 4)
 
 ## MDv -- formal calibration (per-group sigma isolation test) ================
-# Reuses fit_MDv_sim above (already fit under the patched (5,2)/(2) priors)
-# rather than a fresh calibration fit.
+# Reuses fit_MDv_sim (no new calibration fit)
 
 ### loga x sigma[Mg] funnel check ----------------------------------------
-# Two per-group sigmas to check, unlike MD's single shared one.
+# Two per-group sigmas
 
 p_funnel_MDv <- function(){
   par(mfrow = c(1,2))
@@ -135,7 +115,7 @@ save_sbc_health_report(
   variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "median_contrast", "mean_contrast"),
   hiermod_out_dir = hiermod_out_dir)
 
-# diagnostic with one loga is slightly off; might be by chance (see report)
+# One loga slightly off; maybe chance (see report)
 
 n_sbc  <- 400
 
@@ -155,9 +135,8 @@ save_sbc_health_report(
   model_id_MDv, sbc_MDv_2, n_sbc, n_iter,
   variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "median_contrast", "mean_contrast"),
   hiermod_out_dir = hiermod_out_dir)
-# Doesnt help, actually get other miscalibration
-# mean_contrast and loga[1] are miscalibrated; sigma prior's shape is distorting 
-# the mean-derived quantity and leaking into loga[1]'s estimate.
+# n = 400: worse -- mean_contrast and loga[1] miscalibrated
+# - sigma prior shape distorts the mean-based estimand, leaks into loga[1]
 
 ### Calibratation: dexp(1) --------
 model_MDv_dexp1 <- model_MDv
@@ -193,16 +172,12 @@ save_sbc_health_report(
   model_id_MDv, sbc_MDv_dexp1, n_sbc, n_iter,
   variables = c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "median_contrast", "mean_contrast"),
   hiermod_out_dir = hiermod_out_dir)
-# lot better
+# Much better
 
 ### Calibration: half-normal(0,1) --------
-# dexp(1) already fixed it, but every dexp prior has its density mode AT
-# zero. as the model family grows more variance terms (sigma_loc,
-# sigma_tr, etc.), stacking several zero-mode priors risks pulling multiple
-# scale parameters toward degenerate small values at once. half-normal(0,1)
-# has the same rough magnitude as dexp(1) (mean sqrt(2/pi) ~= 0.8 vs dexp(1)'s
-# mean of 1) but its density is 0 at sigma=0 and peaks just above it.
-#
+# half-normal(0,1) vs dexp(1): similar scale (mean 0.8 vs 1)
+# - flatter near 0 and lighter tail -> less pull toward tiny sigmas when
+#   several variance terms are added later
 model_MDv_halfnorm <- model_MDv
 model_MDv_halfnorm$prior_sigma <- quote(sigma[Mg] ~ dhalfnorm(0,1))
 model_id_MDv <- 'MDv_halfnorm'
@@ -243,9 +218,7 @@ save_sbc_health_report(
   hiermod_out_dir = hiermod_out_dir)
 
 ### Posterior predictive check -- 3rd quartile ---------------------------
-# Q3 = exp(mu + sigma*qnorm(0.75)) depends directly on sigma (unlike the
-# median), so it's the natural stress test for whether the lighter
-# half-normal prior lets the upper tail drift relative to the observed data.
+# Q3 depends on sigma (unlike the median): does the upper tail drift?
 p_ppc_q3_contrast <- plot_ppc_contrast_stat(
   fit_MDv_sim_halfnorm, dat_sim_hetero, dat_sim_hetero$Mg,
   function(y) quantile(y, 0.75), "3rd quartile", idx$Mg$levels)
@@ -253,10 +226,7 @@ p_ppc_q3_contrast
 
 save_gg("ppc_q3_contrast", model_id_MDv, p_ppc_q3_contrast)
 
-# n=100 looks clean, but dexp(2) also looked clean at n=100 before flipping
-# to MISCALIBRATED at n=400 -- and this run already has one bad fit (Rhat
-# 1.72, ESS bulk 2, treedepth maxed at 4533), unlike dexp(1)'s fully clean
-# backend. Same n=400 stress test before trusting it.
+# Clean at n = 100, but so was dexp(2); one bad fit (Rhat 1.72) -> n = 400 check
 
 n_sbc <- 400
 

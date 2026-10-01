@@ -1,25 +1,7 @@
-# MODEL 7 (MDSTYCV), 16S: merges Tree (MDST, Model 3) into the
-# Year+Covariates+Cultivar branch (MDSYCV, Model 6) -- the last unmerged
-# piece before the Location sensitivity check.
-#
-# This is not just a mechanical "does it still calibrate" exercise. Tree is
-# deterministically nested in Cultivar in the real data (confirmed: 129/129
-# trees map to exactly one cultivar), and MDST's own sigma_tr already has
-# documented, real fragility (SBC: 3218 divergences, 74/400 (18.5%)
-# replicates with Rhat > 1.01 at n_sbc=400, tied to a small-sigma_tr /
-# sparse-per-tree-N funnel -- see 3.2_MDST_16S_calibration.R). The actual
-# question this script is built to answer: once Cultivar's fixed effect
-# partitions the exact same 129 trees Tree's own random effect struggles
-# with, does that make sigma_tr's estimation problem better (Cultivar
-# explains away some of what looked like unexplained tree-to-tree noise),
-# worse (a new entanglement, e.g. with cv_1..cv_4), or unchanged?
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2/cv_1/cv_3/cv_4/cv_5/b_deg/
-# b_precip/b_seq priors are MDSYCV's own validated answer, hardcoded here
-# as this model's starting point. sigma_tr ~ dhalfnorm(0,1) is MDST's own
-# validated (if imperfect) starting point for that parameter -- same prior
-# family, so the before/after backend-health comparison below is apples to
-# apples, not confounded by a prior change too.
+# MODEL 7 (MDSTYCV, "Saruman the Fool"), 16S: calibration
+# Aim: add Tree (model 3) to the Year/Covariate/Cultivar model (model 6)
+# Question: Tree nested in Cultivar -- does sigma_tr's fragility (MDST) improve, worsen or stay?
+# - same sigma_tr prior as MDST, so health is directly comparable
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -32,9 +14,7 @@ model_id <- model_id_MDSTYCV
 hiermod_out_dir <- "out/hiermod/16S_7_tree_full_MDSTYCV/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# Same baseline/gap/year/cultivar/covariate values as MDSYCV's own
-# calibration, plus sigma_tr=0.3 (MDST's own convention), so results stay
-# comparable across the whole family.
+# Same values as MDSYCV, plus sigma_tr = 0.3
 
 may_conv <- 180
 may_org  <- 120
@@ -140,10 +120,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## Full pairwise parameter check ------------------------------------------------
-# The specific new combination that's never been tested before: sigma_tr
-# against cv_1..cv_4 (Tree and Cultivar partition the same 129 trees for
-# the first time). Also loga against everything, given this family's track
-# record of small loga leaks showing up in unexpected places.
+# New: sigma_tr vs cv_* (Tree and Cultivar over the same trees); loga vs everything
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_tr",
                 "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
@@ -152,9 +129,7 @@ p_pairs <- plot_mcmc_pairs(fit_sim, variables = pairs_vars, n_keep = 1000)
 save_gg("mcmc_pairs", model_id, p_pairs, width = 15, height = 15, type = "png")
 
 ## Simulation-based calibration (SBC), via the SBC package -----------------------
-# tr[Tr] stays out of `keep` (cardinality scales with N_samples, simulator
-# draws fresh per-tree offsets each replicate) -- every other parameter,
-# including sigma_tr, is tracked directly.
+# tr[Tr] not tracked (fresh per-tree offsets); everything else incl. sigma_tr tracked
 
 sbc_gen_MDSTYCV <- make_sbc_generator(
   fit = fit_sim, simulate_fn = simulate_from_priors_MDSTYCV,
@@ -188,8 +163,7 @@ save_sbc_health_report(
                 "may_gap", "july_gap", "seasonal_change"),
   hiermod_out_dir = hiermod_out_dir)
 
-# Same stress test as every model in this rebuild before trusting an "ok"
-# result at n=100.
+# n = 400 stress test (n = 100 alone not trusted)
 
 n_sbc <- 400
 n_iter <- 10000
@@ -216,9 +190,7 @@ save_sbc_health_report(
   hiermod_out_dir = hiermod_out_dir)
 
 ## Compare with MDST : does Cultivar help or hurt sigma_tr? -------
-# MDST's own standalone numbers (3.2_MDST_16S_calibration.R,
-# sbc_health_MDST_400iter.txt), same sigma_tr ~ dhalfnorm(0,1) prior, same
-# n_sbc=400 -- apples to apples, no prior change confounding the comparison.
+# MDST at n = 400, same sigma_tr prior (sbc_health_MDST_400iter.txt)
 
 mdst_divergences   <- 3218
 mdst_pct_bad_rhat  <- 74/400
@@ -233,14 +205,10 @@ cat(sprintf("  divergences:        %d  ->  %d\n", mdst_divergences, sum(mdstycv_
 cat(sprintf("  %% fits Rhat>1.01:   %.1f%%  ->  %.1f%%\n",
             100*mdst_pct_bad_rhat, 100*mean(mdstycv_dd$max_rhat > 1.01, na.rm = TRUE)))
 cat(sprintf("  max Rhat:           %.3f  ->  %.3f\n", mdst_max_rhat, max(mdstycv_dd$max_rhat, na.rm = TRUE)))
-# If these improved, Cultivar is explaining away some of what looked like
-# unexplained tree-to-tree noise. If worse, Cultivar + Tree compound each
-# other's known fragility instead.
+# Result vs MDST:
 # divergences:        3218  ->  0
 # % fits Rhat>1.01:   18.5%  ->  17.8%
 # max Rhat:           2.119  ->  2.123
-
-# So cultivar didnt fix everything, butb the divergence drop is a really good sign
-# ECDF plots arent perfectly healthy but overall very good
-# Estimands are clean
+# - cultivar doesn't fix everything, but the divergence drop is a good sign
+# - ECDF plots not perfect but overall good; estimands clean
 

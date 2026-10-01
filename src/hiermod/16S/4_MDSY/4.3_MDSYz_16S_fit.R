@@ -1,6 +1,4 @@
-# MODEL 4 (MDSYz, "Elrond the Ageless"), 16S, SHIFTED (Hill_1 - 1): real fit
-# and PPC. model_MDSYz_16S already carries its own validated priors, no
-# local override needed here.
+# MODEL 4 (MDSYz, "Elrond the Ageless"), 16S: real fit (Hill_1 - 1) and PPC
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -43,8 +41,7 @@ save_gg("postpred_density", model_id_MDSYz, p_postpred)
 save_gg("postpred_stat", model_id_MDSYz, p_ppc)
 
 ## Year effect (fixed, not pooled) ---------------------------------------------
-# yr1/yr2 are the free parameters; yr3 = -(yr1+yr2) by construction
-# (sum-to-zero). 
+# yr1/yr2 free; yr3 = -(yr1 + yr2)
 
 pf <- post_full(fit_MDSYz)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)

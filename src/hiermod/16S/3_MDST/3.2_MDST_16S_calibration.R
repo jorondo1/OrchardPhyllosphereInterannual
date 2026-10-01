@@ -1,17 +1,6 @@
-# MODEL 3 (MDST, "Treebeard the Skeptic"), 16S: Management x Season
-# interaction plus a Tree random effect (repeated measures: each tree
-# contributes one May row and one July row).
-#
-# MDS treated a tree's two rows as independent draws, overstating effective N 
-# and risks sucking real tree-to-tree variation into sigma[Mg]. Here we quantify
-# how much of the variation is actually tree-level heterogeneity before trusting
-# a (potentially overconfident) season/management contrast.
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg] priors are MDS's own validated answer,
-# hardcoded here as this model's starting point (see MDST_model.R header).
-
-# TO VALIDATE:
-# sigma_tr ~ dhalfnorm(0,1) is the one new assmuption SBC will check
+# MODEL 3 (MDST, "Treebeard the Skeptic"), 16S: calibration
+# Aim: Tree random effect (repeated measures, see MDST_model.R)
+# To validate: sigma_tr ~ dhalfnorm(0,1)
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -23,8 +12,7 @@ model_id <- model_id_MDST
 hiermod_out_dir <- "out/hiermod/16S_3_tree_MDST/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# Same baseline/gap values as MDS/MDS2's own calibration, plus sigma_tr=0.3
-# (matching MDS2's own convention), so results stay comparable.
+# Same baseline/gap values as MDS, plus sigma_tr = 0.3
 
 may_conv <- 180
 may_org  <- 120
@@ -106,9 +94,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga/gamma x sigma[Mg]/sigma_tr funnel check ------------------------------
-# sigma_tr is the new scale parameter sharing the same likelihood term as
-# loga/s_conv/gap_shift: the exact kind of entanglement risk sigma[Mg]
-# already turned out to have in Model 1.
+# sigma_tr shares the likelihood term with loga/s_conv/gap_shift: entanglement risk
 
 p_funnel <- function(){
   par(mfrow = c(2,3))
@@ -129,13 +115,8 @@ p_funnel <- function(){
 save_pdf("loga_sigma_funnel", model_id, p_funnel)
 
 ## Simulation-based calibration  -----------------------
-# tr[Tr] stays out of `variables`/`keep` because the simulator draws a fresh
-# per-tree offset internally at each replicate, it's not a predetermined quantity.
-# sigma_tr is tracked.
-
-# sigma_tr doesn't sit outside the likelihood like an independent nuisance 
-# parameter;it contributes to mu, scaling each tree's own z-score before the sum
-# is passed to the likelihood.
+# tr[Tr] not tracked: fresh per-tree offsets each replicate
+# sigma_tr tracked (scales each tree's z-score inside mu)
 
 sbc_gen_MDST <- make_sbc_generator(
   fit = fit_sim, simulate_fn = simulate_from_priors_MDST,
@@ -169,8 +150,8 @@ save_sbc_health_report(
 
 # file.remove('out/hiermod/16S_3_tree_MDST/sbc_cache_MDST.rds')
 
-# Miscalibrations on gap_shift and loga[2]!
-# tighten adapt_delta in case this is a funnel problem:
+# Miscalibrated gap_shift and loga[2]
+# - higher adapt_delta, in case of a funnel:
 model_id <- "MDST_999"
 
 sbc_MDST_999 <- run_sbc_pipeline(
@@ -194,16 +175,13 @@ save_sbc_health_report(
                 "sigma_tr", "may_gap", "july_gap", "seasonal_change"),
   hiermod_out_dir = hiermod_out_dir)
 
-# doesn'T help, now both loga are miscalibrated / overconfident.
-# Divergences vanished, but treedepth usage nearly doubled and more fits now have bad Rhat
-# Not much we can do about this except drop the random effect
-# Let's tighten the sigma_tr prior (we can revert back to 0.99)
+# Doesn't help: both loga now miscalibrated (overconfident)
+# - divergences gone, but treedepth ~2x and more bad Rhat
+# Next: tighter sigma_tr prior
 
 ## Calibration: tighter, more realistic sigma_tr prior -----------------------
-# half-normal's density is highest AT zero, so narrowing its scale only packs
-# MORE mass into the exact near-zero region that triggers the funnel --
-# log-normal has zero density at zero and can center on the real fit's own
-# ~0.15 magnitude instead.
+# Half-normal peaks at 0: narrowing it puts MORE mass near the funnel
+# - lognormal: zero density at 0, centred on the real fit's ~0.15
 
 model_MDST_tight <- model
 model_MDST_tight$pr_sigma_tr <- quote(sigma_tr ~ dlnorm(log(0.15), 0.5))

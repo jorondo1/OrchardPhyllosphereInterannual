@@ -1,11 +1,6 @@
-# MODEL 5 (MDSYC), 16S: MDSYz plus three standardized control covariates
-# (deg_h_z, precip_72h_z, seq_depth_z), additive fixed slopes.
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2 priors are MDSYz's own
-# validated answer, hardcoded here as this model's starting point.
-# b_deg/b_precip/b_seq ~ dnorm(0,1) is the one new assumption -- MDLSYC's
-# (ITS lineage) own choice for the same three covariates, carried forward
-# as the hypothesis to validate here.
+# MODEL 5 (MDSYC), 16S: calibration
+# Aim: weather + read-count covariates (see MDSYC_model.R)
+# To validate: b_deg, b_precip, b_seq ~ dnorm(0,1)
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -18,8 +13,7 @@ model_id <- model_id_MDSYC
 hiermod_out_dir <- "out/hiermod/16S_5_covariates_MDSYC/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# Same baseline/gap/year values as MDSYz's own calibration, plus modest
-# covariate slopes, so results stay comparable.
+# Same baseline/gap/year values as MDSYz, plus modest slopes
 
 may_conv <- 180
 may_org  <- 120
@@ -76,8 +70,7 @@ post_sim <- extract.samples(fit_sim)
     b_deg = post_sim$b_deg, b_precip = post_sim$b_precip, b_seq = post_sim$b_seq)))
 
 ### Contrast recovery -------------
-# b_deg/b_precip/b_seq cancel at the default (z=0) reference level, so this
-# is unaffected by their addition -- same recovery estimand as MDSYz.
+# Covariates at z = 0 cancel: same estimand as MDSYz
 
 cr <- contrast_recovery(
   fit_sim, means_MDSYC, may_conv, may_org, july_conv_shift, july_org_shift, shift = 1)
@@ -112,11 +105,8 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga/covariate collinearity check -----------------------------------------
-# b_deg/b_precip/b_seq are independent of Mg/Mo/Yr in this simulator (see
-# MDSYC_model.R header -- MDLSYC's own rho_deg_season/rho_seq_mu stress
-# test is the template for a realistic-confounding follow-up), so no strong
-# correlation is expected here. Worth checking anyway, same discipline as
-# every new fixed effect in this rebuild.
+# Covariates independent of Mg/Mo/Yr in this simulator: little correlation expected
+# - realistic collinearity tested in 6.5
 
 p_funnel <- function(){
   par(mfrow = c(2,2))
@@ -163,8 +153,7 @@ save_sbc_health_report(
                 "may_gap", "july_gap", "seasonal_change"),
   hiermod_out_dir = hiermod_out_dir)
 
-# Same stress test as every model in this rebuild before trusting an "ok"
-# result at n=100.
+# n = 400 stress test (n = 100 alone not trusted)
 
 n_sbc <- 400
 

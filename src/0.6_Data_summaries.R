@@ -57,6 +57,7 @@ classrates %>%
 
 # Rounding functions
 fmt_int  <- function(x) format(round(x), big.mark = ",")
+# Number formatting: 1 and 2 decimals
 fmt_dec <-  function(x) format(round(x, 1), nsmall = 1)
 fmt_prop <- function(x) format(round(x, 2), nsmall = 2)
 
@@ -125,6 +126,7 @@ clean_taxa_vector <- function(x) {
   )
 }
 
+# Unique classified taxa per taxonomic rank
 get_unique_taxa_list <- function(ps) {
   tax_df <- as.data.frame(as(tax_table(ps), "matrix"), stringsAsFactors = FALSE)
   rank_list <- purrr::map(names(tax_df), function(rank) {

@@ -1,6 +1,5 @@
-# PCoA (weighted UniFrac) + envfit taxonomic-class arrows, both barcodes.
-# Same ordination and panels as src/2.2_betadiv_fig_main.R, minus the
-# ellipses, plus arrows for classes significantly correlated with each ordination.
+# PCoA (weighted UniFrac) + envfit taxonomic-class arrows, both barcodes
+# - same ordinations as 3.2, no ellipses
 
 pacman::p_load(tidyverse, vegan, patchwork, ggrepel, phyloseq, update = FALSE)
 

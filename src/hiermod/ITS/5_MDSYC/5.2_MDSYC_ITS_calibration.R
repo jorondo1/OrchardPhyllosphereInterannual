@@ -1,20 +1,6 @@
-# MODEL 5 (MDSYC, "Radagast the Grower"), ITS: MDSYz plus three
-# standardized control covariates (deg_h_z, precip_72h_z, seq_depth_z) as
-# additive fixed slopes. Mirrors 5.2_MDSYC_16S_calibration.R. All three
-# covariates are computed once in 0_SETUP.R, identically regardless of
-# Kingdom (deg_h_z/precip_72h_z centered WITHIN Season; seq_depth_z --
-# ITS's own Fungi-specific sequencing depth column -- centered globally on
-# purpose, see 0_SETUP.R's own header).
-#
-# model_MDSYC_ITS: loga[Mg] ~ dnorm(2,2) is ITS's own scale; b_deg/b_precip/
-# b_seq ~ dnorm(0,1) carry over unchanged from model_MDSYC_16S -- additive
-# log-scale slopes on standardized covariates, not tied to Hill_1's own
-# baseline, and the old ITS lineage's own MDLSYC_model.R already used the
-# identical dnorm(0,1) choice.
-#
-# True b_deg/b_precip/b_seq reused directly from 16S -- the simulator draws
-# these covariates independently of Mg/Mo/Yr, so their recoverability
-# doesn't depend on Kingdom either.
+# MODEL 5 (MDSYC, "Radagast the Grower"), ITS: calibration
+# - covariates as 16S (see MDSYC_model.R); seq_depth_z = fungal read count
+# - true slopes as 16S (covariates simulated independently of Mg/Mo/Yr)
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')

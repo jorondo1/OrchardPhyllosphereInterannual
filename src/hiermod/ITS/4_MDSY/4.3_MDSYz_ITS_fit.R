@@ -1,9 +1,4 @@
-# MODEL 4 (MDSYz), ITS, SHIFTED (Hill_1 - 1): real fit and PPC. Mirrors
-# 4.3_MDSYz_16S_fit.R. model_MDSYz_ITS already carries its own validated
-# priors (loga[Mg] ~ dnorm(2,2), everything else inherited from
-# model_MDSYz_16S) -- no local override needed, confirmed clean by
-# 4.2_MDSYz_ITS_calibration.R's own n_sbc=500 run (0 divergences,
-# "Overall: OK").
+# MODEL 4 (MDSYz), ITS: real fit (Hill_1 - 1) and PPC
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -46,10 +41,7 @@ save_gg("postpred_density", model_id_MDSYz, p_postpred)
 save_gg("postpred_stat", model_id_MDSYz, p_ppc)
 
 ## Year effect (fixed, not pooled) ---------------------------------------------
-# yr1/yr2 are the free parameters; yr3 = -(yr1+yr2) by construction
-# (sum-to-zero). Shown together as one panel since all three are on the
-# same log-scale footing, no separate hyper-SD to report (this is a fixed
-# effect, not a variance component).
+# yr1/yr2 free; yr3 = -(yr1 + yr2)
 
 pf <- post_full(fit_MDSYz)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)

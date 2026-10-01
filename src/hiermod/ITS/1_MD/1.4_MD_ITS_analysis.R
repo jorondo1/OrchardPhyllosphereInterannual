@@ -1,7 +1,4 @@
-# MODEL 1 (MDv), ITS: posterior contrast, run against the saved fit. Mirrors
-# 1.4_MD_16S_analysis.R -- no prior_sigma override needed here (see 1.3's
-# own header): model_MDv_ITS's file-level sigma[Mg] ~ dexp(1) is what was
-# actually validated.
+# MODEL 1b (MDv), ITS: posterior contrast from the saved fit
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')

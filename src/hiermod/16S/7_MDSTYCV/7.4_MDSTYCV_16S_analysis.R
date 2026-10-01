@@ -1,8 +1,5 @@
-# MODEL 7 (MDSTYCV, "Saruman the Fool"), 16S, SHIFTED: posterior contrast,
-# run against the saved fit. Year/covariate/cultivar/Tree effect panels are
-# already covered in 7.3's own fit script -- this one mirrors
-# 2.4/3.4/4.4/5.4/6.4's Management x Season contrast reporting so every
-# model in the family stays directly comparable.
+# MODEL 7 (MDSTYCV) 16S
+# estimands, variance partition, results report (effect panels in 7.3)
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -28,9 +25,7 @@ pc_estimands_medians <- pc_estimands$medians
 
 
 ## Variance partition -----------------------------------------------------------
-# Needs raw extract.samples() (plain matrices), not `pf`. Shapley/LMG shares
-# with Management / Season / interaction effect-coded -- see the model file's
-# variance_partition_*() comment and doc/R2_methods.txt.
+# Needs raw extract.samples() matrices; LMG shares, effect-coded Mg x Season (see model file)
 
 post_raw <- extract.samples(fit_MDSTYCV)
 pc_varpart <-  variance_partition_MDSTYCV(post_raw, dat_MDSTYCV)
@@ -50,11 +45,7 @@ p_varpart <- pc_varpart %>%
 save_gg("fit_variance_partition", model_id_MDSTYCV, p_varpart, width = 12, height = 4)
 
 ## Comprehensive posterior summary (results report) -----------------------------
-# Every interpretable posterior's own mean/median/89% PI/HPDI, not just the
-# headline contrast -- excludes per-tree tr[Tr] raw draws (too many, not
-# individually interpretable) and the generic "mean"/"median" 4-column
-# entries (already covered, more legibly, by pc_estimands_means/medians'
-# own May/July/Conventional/Organic labels).
+# All interpretable posteriors (excl. raw per-tree draws and generic mean/median columns)
 
 pc_all <- bind_rows(
   compute_contrasts(
@@ -84,10 +75,7 @@ p_contrast_median <- contrast_plot_panels(
 save_gg("fit_contrast_median", model_id_MDSTYCV, p_contrast_median)
 
 ## Residual variance (sigma[Mg]) -------------------------------------------------
-# Does the still-open Organic-vs-Conventional sigma asymmetry (unexplained
-# by Cultivar in Model 6: 0.285 vs MDSYC's own 0.31) change once Tree is
-# estimated separately? Possible either direction -- Tree could absorb some
-# of what looked like residual noise, or leave it untouched.
+# Does the organic vs conventional sigma gap change once Tree is estimated?
 
 pc_sigma <- compute_contrasts(pf, keep = "sigma", group_levels = idx$Mg$levels)
 

@@ -1,42 +1,13 @@
-# MDSTYCVr_model.R --- MODEL 8 (MDSTYCVr, "Gimli the Greedy"), 16S: MDSTYCV
-# with Cultivar switched from a FIXED sum-to-zero effect to a partially-
-# pooled RANDOM effect (cv[Cv]*sigma_cv, non-centered) -- the exact same
-# recipe as Tree's own tr[Tr]*sigma_tr.
+# MDSTYCVr_model.R --- MODEL 8 (MDSTYCVr, "Gimli the Greedy"): MDSTYCV with Cultivar
+# as a random effect (cv[Cv]*sigma_cv, non-centered, like Tree)
 
 source('src/hiermod/0_INDEX.R')
 
-# Motivation (from discussion, not yet in any TODO): the 5 cultivars in
-# this dataset are a specific, deliberate choice (we picked these varieties,
-# we could have picked others), which is at least an arguable case for
-# treating them as an exchangeable sample from a broader population of
-# possible cultivars rather than 5 fixed, individually-meaningful levels
-# (contrast Year, which stays fixed -- see MDSTYCV_posterior_guide.html
-# section 5's own note on why). Whether that's actually a good idea comes
-# down to an empirical question, not a conceptual one: can sigma_cv be
-# identified at all from only 5 levels? This calibration script's real job
-# is answering that, not assuming either way.
-#
-# Real structural complication worth stating up front: Tree is
-# DETERMINISTICALLY NESTED in Cultivar in the real data (129/129 trees map
-# to exactly one cultivar -- MDSTYCV_model.R's own header). Making
-# Cultivar ALSO a random effect means sigma_cv and sigma_tr are now two
-# hyperparameters both trying to explain variance at nested levels of the
-# SAME 129 trees (Cultivar the coarser grouping, Tree the finer one nested
-# inside it -- the standard nested-random-effects structure, cf. lme4's
-# `(1|Cultivar/Tree)`). sigma_tr already has documented fragility on its
-# own (small-sigma_tr funnel, sparse 1-2 obs/tree, MDST_model.R's header) --
-# adding sigma_cv competing for variance at an adjacent level of the same
-# nesting could make identification of BOTH harder, not just sigma_cv's
-# own. The pairs-check in 8.2_MDSTYCVr_16S_calibration.R is built
-# specifically around this: is cor(sigma_tr, sigma_cv) in the posterior
-# large enough to worry about?
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2/tr[Tr]*sigma_tr/b_deg/
-# b_precip/b_seq are MDSTYCV's own validated answer, hardcoded as this
-# model's starting point. cv[Cv] ~ dnorm(0,1) / sigma_cv ~ dhalfnorm(0,1)
-# are the one new assumption to validate -- same non-centered form and
-# same prior family as sigma_tr, so any difference in behaviour is about
-# the 5-level cardinality/nesting, not a different prior choice.
+# Why: the 5 cultivars are a choice among many -> arguably exchangeable
+# Risk: Tree nested in Cultivar -> sigma_cv and sigma_tr compete for the same variance
+# - can sigma_cv be identified from 5 levels? (pairs check in 8.2: cor(sigma_tr, sigma_cv))
+# Priors: as MDSTYCV; cv[Cv] ~ dnorm(0,1), sigma_cv ~ dhalfnorm(0,1) (as Tree)
+# Outcome: failed calibration (divergences, miscalibrated intercepts) -> not used
 
 model_MDSTYCVr_16S <- alist(
   likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
@@ -72,19 +43,13 @@ attr(model_MDSTYCVr_16S, "name") <- "Gimli the Greedy"
 model_id_MDSTYCVr <- "MDSTYCVr"
 
 ## ITS variant -----------------------------------------------------------------
-# Same rationale as MDSTYCV_ITS. cv[Cv]/sigma_cv carry over unchanged --
-# same Cultivar factor (idx$Cv, shared across Kingdoms), same non-centered
-# form.
+# Intercept prior only (as MDS_ITS)
 model_MDSTYCVr_ITS <- model_MDSTYCVr_16S
 model_MDSTYCVr_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
 attr(model_MDSTYCVr_ITS, "name") <- "Gimli the Greedy"
 
 ## means_MDSTYCVr() -------------------------------------------------------------
-# Same as means_MDSTYCV(), plus sigma_cv^2 folded into total_var alongside
-# sigma_tr^2 -- Cultivar is now a random, not fixed, effect, so unlike
-# MDSTYCV's own means_MDSTYCV() (Cultivar held at its fixed-effect average,
-# contributing 0 variance), a population-mean estimand here must integrate
-# over Cultivar's own extrapolated population too.
+# As means_MDSTYCV(); mean variance also includes sigma_cv^2 (cultivar now random)
 
 means_MDSTYCVr <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
   total_var_conv <- post$sigma[,1]^2 + as.vector(post$sigma_tr)^2 + as.vector(post$sigma_cv)^2
@@ -116,9 +81,7 @@ means_MDSTYCVr <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_d
   )
 }
 
-# SBC estimands -- same formula as MDSTYCV's own dq_MDSTYCV, sigma_cv^2
-# folded in alongside sigma_tr^2; yr/covariates all cancel in the Mg x Mo
-# contrast, same reasoning as dq_MDSYCV.
+# SBC estimands: as dq_MDSTYCV, variance incl. sigma_cv^2
 dq_MDSTYCVr <- SBC::derived_quantities(
   may_gap =
     exp(loga[2] + (sigma[2]^2 + sigma_tr^2 + sigma_cv^2) / 2) -
@@ -134,10 +97,8 @@ dq_MDSTYCVr <- SBC::derived_quantities(
 )
 
 ## variance_partition_MDSTYCVr() -------------------------------------------------
-# Same as variance_partition_MDSTYCV(), except Cultivar moves OUT of the
-# sequential fixed-effect decomposition and becomes its own random bucket
-# (sigma_cv^2/total), alongside Tree -- it's no longer a level-based fixed
-# effect once it's cv[Cv]*sigma_cv.
+# Sequential partition as MDSYCV; Cultivar and Tree as variance shares
+# (sigma_cv^2, sigma_tr^2 over total)
 
 variance_partition_MDSTYCVr <- function(post, dat){
   loga_obs   <- post$loga[, dat$Mg]
@@ -178,10 +139,7 @@ variance_partition_MDSTYCVr <- function(post, dat){
 }
 
 ## Data-generating function ---------------------------------------------------
-# Same Tree-as-study-unit design as sim_div_MDSTYCV(), except Cultivar is
-# now drawn as a random per-level offset (cv_offset, 5 levels) rather than
-# passed in as 4 fixed coefficients + 1 derived one -- true_params$sigma_cv
-# replaces true_params$cv_1/cv_3/cv_4/cv_5.
+# As sim_div_MDSTYCV(), cultivar offsets drawn from N(0, sigma_cv)
 
 sim_div_MDSTYCVr <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
                               sigma_cv, sigma_tr, b_deg, b_precip, b_seq, shift = NULL){
@@ -211,6 +169,7 @@ sim_div_MDSTYCVr <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2
   dat
 }
 
+# Simulate one dataset from one prior draw (draw_true() output)
 simulate_from_priors_MDSTYCVr <- function(true_params, N_samples = 250, shift = NULL){
   sim_div_MDSTYCVr(
     N_samples = N_samples,

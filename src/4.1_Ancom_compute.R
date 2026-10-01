@@ -37,6 +37,7 @@ ps_final <- lapply(
 # Relab filter
 rel_abund_cutoff <- 0.0001 
 
+# Keep taxa whose max relative abundance in any sample >= cutoff
 filter_relative_abundance <- function(ps, cutoff = 0.0001) {
   ps <- prune_taxa(taxa_sums(ps) > 0, ps)
   ps_rel <- transform_sample_counts(ps, function(x) x / sum(x))

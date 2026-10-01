@@ -1,11 +1,4 @@
-# MODEL 3 (MDST, "Treebeard the Skeptic"), ITS, SHIFTED: posterior
-# contrast, run against the saved fit. Mirrors 3.4_MDST_16S_analysis.R.
-# Variance components (sigma[Mg], sigma_tr) are already covered in 3.3's
-# own fit script -- this one just mirrors 2.4's Management x Season
-# contrast reporting so the two models stay directly comparable side by
-# side. See 3.3's own header for the SBC-miscalibration caveat on this
-# model -- a scaffolding step toward Model 7, not an independently
-# interpreted result.
+# MODEL 3 (MDST), ITS: posterior contrasts from the saved fit (variance components in 3.3)
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -16,20 +9,12 @@ fit_MDST <- readRDS(file.path(hiermod_out_dir, "fit_MDST.rds"))
 dat_MDST <- readRDS(file.path(hiermod_out_dir, "dat_MDST.rds"))
 
 pf <- post_full(fit_MDST, means_MDST, shift = 1)
-m  <- pf$mean
-md <- pf$median
 
 ## Management x Season contrasts -----------------------------------------------
 
-pc_estimands_means <- estimand_panels(
-  pairs = list(`May mean`  = list(m$mean_1, m$mean_3),
-               `July mean` = list(m$mean_2, m$mean_4)),
-  extra = setNames(
-    list(m$mean_1 / m$mean_3, m$mean_2 / m$mean_4),
-    names(Fold_change_palette)
-  ),
-  group_levels = idx$Mg$levels
-)
+pc_estimands <- build_pc_estimands(pf, group_levels = idx$Mg$levels)
+pc_estimands_means   <- pc_estimands$means
+pc_estimands_medians <- pc_estimands$medians
 
 save_report("fit_summary", model_id_MDST, fit_MDST, model = model_MDST_ITS)
 
@@ -41,15 +26,6 @@ p_contrast_mean <- contrast_plot_panels(
 
 save_gg("fit_contrast_mean", model_id_MDST, p_contrast_mean)
 
-pc_estimands_medians <- estimand_panels(
-  pairs = list(`May median`  = list(md$median_1, md$median_3),
-               `July median` = list(md$median_2, md$median_4)),
-  extra = setNames(
-    list(md$median_1 / md$median_3, md$median_2 / md$median_4),
-    names(Fold_change_palette)
-  ),
-  group_levels = idx$Mg$levels
-)
 
 p_contrast_median <- contrast_plot_panels(
   pc_estimands_medians, quant = c(0.01, 0.995), scales = 'free_y',

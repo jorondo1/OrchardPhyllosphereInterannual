@@ -1,4 +1,4 @@
-# MODEL 7 (MDSTYCV, "Saruman the Fool"), ITS, SHIFTED
+# MODEL 7 (MDSTYCV), ITS: estimands, variance partition, results report (effect panels in 7.3)
 
 hiermod_marker <- "ITS"
 source('src/hiermod/Models/MDSTYCV_model.R') 
@@ -21,9 +21,7 @@ pc_estimands_medians <- pc_estimands$medians
 
 
 ## Variance partition -----------------------------------------------------------
-# Needs raw extract.samples() (plain matrices), not `pf`. Shapley/LMG shares
-# with Management / Season / interaction effect-coded -- see the model file's
-# variance_partition_*() comment and doc/R2_methods.txt.
+# Needs raw extract.samples() matrices; LMG shares, effect-coded Mg x Season (see model file)
 
 post_raw <- extract.samples(fit_MDSTYCV)
 pc_varpart <- 
@@ -43,11 +41,7 @@ p_varpart <- pc_varpart %>%
 save_gg("fit_variance_partition", model_id_MDSTYCV, p_varpart, width = 12, height = 4)
 
 ## Comprehensive posterior summary (results report) -----------------------------
-# Every interpretable posterior's own mean/median/89% PI/HPDI/pd, not just
-# the headline contrast -- excludes per-tree tr[Tr] raw draws (too many,
-# not individually interpretable) and the generic "mean"/"median" 4-column
-# entries (already covered, more legibly, by pc_estimands_means/medians'
-# own May/July/Conventional/Organic labels).
+# All interpretable posteriors (excl. raw per-tree draws and generic mean/median columns)
 
 pc_all <- bind_rows(
   compute_contrasts(pf, keep = setdiff(names(pf), c("tr", "mean", "median")), group_levels = idx$Mg$levels),

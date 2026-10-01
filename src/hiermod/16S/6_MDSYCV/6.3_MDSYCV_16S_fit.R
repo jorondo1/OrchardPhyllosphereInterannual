@@ -1,6 +1,4 @@
-# MODEL 6 (MDSYCV, "Bombadil the Eldest"), 16S, SHIFTED (Hill_1 - 1): real
-# fit and PPC. model_MDSYCV_16S already carries its own validated priors,
-# no local override needed here.
+# MODEL 6 (MDSYCV, "Bombadil the Eldest"), 16S: real fit (Hill_1 - 1) and PPC
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -49,7 +47,7 @@ save_gg("postpred_density", model_id_MDSYCV, p_postpred)
 save_gg("postpred_stat", model_id_MDSYCV, p_ppc)
 
 ## Year effect (fixed, not pooled) ---------------------------------------------
-# Same as 4.3/5.3's own panel -- yr1/yr2 free, yr3 = -(yr1+yr2) by construction.
+# yr1/yr2 free; yr3 = -(yr1 + yr2)
 
 pf <- post_full(fit_MDSYCV)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)
@@ -75,9 +73,7 @@ p_covariates <- variance_component_panels(
   pc_covariates, quant = c(0, 1), palette = cov_pal); p_covariates
 
 ## Cultivar effect (fixed, not pooled) -----------------------------------------
-# cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = -(cv_1+cv_3+cv_4+cv_5) by
-# construction (Liberty has the most combined observations -- see
-# MDSYCV_model.R's own header for why it's the derived slot).
+# cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = minus their sum
 
 cv_2 <- -(pf$cv_1$cv_1 + pf$cv_3$cv_3 + pf$cv_4$cv_4 + pf$cv_5$cv_5)
 
@@ -98,11 +94,7 @@ p_effects <- p_year / p_covariates / p_cultivar
 save_gg("fit_effects", model_id_MDSYCV, p_effects, width = 8, height = 14)
 
 ## Full pairwise parameter check ------------------------------------------------
-# Same rationale/settings as 6.2's own calibration-stage check -- PNG, not
-# PDF (see plot_mcmc_pairs()'s docstring, hiermod_core.R), n_keep tuned to
-# ~5% of this fit's own total draws (6 chains x 5000 post-warmup/chain x 2
-# kept chains = 5000 -- reuse the exact same 250 draws chains=6/iter=10000
-# already implies).
+# As in 6.2; PNG (point-heavy)
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "yr1", "yr2",
                  "cv_1", "cv_3", "cv_4", "cv_5", "b_deg", "b_precip", "b_seq")

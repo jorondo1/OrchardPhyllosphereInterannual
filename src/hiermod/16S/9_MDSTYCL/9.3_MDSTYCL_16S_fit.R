@@ -1,6 +1,4 @@
-# MODEL 7 (MDSTYCL, "Saruman the Fool"), 16S, SHIFTED (Hill_1 - 1): real fit
-# and PPC. model_MDSTYCL_16S already carries its own validated priors, no
-# local override needed here.
+# MODEL 9 (MDSTYCL, "Faramir the Judicious"), 16S: real fit (Hill_1 - 1) on the B/D subset, PPC, effect panels
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -8,16 +6,11 @@ source('src/hiermod/Models/MDSTYCL_model.R') # model_MDSTYCL_16S, means_MDSTYCL(
 
 hiermod_out_dir <- "out/hiermod/16S_9_location_MDSTYCL"
 
-## DATA SUBSET
+## Data subset: locations B and D (both managements) ---------------------------
 div %<>% filter(Location %in% c('B', 'D'))
 
-# idx$Tr (0_INDEX.R) is built over the FULL, unfiltered 129-tree div, so its
-# to_index() still returns each tree's GLOBAL index (up to 129) here, but
-# ulam() sizes tr[] from how many DISTINCT indices are actually present in
-# this B/D subset (~75) -- so a tree whose global index exceeds that count
-# (e.g. 116) overflows the declared array ("index 116 out of range;
-# expecting index to be between 1 and 75"). Needs a subset-local, compacted
-# index, same reasoning as Location's own local remap just below.
+# Tree index re-compacted to 1..n within the subset
+# - idx$Tr uses the global 129-tree index; ulam sizes tr[] by distinct values (~75)
 idx_Tr_local <- make_index(div$Tree_id)
 
 ## Model fit ----------------------------------------------------------------
@@ -27,7 +20,6 @@ dat_MDSTYCL <- list(
   Mg = idx$Mg$to_index(div$Management),
   Mo = idx$Mo$to_index(div$Time),
   Yr = idx$Yr$to_index(div$Year),
-# rewrite Location levels
   Lo = ifelse(idx$Lo$to_index(div$Location) == 2, 1L, 2L), # B=1, D=2
   Tr = idx_Tr_local$to_index(div$Tree_id),
   deg_h_z = div$deg_h_z,
@@ -65,7 +57,7 @@ save_gg("postpred_density", model_id_MDSTYCL, p_postpred)
 save_gg("postpred_stat", model_id_MDSTYCL, p_ppc)
 
 ## Year effect (fixed, not pooled) ---------------------------------------------
-# Same as 4.3/5.3/6.3's own panel -- yr1/yr2 free, yr3 = -(yr1+yr2) by construction.
+# yr1/yr2 free; yr3 = -(yr1 + yr2)
 
 pf <- post_full(fit_MDSTYCL)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)
@@ -90,9 +82,8 @@ pc_covariates <- bind_rows(
 p_covariates <- variance_component_panels(
   pc_covariates, quant = c(0, 1), palette = cov_pal); p_covariates
 
-## Cultivar effect (fixed, not pooled) -----------------------------------------
-# cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = -(cv_1+cv_3+cv_4+cv_5) by
-# construction (Liberty has the most combined observations).
+## Location effect (fixed, sum-to-zero) ------------------------------------------
+# lo1 = location B's offset; D = -lo1
 
 pc_location <-  tibble(
   group = "B", value = pf$lo1$lo1) %>% mutate(statistic = "Location effect (log scale)")
@@ -101,10 +92,7 @@ p_location <- variance_component_panels(
   pc_location, quant = c(0, 1), palette = fill_loc[c("B", "D")]); p_location
 
 ## Tree effect: how much tree-to-tree spread is there in the real fit? --------
-# sigma_tr's own posterior magnitude, next to sigma[Mg] for scale -- same
-# diagnostic as 3.3_MDST_16S_fit.R's own "added value of Tree" section.
-# tr[Tr] itself (~129 levels) isn't plotted individually -- too many for a
-# readable panel; precis()/the trankplot above cover those if ever needed.
+# sigma_tr next to sigma[Mg] (as in 3.3)
 
 pc_sigma_tr <- bind_rows(
   compute_contrasts(pf, keep = "sigma", group_levels = idx$Mg$levels),
@@ -116,14 +104,13 @@ p_sigma_tr <- variance_component_panels(
   palette = Management_palette, # already carries Population's colour
   sd_stats = c("sigma", "sigma_tr")); p_sigma_tr
 
-## Year/Covariate/Cultivar/Tree effects, combined ---------------------------------
+## Year/Covariate/Location/Tree effects, combined ---------------------------------
 
 p_effects <- p_year / p_covariates / p_location / p_sigma_tr
 save_gg("fit_effects", model_id_MDSTYCL, p_effects, width = 8, height = 14)
 
 ## Full pairwise parameter check ------------------------------------------------
-# Same rationale/settings as 7.2's own calibration-stage check -- the
-# combination that mattered most there: sigma_tr vs cv_1..cv_4.
+# As in 9.2 (key pair: sigma_tr vs lo1)
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_tr",
                  "yr1", "yr2", "lo1",

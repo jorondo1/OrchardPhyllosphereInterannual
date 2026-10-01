@@ -1,7 +1,6 @@
-# Exploratory, to be archived. Section 1: is each environmental variable's
-# correlation with a PCoA axis significant, and are the underlying model's
-# residuals normally distributed (Shapiro/QQ/scatter)? Section 2: PERMANOVA
-# blocked by tree (moved here from src/2.5_betadiv_envfit_fig.R).
+# Exploratory, to be archived
+# - 1: env. variable vs PCoA axis correlations + residual checks
+# - 2: PERMANOVA blocked by tree
 
 pacman::p_load(tidyverse, vegan, patchwork, update = FALSE)  # patchwork: scatter + qq below
 
@@ -30,12 +29,10 @@ pcoa_data <- expand_grid(
     }))
 
 ## Correlation diagnostics for one env. variable x one PCoA axis, z-scored --------------
-# NOTE (todo, deferred by user): correlates the RAW mean_temp/precip_72h/
-# deg_h columns, not diversity_data.rds's deg_h_z/precip_72h_z (which are
-# season-centered, not simple z-scores -- see
-# src/0.3.2.Metadata_phyloseq.R's add_centered_covariates()). Deferred.
+# TODO: uses raw mean_temp/precip_72h/deg_h, not the centered *_z versions
 alpha <- 0.05  # significance threshold, lm slope + Shapiro-Wilk test
 
+# Correlation of a z-scored variable with one PCoA axis + residual normality checks
 corr_diagnostics <- function(df, var, axis) {
   axis_value <- df[[axis]]
   z <- as.numeric(scale(df[[var]]))

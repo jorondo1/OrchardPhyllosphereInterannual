@@ -1,32 +1,10 @@
 # MODEL 8 (MDSTYCVr, "Gimli the Greedy"), 16S: MDSTYCV with Cultivar
 # switched from a FIXED sum-to-zero effect to a partially-pooled RANDOM
-# effect (cv[Cv]*sigma_cv, non-centered) -- same recipe as Tree's own
-# tr[Tr]*sigma_tr.
+# effect (cv[Cv]*sigma_cv, non-centered) 
 #
-# The actual question this script exists to answer (from discussion, not
-# a settled decision): the 5 cultivars here are a specific, deliberate
-# choice -- we picked these varieties, we could have picked others -- so
-# treating them as an exchangeable sample from a broader cultivar
-# population is at least defensible, unlike Year (see
-# MDSTYCV_posterior_guide.html section 5). But is 5 levels even enough to
-# identify sigma_cv? And since Tree is DETERMINISTICALLY NESTED in
-# Cultivar in the real data (129/129 trees map to exactly one cultivar --
-# MDSTYCV_model.R's own header), sigma_cv and sigma_tr are now two
-# hyperparameters competing for variance at adjacent levels of the SAME
-# nesting -- MDST's own sigma_tr already has documented fragility on its
-# own (small-sigma_tr funnel, sparse 1-2 obs/tree). This script's pairs-
-# check is built specifically around cor(sigma_tr, sigma_cv): if that's
-# large, the two are trading off against each other rather than being
-# separately identified, which would be the concreste argument against
-# this model regardless of what the "5 levels is marginal" heuristic says
-# in the abstract.
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2/sigma_tr/b_deg/b_precip/
-# b_seq priors are MDSTYCV's own validated answer, hardcoded here as this
-# model's starting point. cv[Cv] ~ dnorm(0,1) / sigma_cv ~ dhalfnorm(0,1)
-# are the one new assumption to validate -- same prior family as sigma_tr,
-# so any difference in behaviour is about the 5-level cardinality/nesting,
-# not a different prior choice.
+# Aim: treat cultivar as a random effect
+# danger : nestedness could make sigma_* hyperparameters compete for variance
+# Question ; is this making the model more fragile, and is it worh the gain?
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -39,13 +17,9 @@ model_id <- model_id_MDSTYCVr
 hiermod_out_dir <- "out/hiermod/16S_8_cultivar_random_MDSTYCVr/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# Same baseline/gap/year/covariate values as MDSTYCV's own calibration, so
-# results stay comparable across the whole family. true_sigma_cv=0.15
-# matches the SD implied by MDSTYCV's own fixed cv_1..cv_5 calibration
-# values (sd(c(0.2,-0.05,-0.15,0.1,-0.1)) ~ 0.146) -- same effective
-# cultivar-to-cultivar spread, just generated as a random draw instead of
-# 4 fixed coefficients, so this is an apples-to-apples comparison of the
-# two parameterizations, not a different scenario.
+# Keep the same effective cultivar-to-cultivar spread as before, 
+# just generated as a random draw instead of 4 fixed coefficients, 
+# so this is an apples-to-apples comparison (lol) with model 7.
 
 may_conv <- 180
 may_org  <- 120
@@ -55,7 +29,7 @@ july_org_shift  <- 0.2
 true_sigma    <- cv_to_sigma(c(0.5, 0.8)) # conv, org
 true_sigma_tr <- 0.3
 true_sigma_cv <- 0.15
-true_yr1   <- 0.1
+true_yr1   <- 0.1  # --|
 true_yr2   <- 0.3  # implies yr3 = -0.4
 
 true_b_deg    <- 0.2
@@ -143,10 +117,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## Full pairwise parameter check ------------------------------------------------
-# The specific new combination this whole model exists to test: sigma_tr
-# against sigma_cv (Tree nested in Cultivar, both now random, for the
-# first time). Also loga against everything, given this family's track
-# record of small loga leaks showing up in unexpected places.
+# Key pair: sigma_tr vs sigma_cv (both random, nested); loga vs everything
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_tr", "sigma_cv",
                 "yr1", "yr2", "b_deg", "b_precip", "b_seq")
@@ -155,16 +126,10 @@ save_gg("mcmc_pairs", model_id, p_pairs, width = 15, height = 15, type = "png")
 
 cat(sprintf("cor(sigma_tr, sigma_cv) in the posterior: %.3f\n",
             cor(post_sim$sigma_tr, post_sim$sigma_cv)))
-# A large magnitude here (say, |r| > 0.5) would mean the two variance
-# components are trading off against each other rather than being
-# separately identified -- the concrete version of the "does nesting
-# Cultivar-as-random with Tree actually work" question, not just the
-# "5 levels is marginal" heuristic in the abstract.
+# |r| > ~0.5: the two variance components trade off instead of being identified
 
-## Simulation-based calibration (SBC), via the SBC package -----------------------
-# tr[Tr]/cv[Cv] stay out of `keep` (cardinality scales with N_samples,
-# simulator draws fresh per-tree/per-cultivar offsets each replicate) --
-# every hyperparameter, including sigma_tr/sigma_cv, is tracked directly.
+## Simulation-based calibration -----------------------
+# tr[Tr], cv[Cv] not tracked (fresh offsets each replicate); sigma_tr, sigma_cv tracked
 
 sbc_gen_MDSTYCVr <- make_sbc_generator(
   fit = fit_sim, simulate_fn = simulate_from_priors_MDSTYCVr,
@@ -200,11 +165,7 @@ save_sbc_health_report(
 
 
 ## Compare with MDSTYCV: does a random Cultivar help or hurt sigma_tr? -----------
-# MDSTYCV's own standalone numbers (7.2_MDSTYCV_16S_calibration.R,
-# sbc_health_MDSTYCV_400iter.txt), same sigma_tr ~ dhalfnorm(0,1) prior --
-# n_sbc differs (400 vs this script's 500), close enough for a qualitative
-# before/after read, not a formal test. Fill in MDSTYCV's own numbers
-# before comparing.
+# vs MDSTYCV (7.2, n = 400; here n = 500): qualitative before/after only
 
 mdstycv_divergences  <- NA # from sbc_health_MDSTYCV_400iter.txt
 mdstycv_pct_bad_rhat <- NA

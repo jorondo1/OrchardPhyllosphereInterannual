@@ -1,15 +1,6 @@
-# MODEL 7 (MDSTYCV, "Saruman the Fool"), ITS, SHIFTED (Hill_1 - 1): real
-# fit and PPC. Mirrors 7.3_MDSTYCV_16S_fit.R. model_MDSTYCV_ITS already
-# carries its own validated priors (loga[Mg] ~ dnorm(2,2), everything else
-# inherited from model_MDSTYCV_16S) -- no local override needed.
-#
-# Calibration caveat: 7.2_MDSTYCV_ITS_calibration.R's own n_sbc=500 run
-# flagged loga[1] and sigma[2] MISCALIBRATED (z=-2.99/+2.64; 0 divergences,
-# so a rank-fraction issue, not a sampling failure) -- same fingerprint as
-# 16S's own MDSTYCV calibration and ITS's own MDST (Model 3), both of
-# which fit real data cleanly despite it. Worth checking loga[1]'s own
-# Rhat/ESS below before trusting it precisely, but not a reason to expect
-# this real fit to fail outright.
+# MODEL 7 (MDSTYCV, "Saruman the Fool"), ITS: real fit (Hill_1 - 1), PPC, effect panels
+# Caveat: SBC flagged loga[1], sigma[2] (z ~ -3.0/+2.6, 0 divergences), as in 16S
+# - check loga[1]'s Rhat/ESS below
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -47,7 +38,7 @@ save_pdf("fit_trankplot", model_id_MDSTYCV,
          function() trankplot(fit_MDSTYCV, n_cols = 6, max_rows = 20),
          width = 24, height = 36)
 
-# num_divergent/num_max_treedepth/ebfmi per chain directly:
+# Per-chain divergences, max treedepth, E-BFMI
 attr(fit_MDSTYCV, "cstanfit")$diagnostic_summary(
   diagnostics = c("divergences", "treedepth", "ebfmi"), quiet = TRUE)
 
@@ -67,7 +58,7 @@ save_gg("postpred_stat", model_id_MDSTYCV, p_ppc)
 ## Posterior estimates ---------------------------
 
 ### Year effect (fixed, not pooled) ---------------------------------------------
-# yr1/yr2 free; yr3 = -(yr1+yr2) by construction.
+# yr1/yr2 free; yr3 = -(yr1 + yr2)
 
 pf <- post_full(fit_MDSTYCV)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)
@@ -87,8 +78,7 @@ pc_covariates <- bind_rows(
 ) %>% mutate(statistic = "Covariate effects (log scale)")
 
 ## Cultivar effect (fixed, not pooled) -----------------------------------------
-# cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = -(cv_1+cv_3+cv_4+cv_5) by
-# construction (Liberty has the most combined observations).
+# cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = minus their sum
 
 cv_2 <- -(pf$cv_1$cv_1 + pf$cv_3$cv_3 + pf$cv_4$cv_4 + pf$cv_5$cv_5)
 
@@ -108,9 +98,8 @@ pc_sigma_tr <- bind_rows(
 ) %>% mutate(statistic = factor(statistic, levels = c("sigma", "sigma_tr")))
 
 ## Year/Covariate/Cultivar/Tree effects, combined ---------------------------------
-# Data only, one row per panel: its draws (pc_full) + the palette/sd_stats
-# variance_component_panels() needs, so any subset can be re-plotted
-# elsewhere, e.g. from the saved rds:
+# Data only, one row per panel (draws + palette + sd_stats), saved to rds
+# - re-plot any subset elsewhere, e.g.:
 #   filter(effect_panels, panel %in% c("year", "cultivar")) %>%
 #     purrr::pmap(\(pc_full, palette, sd_stats, ...)
 #       variance_component_panels(pc_full, quant = c(0, 1), palette = palette, sd_stats = sd_stats))

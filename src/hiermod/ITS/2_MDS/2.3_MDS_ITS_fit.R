@@ -1,8 +1,4 @@
-# MODEL 2 (MDS), ITS, SHIFTED (Hill_1 - 1): real fit and PPC. Mirrors
-# 2.3_MDS_16S_fit.R. model_MDS_ITS already carries its own validated priors
-# (loga[Mg] ~ dnorm(2,2), everything else inherited from model_MDS_16S) --
-# no local override needed, confirmed clean by 2.2_MDS_ITS_calibration.R's
-# own n_sbc=400 run (0 divergences, "Overall: OK").
+# MODEL 2 (MDS), ITS: real fit (Hill_1 - 1) and PPC
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')

@@ -1,9 +1,4 @@
-# MODEL 6 (MDSYCV, "Bombadil the Eldest"), ITS, SHIFTED (Hill_1 - 1): real
-# fit and PPC. Mirrors 6.3_MDSYCV_16S_fit.R. model_MDSYCV_ITS already
-# carries its own validated priors (loga[Mg] ~ dnorm(2,2), everything else
-# inherited from model_MDSYCV_16S) -- no local override needed, confirmed
-# clean by 6.2_MDSYCV_ITS_calibration.R's own n_sbc=500 run (0 divergences,
-# "Overall: OK").
+# MODEL 6 (MDSYCV, "Bombadil the Eldest"), ITS: real fit (Hill_1 - 1) and PPC
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -52,7 +47,7 @@ save_gg("postpred_density", model_id_MDSYCV, p_postpred)
 save_gg("postpred_stat", model_id_MDSYCV, p_ppc)
 
 ## Year effect (fixed, not pooled) ---------------------------------------------
-# Same as 4.3/5.3's own panel -- yr1/yr2 free, yr3 = -(yr1+yr2) by construction.
+# yr1/yr2 free; yr3 = -(yr1 + yr2)
 
 pf <- post_full(fit_MDSYCV)
 yr3 <- -(pf$yr1$yr1 + pf$yr2$yr2)
@@ -78,9 +73,7 @@ p_covariates <- variance_component_panels(
   pc_covariates, quant = c(0, 1), palette = cov_pal); p_covariates
 
 ## Cultivar effect (fixed, not pooled) -----------------------------------------
-# cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = -(cv_1+cv_3+cv_4+cv_5) by
-# construction (Liberty has the most combined observations -- see
-# MDSYCV_model.R's own header for why it's the derived slot).
+# cv_1/cv_3/cv_4/cv_5 free; cv_2 (Liberty) = minus their sum
 
 cv_2 <- -(pf$cv_1$cv_1 + pf$cv_3$cv_3 + pf$cv_4$cv_4 + pf$cv_5$cv_5)
 
@@ -101,9 +94,7 @@ p_effects <- p_year / p_covariates / p_cultivar
 save_gg("fit_effects", model_id_MDSYCV, p_effects, width = 8, height = 14)
 
 ## Full pairwise parameter check ------------------------------------------------
-# Same rationale/settings as 6.2's own calibration-stage check -- PNG, not
-# PDF, n_keep tuned to the standard 1000-draw thinning target for this
-# family.
+# As in 6.2; PNG (point-heavy)
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "yr1", "yr2",
                  "cv_1", "cv_3", "cv_4", "cv_5", "b_deg", "b_precip", "b_seq")

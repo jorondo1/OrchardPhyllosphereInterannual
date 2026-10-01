@@ -1,8 +1,6 @@
-# Simulation-based calibration via SBC package (https://hyunjimoon.github.io/SBC/),
-#
-# Typical calibration-script usage (see any Models/*_model.R for the
-# model-specific dq_X derived_quantities() this expects, and any numbered
-# calibration script for the full pattern in context):
+# Simulation-based calibration via the SBC package (https://hyunjimoon.github.io/SBC/)
+# - dq_X estimands: defined in each Models/*_model.R
+# Typical usage:
 #
 #       sbc_gen <- make_sbc_generator(
 #         fit_sim, simulate_from_priors_X,
@@ -24,7 +22,7 @@
 
 # Contrast recovery -------------------------
 
-# Posterior + true-value tables for the May gap / July gap / seasonal-change
+# Posterior vs. true May gap / July gap / seasonal change (median-based)
 contrast_recovery <- function(fit, means_fn, may_conv, may_org,
                               july_conv_shift, july_org_shift, shift = 0){
   pf <- post_full(fit, means_fn, shift = shift)
@@ -50,10 +48,8 @@ contrast_recovery <- function(fit, means_fn, may_conv, may_org,
 }
 
 
-# Pulls the i-th prior draw out of extract.prior()'s output as a plain
-# named list, for feeding to a model's simulate_from_priors_X() as one
-# "true" parameter set (an indexed parameter comes back as a matrix row, a
-# scalar as one vector element).
+# i-th prior draw from extract.prior() as a named list ("true" parameter set)
+# - vector parameters -> matrix row; scalars -> single value
 draw_true <- function(priors, i){
   purrr::imap(priors, function(x, name){
     x <- as.matrix(x)
@@ -61,14 +57,14 @@ draw_true <- function(priors, i){
   })
 }
 
-# ---- SBC_backend_ulam: lets compute_SBC() fit rethinking::ulam() models directly ----
+# ---- SBC_backend_ulam: lets compute_SBC() fit rethinking::ulam() models ----
+# S3 methods below are what the SBC package calls for a custom backend
 
 SBC_backend_ulam <- function(model, ...){
   structure(list(model = model, args = list(...)), class = "SBC_backend_ulam")
 }
 
-# chains is always set to whatever `cores` compute_SBC() hands us for this
-# fit, never taken from backend$args
+# chains = cores given by compute_SBC(), never from backend$args
 
 SBC_fit.SBC_backend_ulam <- function(backend, generated, cores){
   do.call(
@@ -82,14 +78,14 @@ SBC_fit.SBC_backend_ulam <- function(backend, generated, cores){
     )
 }
 
+# Posterior draws as a draws_matrix
 SBC_fit_to_draws_matrix.ulam <- function(fit){
   posterior::as_draws_matrix(fit@cstanfit$draws())
 }
 
+# Per-fit sampling diagnostics: divergences, max treedepth, low E-BFMI
 SBC_fit_to_diagnostics.ulam <- function(fit, fit_output, fit_messages, fit_warnings){
-  # quiet = TRUE: this call itself would otherwise print the same
-  # divergence/treedepth text a second time on top of cmdstanr's own
-  # automatic post-sample message)
+  # quiet: avoid printing diagnostics twice
   ds <- fit@cstanfit$diagnostic_summary(diagnostics = c("divergences", "treedepth", "ebfmi"), quiet = TRUE)
   data.frame(n_divergent = sum(ds$num_divergent), n_max_treedepth = sum(ds$num_max_treedepth),
              n_low_ebfmi = sum(ds$ebfmi < 0.3))
@@ -97,40 +93,22 @@ SBC_fit_to_diagnostics.ulam <- function(fit, fit_output, fit_messages, fit_warni
 
 # ---- Generator factory ------------------------------------------------------
 
-# Builds a generate_datasets()-ready generator closure for one model,
-# replacing every script's own copy-pasted generate_one_X(): on each call,
-# draws one fresh prior sample from `fit`, simulates a dataset via
-# `simulate_fn`, and packages both the way the SBC package expects.
-#   fit           : the recovery ulam fit supplying the model formula + priors
-#                   (extract.prior(fit, ...) is called fresh inside the
-#                   closure on every replicate)
-#   simulate_fn   : function(true_params, ...) -> data.frame, e.g.
-#                   simulate_from_priors_MDL
-#   keep          : names to retain from draw_true()'s output, e.g.
-#                   c("loga", "sigma", "sigma_loc")
-#   gen_cols      : columns of simulate_fn()'s output to hand to ulam(),
-#                   e.g. c("Dv", "Mg", "Lo")
-#   extra_globals : character vector of any OTHER top-level object names
-#                   simulate_fn's own call chain depends on beyond itself
-#                   (e.g. "sim_div_MDL"; a two-level chain like MDLSYv's
-#                   needs both "sim_div_MDLSY" and "true_sigma_from_ls")
-#   ...           : extra fixed arguments forwarded to simulate_fn on every
-#                   call (e.g. shift = 1)
-# Returns list(generator = <closure>, globals = <named list of VALUES>) --
-# pass $generator to run_sbc_pipeline() as-is and $globals straight through
-# as its future.globals. Values (not name-strings) are used deliberately:
-# future.apply's future.globals accepts a named list of values directly,
-# which avoids relying on future's own static code-analysis to trace names
-# into this closure (already confirmed NOT to work automatically -- it
-# doesn't see past generate_datasets()'s own internal call layer inside the
-# SBC package -- and fresh multisession workers don't have rethinking/
-# tidyverse attached either, hence the library() calls inside the closure).
+# SBC dataset generator for one model: each call draws one prior sample
+# from `fit` and simulates a dataset with it
+#   fit           : recovery ulam fit (supplies formula + priors)
+#   simulate_fn   : function(true_params, ...) -> data.frame
+#   keep          : parameters to track, e.g. c("loga", "sigma")
+#   gen_cols      : simulated columns passed to ulam(), e.g. c("Dv", "Mg")
+#   extra_globals : other object names simulate_fn needs, e.g. "sim_div_X"
+#   ...           : fixed args for simulate_fn (e.g. shift = 1)
+# Returns list(generator, globals)
+# - globals: object VALUES for parallel workers (future can't find them by itself)
 make_sbc_generator <- function(fit, simulate_fn, keep, gen_cols,
                                extra_globals = character(0), ...){
   extra_args <- list(...)
   
   generator <- function(){
-    library(rethinking); library(tidyverse) # future::multisession workers start fresh (not auto-attached)
+    library(rethinking); library(tidyverse) # parallel workers start with no packages
     true_params <- suppressMessages(suppressWarnings(
       draw_true(extract.prior(fit, n = 1, refresh = 0), 1)))[keep]
     dat <- do.call(simulate_fn, c(list(true_params), extra_args))
@@ -147,7 +125,7 @@ make_sbc_generator <- function(fit, simulate_fn, keep, gen_cols,
 
 # ---- Pipeline: generate + fit ------------------------------------------------
 
-# Generates n_sbc SBC replicate datasets in parallel 
+# Generate n_sbc datasets in parallel, then fit each (compute_SBC)
 run_sbc_pipeline <- function(generator, globals, n_sbc, model, model_id, n_iter,
                              hiermod_out_dir, dquants = NULL, refresh = 0, ...){
   future::plan(future::multisession)
@@ -168,18 +146,10 @@ run_sbc_pipeline <- function(generator, globals, n_sbc, model, model_id, n_iter,
 
 # ---- Diagnostic plots --------------------------------------------------------
 
-# Rank-histogram / ECDF-diff / coverage plots for one compute_SBC() result,
-# saved via save_gg() under this project's "<model_id>_<n_sbc>sbc_iter"
-# naming convention. Returns the three ggplot objects invisibly.
-#   - rank histogram: the direct, intuitive view; catches gross violations
-#     at a glance, but its apparent shape depends on bin count/placement.
-#   - ECDF difference (Sailynoja, Burkner & Vehtari 2022): checks
-#     uniformity everywhere at once via a simultaneous (DKW) band, stays
-#     informative at lower replicate counts and localizes *where* a
-#     violation happens.
-#   - central-interval coverage: "does my reported interval actually cover
-#     the truth that often" -- should accompany, not replace, the
-#     shape-based checks above.
+# Save SBC plots for one compute_SBC() result
+# - rank histogram: quick view of gross violations
+# - ECDF difference (Sailynoja et al. 2022): simultaneous band, shows where it fails
+# - coverage: do central intervals cover the truth as often as they should?
 plot_sbc_diagnostics <- function(sbc_result, model_id, n_sbc, width = 9, height = 7){
   sbc_step <- paste0(model_id, "_", n_sbc, "sbc_iter")
   p_rank   <- SBC::plot_rank_hist(sbc_result)
@@ -192,26 +162,16 @@ plot_sbc_diagnostics <- function(sbc_result, model_id, n_sbc, width = 9, height 
 }
 
 # ---- SBC health report -------------------------------------------------------
-# One plain-text file per model -- the PRIMARY artifact to check per run
-# (the PDFs above are secondary/visual backup) -- so calibration health
-# (sampling diagnostics + rank-fraction calibration for the variables that
-# actually matter) can be tracked/diffed/grepped across models and reruns
-# without re-opening R or re-reading rank-histogram PDFs. Written after
-# compute_SBC(); relies only on fields every SBC_backend_ulam-based result
-# has: $stats, $default_diagnostics (built into every SBC_results object
-# regardless of backend), and $backend_diagnostics with this backend's own
-# n_divergent/n_max_treedepth/n_low_ebfmi columns (SBC_fit_to_diagnostics.ulam()
-# above).
-#
-# variables: character vector of tracked stats (e.g. c("loga[1]", "loga[2]"))
-# to check rank-fraction calibration for -- typically the ones under live
-# investigation, not necessarily every variable in the model.
+# Plain-text SBC summary per model (main calibration record; tracked in git)
+# - sampling health: divergences, treedepth, E-BFMI, Rhat, ESS
+# - rank calibration: mean rank fraction vs 0.5, z-score, flag at `alpha`
+# - variables: which tracked stats to check, e.g. c("loga[1]", "loga[2]")
 save_sbc_health_report <- function(model_id, sbc_result, n_sbc, n_iter, variables,
                                    hiermod_out_dir, alpha = 0.01){
   dd <- sbc_result$default_diagnostics
   bd <- sbc_result$backend_diagnostics
   
-  se     <- 1 / sqrt(12 * n_sbc) # SE of a mean rank-fraction under perfect calibration
+  se     <- 1 / sqrt(12 * n_sbc) # SE of a uniform mean rank fraction
   z_crit <- qnorm(1 - alpha / 2)
   
   rank_summary <- sbc_result$stats |>

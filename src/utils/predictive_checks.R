@@ -1,16 +1,11 @@
-# predictive_checks.R -- prior predictive (spaghetti) and posterior
-# predictive (density overlay, contrast test-statistic) plotting helpers.
-# Building the long-format prior_pred data frame itself (simulate_from_priors()
-# looped with map_dfr(..., .id = "draw")) is done per-model.
+# predictive_checks.R -- prior and posterior predictive check plots
+# - prior_pred data (simulate_from_priors() over draws) is built per model
 
 # ---- Prior predictive check -------------------------------------------------
 
-# Overlays many prior-predictive-simulated densities (one per prior draw),
-# to check whether the priors imply plausible data before ever fitting to
-# anything real. Not for posterior predictive checks (those use bayesplot,
-# below). model (optional): prints the alist() on the plot, to document
-# which priors produced it. observed (optional): overlays one real/simulated
-# dataset's own density for comparison against the prior ensemble.
+# Prior predictive "spaghetti": one density per prior draw
+# - model (optional): prints the alist() priors on the plot
+# - observed (optional): overlays one dataset's density for comparison
 prior_predictive_spaghetti <- function(
     prior_pred, model = NULL, value_col = "Dv", draw_col = "draw",
     group_col = NULL, n_sample = 100, upper_q = 0.99,
@@ -21,9 +16,7 @@ prior_predictive_spaghetti <- function(
   xlim_upper <- quantile(prior_pred[[value_col]], upper_q, na.rm = TRUE)
   all_draw_ids <- unique(prior_pred[[draw_col]])
 
-  # % of replicates (not raw points) with >=1 value beyond the cutoff --
-  # shows whether the tail is a few extreme replicates or spread thin
-  # across everyone.
+  # % of replicates with >= 1 value beyond the cutoff (few extreme draws vs. thin spread)
   prop_extreme <- prior_pred %>%
     group_by(.data[[draw_col]]) %>%
     summarise(extreme = any(.data[[value_col]] > xlim_upper), .groups = "drop") %>%
@@ -56,7 +49,7 @@ prior_predictive_spaghetti <- function(
              colour = "grey30", label = stat_label, family = "mono")
 
   if (!is.null(observed)) {
-    # same xlim_upper trim as the ensemble, so bandwidth/shape stay comparable
+    # same trim and bandwidth as the ensemble
     observed_bulk <- observed[observed <= xlim_upper]
     p <- p + geom_density(
       data = tibble(!!value_col := observed_bulk),
@@ -79,27 +72,10 @@ prior_predictive_spaghetti <- function(
 
 # ---- Prior predictive tail diagnosis ----------------------------------------
 
-# Which prior parameter(s) explain the extreme tail of a prior predictive
-# check? Every calibration script used to hand-roll this (and one -- ITS's
-# own 2.2_MDL_ITS_calibration.R ppc1 stage -- had `xlim_upper_ppc1 <- 0.99`
-# instead of `quantile(..., 0.99)`, silently flagging almost every draw as
-# "extreme").
-#
-# `prior_pred` is the long-format tibble built by looping
-# simulate_from_priors_*() with map_dfr(..., .id = "draw"); `candidates` is
-# a named list of length-n_prior vectors, one per prior parameter suspected
-# of driving the tail (e.g. list(sigma_loc = extracted_prior$sigma_loc,
-# ...)), each indexed 1:n_prior in the same draw order
-# extract.prior()/draw_true() produced them -- not resorted to match
-# prior_pred's own (possibly lexically-sorted) draw labels.
-#
-# Reports two things: (1) each candidate's median among "extreme" vs.
-# "normal" draws (the eyeball check every script already did by hand), and
-# (2) each candidate's correlation with log(max simulated value) -- added
-# because medians can look different between groups even when the
-# relationship is weak (MDLS2v: sigma_loc/sigma_tr's medians differed by
-# group but correlated only ~0.2; loga -- not in the original group
-# breakdown at all -- correlated ~0.7 and was the real driver).
+# Which prior parameters drive the prior predictive tail?
+# - candidates: named list of prior draws (length n_prior, extract.prior() order)
+# - reports each candidate's median in extreme vs. normal draws
+# - and its correlation with log(max simulated value): the better driver signal
 diagnose_extreme_tail <- function(prior_pred, candidates, value_col = "Dv", upper_q = 0.99){
   n_prior <- length(candidates[[1]])
   stopifnot(all(lengths(candidates) == n_prior))
@@ -138,7 +114,7 @@ diagnose_extreme_tail <- function(prior_pred, candidates, value_col = "Dv", uppe
 
 # ---- Posterior predictive checks (bayesplot) -------------------------------
 
-# Reshapes sim()'s wide draws-by-observation matrix into a long tibble.
+# sim() draws x obs matrix -> long tibble
 postpred_as_long_tibble <- function(post_pred) {
   post_pred %>%
     as_tibble(.name_repair = "minimal") %>%
@@ -148,9 +124,7 @@ postpred_as_long_tibble <- function(post_pred) {
     mutate(obs = as.integer(obs))
 }
 
-# Posterior predictive density overlay, split by group. Thin wrapper
-# around bayesplot::ppc_dens_overlay_grouped() since the sim()+labeling
-# step repeats identically across models 1-3.
+# Posterior predictive density overlay by group (bayesplot wrapper)
 plot_ppc_overlay <- function(fit, dat, group, n = 50, xlim = NULL){
   yrep <- sim(fit, dat, n = n)
   p <- bayesplot::ppc_dens_overlay_grouped(dat$Dv, yrep, group = group)
@@ -158,24 +132,22 @@ plot_ppc_overlay <- function(fit, dat, group, n = 50, xlim = NULL){
   p
 }
 
-# Builds a two-group contrast statistic for ppc_stat() (FUN on group==2
-# minus FUN on group==1). Only fits a clean 1/2 split; a model with more
-# groups (e.g. Mg x Mo cells) needs its own stat function written directly.
+# Two-group contrast statistic for ppc_stat(): FUN(group 2) - FUN(group 1)
+# - force(): fixes FUN/group at creation (closure)
 contrast_stat <- function(FUN, group){
   force(FUN); force(group)
   function(y) FUN(y[group == 2]) - FUN(y[group == 1])
 }
 
-# sim() + ppc_stat() + a title, for one contrast_stat().
+# PPC of one contrast_stat()
 plot_ppc_contrast_stat <- function(fit, dat, group, FUN, stat_name, group_labels, n = 1000){
   yrep <- sim(fit, dat, n = n)
   bayesplot::ppc_stat(dat$Dv, yrep, stat = contrast_stat(FUN, group)) +
     labs(title = paste0("PPC: ", stat_name, " contrast (", group_labels[2], " - ", group_labels[1], ")"))
 }
 
-# The May gap / July gap / seasonal-change PPC used from Model 4 onward, as
-# three stacked ppc_stat() panels. dat needs $Dv/$Mg/$Mo (1/2-coded);
-# Mg==2 is assumed to be the "treatment" side (Organic).
+# PPC of the May gap, July gap and seasonal change in gap (Organic - Conventional)
+# - dat: $Dv, $Mg, $Mo (1/2-coded; Mg 2 = Organic)
 plot_ppc_season_contrast_stats <- function(fit, dat, n = 1000){
   yrep <- sim(fit, dat, n = n)
 
@@ -195,12 +167,8 @@ plot_ppc_season_contrast_stats <- function(fit, dat, n = 1000){
 
 # ---- Model comparison --------------------------------------------------
 
-# PSIS model comparison between two ulam fits (both need log_lik = TRUE at
-# fit time), with a Pareto-k sanity check first -- k > 0.7 means that
-# observation's importance-sampling estimate is unreliable, and if a large
-# share of observations are flagged, the comparison table itself (weights,
-# dPSIS) isn't trustworthy, not just that one point. Common in hierarchical
-# models with few observations per group (e.g. Tree here).
+# PSIS comparison of two ulam fits (both fitted with log_lik = TRUE)
+# - warns on Pareto k > 0.7 (unreliable; common with few obs per tree)
 psis_compare <- function(fit_a, fit_b){
   for (f in list(fit_a, fit_b)) {
     k <- suppressWarnings(PSIS(f, pointwise = TRUE)$k)

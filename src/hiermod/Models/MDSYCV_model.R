@@ -1,35 +1,14 @@
-# MDSYCV_model.R --- MODEL 6 (MDSYCV, "Bombadil the Eldest"), 16S: MDSYC
-# plus Cultivar as a FIXED, sum-to-zero effect (5 levels: Cortland, Liberty,
-# Paulared, Honeycrisp, Spartan).
+# MDSYCV_model.R --- MODEL 6 (MDSYCV, "Bombadil the Eldest"): MDSYC + Cultivar
+# - fixed, sum-to-zero, 5 levels
 
 source('src/hiermod/0_INDEX.R')
 
-# Motivation: MDSYC found sigma[Mg] meaningfully higher for Organic than
-# Conventional (89% contrast [0.16, 0.48], excludes 0) even after season,
-# year, and weather/sequencing covariates. Management and Cultivar aren't
-# perfectly balanced in the real data (Liberty: 35 Conventional vs 18
-# Organic; Honeycrisp: 20 vs 24) -- not a hard confound like Location (every
-# cultivar has substantial presence in both groups), but real correlation
-# that could plausibly explain some of that residual asymmetry if cultivars
-# themselves differ in their own diversity variability.
-#
-# Sum-to-zero from the start this time (4 free scalars + 1 derived),
-# applying what MDSY's own severe loga leak taught us, rather than the old
-# lineage's plain unconstrained cv[Cv] ~ dnorm(0,1) (MDLSY_model.R) -- no
-# reason to risk rediscovering that bug.
-#
-# Cv index order (idx$Cv$levels): 1=Cortland, 2=Liberty, 3=Paulared,
-# 4=Honeycrisp, 5=Spartan. Liberty has the most combined observations across
-# both Management groups (53, vs 44-51 for the other four), so it's the
-# derived slot -- same "put the data-richest level where the construction's
-# extra prior variance matters least" logic used for Year (see
-# MDSYz_model.R). Free parameters are named cv_1/cv_3/cv_4/cv_5 (matching
-# their own Cv index directly, cv_2/Liberty deliberately skipped) so the
-# mapping stays unambiguous everywhere this model is used.
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2/b_deg/b_precip/b_seq are
-# MDSYC's own validated answer, hardcoded as this model's starting point.
-# cv_1/cv_3/cv_4/cv_5 ~ dnorm(0,1) is the one new assumption to validate.
+# Why: organic residual SD higher than conventional in MDSYC
+# - cultivar mildly unbalanced across Management; could explain part of it
+# Sum-to-zero from the start (lesson from MDSY)
+# - Cv order: 1 Cortland, 2 Liberty, 3 Paulared, 4 Honeycrisp, 5 Spartan
+# - free: cv_1, cv_3, cv_4, cv_5; derived: cv_2 (Liberty, most observations)
+# Priors: as MDSYC; new cv_* ~ dnorm(0,1)
 
 model_MDSYCV_16S <- alist(
   likelihood = Dv ~ dlnorm(mu, sigma[Mg]),
@@ -64,18 +43,13 @@ attr(model_MDSYCV_16S, "name") <- "Bombadil the Eldest"
 model_id_MDSYCV <- "MDSYCV"
 
 ## ITS variant -----------------------------------------------------------------
-# Same rationale as MDS_ITS. cv_1/cv_3/cv_4/cv_5 ~ dnorm(0,1) carry over
-# unchanged -- same Cultivar factor (idx$Cv, shared across Kingdoms), same
-# additive log-scale-offset reasoning as Year.
+# Intercept prior only (as MDS_ITS)
 model_MDSYCV_ITS <- model_MDSYCV_16S
 model_MDSYCV_ITS$prior_loga <- quote(loga[Mg] ~ dnorm(2,2))
 attr(model_MDSYCV_ITS, "name") <- "Bombadil the Eldest"
 
 ## means_MDSYCV()/dq_MDSYCV ----------------------------------------------------
-# Same formulas as means_MDSYC()/dq_MDSYC -- Cultivar, like Year, doesn't
-# enter the reported Mg x Mo estimand or its variance (assigned
-# independently of Mg x Mo in the simulator, reported at the default/average
-# level on real data).
+# Same formulas as MDSYC: Cultivar doesn't enter the reported estimands
 
 means_MDSYCV <- function(post, shift = 0, deg_h_z = 0, precip_72h_z = 0, seq_depth_z = 0){
   total_var_conv <- post$sigma[,1]^2
@@ -122,12 +96,8 @@ dq_MDSYCV <- SBC::derived_quantities(
 )
 
 ## variance_partition_MDSYCV() --------------------------------------------------
-# Same as variance_partition_MDSYC() plus Cultivar as its own group,
-# sequentially last (Model 6's own addition, after Covariates). cv_derived
-# (Liberty) computed the same way the model itself does; cv_mat's columns
-# are built directly in Cv's own 1..5 index order so dat$Cv can index it
-# with no remapping. See variance_partition_MDSYC()'s own comment for the
-# sequential-decomposition rationale/telescoping property.
+# As variance_partition_MDSYC() + Cultivar, added last
+# - cv_mat columns in Cv index order, so dat$Cv indexes it directly
 
 variance_partition_MDSYCV <- function(post, dat){
   loga_obs   <- post$loga[, dat$Mg]
@@ -170,22 +140,11 @@ variance_partition_MDSYCV <- function(post, dat){
 }
 
 ## Data-generating function ---------------------------------------------------
-# Same balanced Mg x Mo x Year design as sim_div_MDSYC(), plus an
-# independent Cv draw per unit (5 categories) and its cv_eff offset.
-# Cultivar assigned independently of Mg here (unlike the real data's mild
-# imbalance) -- tests whether cv_1..cv_4 are recoverable in principle, not
-# how identifiable they are under the real design's modest correlation with
-# Management.
-#
-# rho_deg_season/rho_precip_season/rho_seq_mg (all default 0, i.e. unchanged
-# original behaviour -- independent draws) optionally correlate deg_h_z/
-# precip_72h_z with Season and seq_depth_z with Management instead, at
-# approximately the given correlation -- a stress test for identifiability
-# under realistic collinearity, not just independent-covariate simulation.
-# Standard target-correlation construction: z = rho*scale(x) + sqrt(1-rho^2)*noise
-# (same template as the ITS lineage's own MDLSYC_model.R). Real data has all
-# three: cor(deg_h_z, Mo)=0.73, cor(precip_72h_z, Mo)=0.55,
-# cor(seq_depth_z, Mg)=0.31 -- see 6.5_MDSYCV_16S_collinearity_check.R.
+# As sim_div_MDSYC() + a random cultivar per unit (independent of Mg)
+# Optional collinearity stress test (rho_* = 0: independent covariates)
+# - z = rho * scale(x) + sqrt(1 - rho^2) * noise
+# - real data: cor(deg_h, Mo) = 0.73, cor(precip, Mo) = 0.55, cor(seq_depth, Mg) = 0.31
+#   (6.5_MDSYCV_16S_collinearity_check.R)
 
 sim_div_MDSYCV <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
                             cv_1, cv_3, cv_4, cv_5, b_deg, b_precip, b_seq, shift = NULL,
@@ -219,6 +178,7 @@ sim_div_MDSYCV <- function(N_samples, loga, s_conv, gap_shift, sigma, yr1, yr2,
   dat
 }
 
+# Simulate one dataset from one prior draw (draw_true() output)
 simulate_from_priors_MDSYCV <- function(true_params, N_samples = 250, shift = NULL,
                                          rho_deg_season = 0, rho_precip_season = 0, rho_seq_mg = 0){
   sim_div_MDSYCV(

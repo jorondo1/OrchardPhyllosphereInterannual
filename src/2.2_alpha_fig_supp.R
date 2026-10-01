@@ -22,8 +22,7 @@ effects <- bind_rows(
 )
 
 ## Shared series colours --------------------------------------------------------
-# One legend for every panel: the two kingdoms, plus the Bacteria - Fungi
-# contrast (posterior-parameter panels only).
+# One legend: the two barcodes + Bacteria - Fungi contrast (parameter panels only)
 series_pal <- c( Contrast = "#B82D2C", Bacteria = "#2C7FB8", Fungi = "#B8B62C")
 
 scales_series <- list(
@@ -31,6 +30,7 @@ scales_series <- list(
   scale_colour_manual(values = series_pal, limits = names(series_pal))
 )
 
+# Ridge plot of posterior draws: one row per group, one ridge per series
 ridge_panel <- function(df, xlab, scale = 0.8, show_legend = NA, labels = waiver()){
   df %>%
     ggplot(aes(x = value, y = group, fill = series, colour = series,
@@ -51,10 +51,9 @@ ridge_panel <- function(df, xlab, scale = 0.8, show_legend = NA, labels = waiver
 }
 
 ## Posterior parameters: Bacteria, Fungi and Bacteria - Fungi -------------------
-# Fits are independent, so draws are paired by index to get the between-kingdom
-# contrast per parameter level. Caveat: the Read count contrast compares different
-# variables (seq_depth_z is each marker's own z-scored log read count).
-# statistic is character in some panels, factor in others -- harmonised first.
+# Independent fits: draws paired by index for the Bacteria - Fungi contrast
+# - caveat: read-count contrast compares different variables (each marker's own read count)
+# - statistic is character in some panels, factor in others: harmonised first
 
 params_long <- effects %>%
   mutate(pc_full = purrr::map(pc_full, \(x) mutate(x, statistic = as.character(statistic)))) %>%
@@ -126,9 +125,8 @@ ggsave(plot = p_supp, filename = "out/manuscript/2_alpha_var.pdf", bg = "white",
        width = 2400, height = 3200, units = 'px', dpi = 300)
 
 ## Summary tables ----------------------------------------------------------------
-# Same format as the *_results_report_MDSTYCV.html reports (save_posterior_kable()),
-# from the untrimmed draws: one table for the variance partition, one for the
-# posterior parameters.
+# Same format as the *_results_report_MDSTYCV.html reports, untrimmed draws
+# - one table for the variance partition, one for the parameters
 
 # Explained share (Bayesian R2) per draw = 1 - that draw's residual share
 varpart_tbl <- bind_rows(

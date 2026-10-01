@@ -46,8 +46,7 @@ shape_time2 <- c(May = 21, July = 22) # 2-level variant (no "other"), for plots 
 fill_time   <- c(May = "#CC8FBB", July = "#7AAB32", other = "grey90") # colors adopted from Sophie
 
 ## Management ---------------------------------------------------------------------
-# fill_mg matches src/hiermod/0_SETUP.R's own values; "other" fallback kept
-# for consumers with a 3rd level (hiermod's own 2-level Mg ignores it).
+# fill_mg: also used by hiermod; "other" for consumers with a 3rd level
 
 color_mg <- c(Conventional = "black", Organic = "black", other = "grey80")
 shape_mg <- c(Conventional = 21, Organic = 21, other = 21)
@@ -80,15 +79,12 @@ fill_site  <- c(A = "#5DB63B", B1 = "#2C9EE3", B2 = "#096EA4",
 
 ## Location -----------------------------------------------------------------------------
 color_loc <- c(A = "black", B = "black", C = "black", D = "black", other = "black")
-# shape_loc: distinct shapes (unlike most other shape_* palettes, which are
-# uniform placeholders) -- needed wherever Location has to be told apart by
-# shape alone, e.g. src/2.5_betadiv_envfit_fig.R's Time-coloured panel.
+# shape_loc: distinct shapes, for location told apart by shape alone
 shape_loc <- c(A = 21, B = 22, C = 23, D = 24, other = 25)
 fill_loc  <- c(A = "#5DB63B", B = "#1B86C4", C = "gold", D = "#FAAB37", other = "grey90")
 
 ## Cultivar -----------------------------------------------------------------------------
-# Canonical level order: Cortland, Liberty, Paulared, Honeycrisp, Spartan --
-# matches src/hiermod/0_SETUP.R's idx$Cv order (Cv index 1..5).
+# Level order = hiermod's idx$Cv (Cv index 1..5)
 color_cult <- c(Cortland = "black", Liberty = "black", Paulared = "black",
                 Honeycrisp = "black", Spartan = "black", other = "black")
 shape_cult <- c(Cortland = 21, Liberty = 21, Paulared = 21,
@@ -104,11 +100,8 @@ grad_na  <- "white"
 
 
 ## Environmental/covariate variables ------------------------------------------------------
-# Shared by src/1.4_Fig_BetaDiv_Envfit.R (raw mean_temp/precip_72h/deg_h vs.
-# PCoA axes) and src/hiermod/0_SETUP.R's cov_pal (same deg_h/precip_72h plus
-# seq_depth instead of mean_temp, as z-scored regression coefficients).
-# Keyed by raw column name; each consumer re-keys to its own display labels
-# (see cov_pal). Colours: ColorBrewer Set1.
+# Keyed by raw column name; consumers re-key to their labels (e.g. hiermod's cov_pal)
+# Colours: ColorBrewer Set1
 env_var_colors <- c(
   mean_temp  = "#e41a1c",
   precip_72h = "#377eb8",
@@ -117,17 +110,12 @@ env_var_colors <- c(
 )
 
 ## ps_objects_full.rds display labels ----------------------------------------------------
-# The 6-item ps.ls (src/0.3.2.Metadata_phyloseq.R) uses $-safe identifiers as
-# its keys (Bacteria/Fungi/Bacteria_3y/Bacteria_2y/Fungi_3y/Fungi_2y) so they
-# never need backtick-quoting -- this maps them to a human-readable label for
-# kable tables / plot facet strips.
+# ps.ls keys ($-safe) -> readable labels for tables / facet strips
 ps_dataset_labels <- c(
   Bacteria = "Bacteria", Fungi = "Fungi",
   Bacteria_3y = "Bacteria (3-year subset)", Bacteria_2y = "Bacteria (2-year subset)",
   Fungi_3y = "Fungi (3-year subset)", Fungi_2y = "Fungi (2-year subset)"
 )
 
-# Same idea for the Dataset column itself (diversity_data.rds / ps sample
-# data: "2-year"/"3-year") when a longer facet-strip label is wanted instead
-# of the raw filtering value.
+# Dataset column values -> longer facet-strip labels
 dataset_facet_labels <- c(`2-year` = "2-year dataset", `3-year` = "3-year dataset")

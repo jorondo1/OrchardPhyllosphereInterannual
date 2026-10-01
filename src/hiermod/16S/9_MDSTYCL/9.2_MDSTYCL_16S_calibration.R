@@ -1,43 +1,8 @@
-# MODEL 9 (MDSTYCL, "Faramir the Judicious"), 16S: MDSTYCV with Cultivar's
-# fixed effect replaced by Location's fixed effect (lo1, 2 levels).
-#
-# Why Location instead of Cultivar-as-random (Model 8, MDSTYCVr): that
-# attempt failed badly on real SBC -- 297 divergences, 154/500 (30.8%)
-# fits Rhat>1.01, loga[1]/loga[2] severely MISCALIBRATED (z=-11.96/-14.22),
-# not just sigma_cv (z=-5.76). Nesting sigma_cv with sigma_tr over the
-# same 129 trees leaked into the headline estimand, not just the new
-# parameter. A fixed effect doesn't have that funnel/variance-competition
-# failure mode, so this returns to the same recipe Cultivar (Model 6) and
-# Year already used, just for a different grouping factor.
-#
-# Why Location is worth testing at all: never in this from-scratch
-# family's lineage before, and Tree is deterministically nested in
-# Location the same way it's nested in Cultivar (129/129) -- structurally
-# the same "does Tree's own random effect coexist with a coarser fixed
-# grouping over the same trees" question MDSTYCV already answered cleanly
-# for Cultivar, so there's real reason to expect this one to behave.
-#
-# Why Cultivar is dropped, not kept alongside Location: confirmed by
-# direct query of the real data (not assumed) -- Location x Management is
-# A=Conventional-only (50 rows), C=Organic-only (51), B and D have both.
-# Model 9's real fit will restrict to the B/D subset (141/242 rows) so
-# Location isn't confounded with Management the way it is for A/C. But
-# within that B/D subset, Location x Cultivar is a HARD alias for 3 of 5
-# cultivars: Location D has ONLY Honeycrisp/Spartan (0 Cortland/Liberty/
-# Paulared) -- Cortland/Liberty/Paulared are perfectly collinear with
-# "Location B" there, not just correlated. Cultivar has to go.
-#
-# This calibration script itself simulates Lo independently of Mg/Cv --
-# it tests whether the MODEL STRUCTURE (2-level Location fixed effect +
-# Tree nested in it, alongside Year/Covariates) is recoverable in
-# principle, same scope as every calibration script in this family. The
-# real B/D subset's own confound is a real-fit-stage (9.3, not yet built)
-# concern, not a calibration one.
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg]/yr1/yr2/sigma_tr/b_deg/b_precip/
-# b_seq priors are MDSTYCV's own validated answer, hardcoded here as this
-# model's starting point. lo1 ~ dnorm(0,1) is the one new assumption to
-# validate.
+# MODEL 9 (MDSTYCL, "Faramir the Judicious"), 16S: calibration
+# Aim: Location (fixed, 2 levels) instead of Cultivar (see MDSTYCL_model.R)
+# - simulator: Lo independent of Mg/Cv -- tests the structure in principle;
+#   the real B/D-subset confounding is handled at the fit stage (9.3)
+# To validate: lo1 ~ dnorm(0,1)
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -50,10 +15,7 @@ model_id <- model_id_MDSTYCL
 hiermod_out_dir <- "out/hiermod/16S_9_location_MDSTYCL/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# Same baseline/gap/year/covariate/sigma_tr values as MDSTYCV's own
-# calibration, so results stay comparable across the whole family.
-# true_lo1=0.15 is an arbitrary but modest offset, comparable in magnitude
-# to a single cv_* level from Model 8's own calibration.
+# Same values as MDSTYCV; true lo1 = 0.15 (modest, like one cultivar level)
 
 may_conv <- 180
 may_org  <- 120
@@ -149,11 +111,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## Full pairwise parameter check ------------------------------------------------
-# sigma_tr against lo1 (Tree nested in Location, the new combination this
-# model exists to test) -- Model 8's own failure mode was a large
-# sigma_tr/sigma_cv trade-off, so check the analogous pair here too, even
-# though lo1 is a mean-level fixed effect, not a variance component (a
-# smaller risk in principle, worth confirming rather than assuming).
+# Key pair: sigma_tr vs lo1 (Tree nested in Location; cf. model 8's trade-off)
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_tr", "lo1",
                 "yr1", "yr2", "b_deg", "b_precip", "b_seq")
@@ -164,9 +122,7 @@ cat(sprintf("cor(sigma_tr, lo1) in the posterior: %.3f\n",
             cor(post_sim$sigma_tr, post_sim$lo1)))
 
 ## Simulation-based calibration (SBC), via the SBC package -----------------------
-# tr[Tr] stays out of `keep` (cardinality scales with N_samples, simulator
-# draws fresh per-tree offsets each replicate) -- every other parameter,
-# including sigma_tr/lo1, is tracked directly.
+# tr[Tr] not tracked (fresh per-tree offsets); everything else incl. sigma_tr, lo1 tracked
 
 sbc_gen_MDSTYCL <- make_sbc_generator(
   fit = fit_sim, simulate_fn = simulate_from_priors_MDSTYCL,

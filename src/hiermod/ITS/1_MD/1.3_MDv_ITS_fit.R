@@ -1,12 +1,5 @@
-# MODEL 1 (MDv, Management-specific variance), ITS: real fit and PPC.
-# Mirrors 1.3_MD_16S_fit.R's own role -- only MDv gets a real fit (MD, the
-# constant-variance floor test, is calibration-only, matching 16S's own
-# choice). Unlike 16S's own 1.3 script, NO local prior_sigma override here:
-# model_MDv_ITS's own file-level sigma[Mg] ~ dexp(1) (MD_model.R) is what
-# 1.2_MDv_ITS_calibration.R actually tested (as-is, not pre-patched to
-# dhalfnorm(0,1) -- see that script's own header) and its SBC came back
-# healthy, unlike 16S's own MDv_16S analogue -- so no override to carry
-# forward here.
+# MODEL 1b (MDv), ITS: real fit and PPC
+# - dexp(1) sigma prior kept: calibrated fine for ITS (no override, unlike 16S)
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')

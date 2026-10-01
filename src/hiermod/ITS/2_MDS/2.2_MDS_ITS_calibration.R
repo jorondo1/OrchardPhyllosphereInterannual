@@ -1,21 +1,6 @@
-# MODEL 2 (MDS), ITS: Management x Season interaction, no random effects.
-# Mirrors 2.2_MDS_16S_calibration.R's own role -- the first model in this
-# family to actually target the scientific estimand (Mg x Mo interaction),
-# before any random effect is reintroduced.
-#
-# model_MDS_ITS: loga[Mg] ~ dnorm(2,2) is ITS's own Model 1 starting point;
-# s_conv/gap_shift ~ dnorm(0,1) and sigma[Mg] ~ dhalfnorm(0,1) carry over
-# unchanged from model_MDS_16S (additive log-scale/CV-like quantities, not
-# baseline-dependent -- see MDS_model.R's own header).
-#
-# True s_conv/gap_shift below are NOT copied from 16S -- ITS's own real
-# data shows the opposite-flavoured pattern from bacteria: a steep
-# May->July DROP for Conventional (~20 -> ~4, log-shift ~-1.5) that
-# Organic buffers substantially (~16 -> ~14, log-shift ~-0.1), matching
-# the old ITS lineage's own "Organic buffers the drop" finding
-# (MODEL_HISTORY.md/TODO.md, archived). true_gap_shift is therefore large
-# and POSITIVE here (Organic's extra shift is much less negative than
-# Conventional's own), unlike some of 16S's own smaller magnitudes.
+# MODEL 2 (MDS), ITS: calibration
+# - true values from the ITS data: steep May -> July drop for conventional,
+#   buffered under organic -> large positive gap_shift
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -27,7 +12,7 @@ model_id <- model_id_MDS
 hiermod_out_dir <- "out/hiermod/ITS_2_interaction_MDS/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# True values are ITS's own real May-baseline/July-shift scale (see header).
+# True values: ITS May baseline / July shift (see header)
 
 may_conv <- 20
 may_org  <- 16
@@ -103,8 +88,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga/gamma x sigma[Mg] funnel check ---------------------------------------
-# s_conv/gap_shift are new parameters sharing the same likelihood term,
-# so check them against sigma[Mg] too.
+# New s_conv/gap_shift share the likelihood term: check vs sigma[Mg] too
 
 p_funnel <- function(){
   par(mfrow = c(2,2))

@@ -1,11 +1,6 @@
-# MODEL 4 (MDSY), 16S: Management x Season interaction plus Year as a FIXED
-# effect (3 levels -- see MDSY_model.R header for why fixed, not pooled).
-#
-# loga[Mg]/s_conv/gap_shift/sigma[Mg] priors are MDS's own validated answer,
-# hardcoded here as this model's starting point. yr[Yr] ~ dnorm(0,1) is the
-# one new assumption -- and since Year's cardinality is small and fixed (3,
-# not scaling with N_samples like Tree's), it's tracked directly in `keep`
-# and the health report, unlike tr[Tr].
+# MODEL 4 (MDSY), 16S: calibration
+# Aim: Year as a fixed effect (unconstrained)
+# - yr[Yr] tracked in SBC: 3 levels, fixed cardinality
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -17,8 +12,7 @@ model_id <- model_id_MDSY
 hiermod_out_dir <- "out/hiermod/16S_4_year_MDSY/Calibration"
 
 ## Parameter recovery -----------------------------------------------------------
-# Same baseline/gap values as MDS/MDST's own calibration, plus year_offset
-# (matching MDS2's own convention), so results stay comparable.
+# Same baseline/gap values as MDS, plus year offsets
 
 may_conv <- 180
 may_org  <- 120
@@ -99,9 +93,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga/gamma x sigma[Mg] funnel check ---------------------------------------
-# yr[Yr] is a fixed, unpooled location term (no scale parameter of its own),
-# so it doesn't carry the same funnel risk sigma_tr did -- worth checking
-# anyway since it shares the same likelihood term as loga/s_conv/gap_shift.
+# yr has no scale parameter (no funnel risk), but shares the likelihood term
 
 p_funnel <- function(){
   par(mfrow = c(2,2))
@@ -118,10 +110,7 @@ p_funnel <- function(){
 save_pdf("loga_sigma_funnel", model_id, p_funnel)
 
 ## Simulation-based calibration (SBC), via the SBC package -----------------------
-# yr[Yr] IS tracked here (unlike tr[Tr]): only 3 levels, fixed cardinality
-# regardless of N_samples, so a prior draw of the whole array is exactly
-# what generated each replicate's data -- a genuine, fully testable
-# fixed-effect recovery, not a nuisance array to exclude.
+# yr[Yr] tracked (3 levels, generated as one prior draw)
 
 sbc_gen_MDSY <- make_sbc_generator(
   fit = fit_sim, simulate_fn = simulate_from_priors_MDSY,
@@ -149,10 +138,6 @@ save_sbc_health_report(model_id, sbc_MDSY, n_sbc, n_iter,
                         variables = c("loga[1]", "loga[2]", "s_conv", "gap_shift", "sigma[1]", "sigma[2]",
                                       "yr[1]", "yr[2]", "yr[3]", "may_gap", "july_gap", "seasonal_change"),
                         hiermod_out_dir = hiermod_out_dir)
-# loga[1]/loga[2] both badly miscalibrated (z=-9.55/-8.97, posterior systematically too high)
-# while all three yr are miscalibrated in the opposite direction (z≈+8.6 to +9, posterior 
-# systematically too low). Essentially a one-directional leak between the two, 
-# not just noise. Collinearity mechanism?? not a funnel: 0 divergences, 
-# but 13/100 fits with elevated Rhat (worst 2.09) 
-
-# Solution: zero 
+# loga badly miscalibrated (z ~ -9, too high), all yr opposite (z ~ +9, too low)
+# - one-directional leak (collinearity), not a funnel: 0 divergences, 13/100 bad Rhat
+# Fix: sum-to-zero Year (MDSYz, 4.2b)

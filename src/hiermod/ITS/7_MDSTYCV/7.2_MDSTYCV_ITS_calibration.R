@@ -1,15 +1,6 @@
-# MODEL 7 (MDSTYCV, "Saruman the Fool"), ITS: merges Tree (MDST, Model 3)
-# into the Year+Covariates+Cultivar branch (MDSYCV, Model 6) -- the last
-# model in this family, mirroring 7.2_MDSTYCV_16S_calibration.R. Tree is
-# the same deterministic-nesting-in-Cultivar/Location design as 16S (same
-# physical trees), so the same "does Cultivar's fixed effect and Tree's
-# random effect coexist cleanly" question applies here, including
-# sigma_tr's own known fragility (see MDST_model.R's header).
-#
-# model_MDSTYCV_ITS: loga[Mg] ~ dnorm(2,2) is ITS's own scale; everything
-# else carries over unchanged from model_MDSTYCV_16S. True values match
-# every earlier ITS calibration script in this family (see
-# 2.2_MDS_ITS_calibration.R's header for the real-data May/July rationale).
+# MODEL 7 (MDSTYCV, "Saruman the Fool"), ITS: calibration
+# - same question as 16S 7.2 (Tree nested in Cultivar; sigma_tr fragility)
+# - true values as earlier ITS calibrations
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -126,8 +117,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## Full pairwise parameter check ------------------------------------------------
-# sigma_tr against cv_1..cv_4 (Tree and Cultivar partition the same trees)
-# is the specific new combination to watch, same as 16S's own check.
+# Key pair: sigma_tr vs cv_* (as 16S)
 
 pairs_vars <- c("loga[1]", "loga[2]", "sigma[1]", "sigma[2]", "sigma_tr",
                 "yr1", "yr2", "cv_1", "cv_3", "cv_4", "cv_5",
@@ -136,9 +126,7 @@ p_pairs <- plot_mcmc_pairs(fit_sim, variables = pairs_vars, n_keep = 1000)
 save_gg("mcmc_pairs", model_id, p_pairs, width = 15, height = 15, type = "png")
 
 ## Simulation-based calibration (SBC), via the SBC package -----------------------
-# tr[Tr] stays out of `keep` (cardinality scales with N_samples, simulator
-# draws fresh per-tree offsets each replicate) -- every other parameter,
-# including sigma_tr, is tracked directly.
+# tr[Tr] not tracked (fresh per-tree offsets); everything else incl. sigma_tr tracked
 
 sbc_gen_MDSTYCV <- make_sbc_generator(
   fit = fit_sim, simulate_fn = simulate_from_priors_MDSTYCV,

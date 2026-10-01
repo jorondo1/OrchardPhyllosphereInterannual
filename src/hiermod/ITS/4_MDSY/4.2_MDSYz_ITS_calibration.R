@@ -1,20 +1,6 @@
-# MODEL 4 (MDSYz), ITS: MDS plus Year as a FIXED, sum-to-zero effect
-# (yr1/yr2 free, yr3 = -(yr1+yr2)). Mirrors 4.2b_MDSYz_16S_calibration.R,
-# the FIXED version -- the naive unconstrained yr[Yr] stage (16S's own
-# 4.2_MDSY_16S_calibration.R) is deliberately skipped here. That script
-# found a severe, one-directional loga/yr collinearity leak (loga biased
-# high, yr biased low) that's a structural identifiability problem, not a
-# per-Kingdom finding -- no reason to re-discover it for ITS. Referencing
-# model_MDSYz_16S directly (not MDSY_16S) in MDSYz_model.R already picks
-# up the fixed construction in one step.
-#
-# model_MDSYz_ITS: loga[Mg] ~ dnorm(2,2) is ITS's own scale; everything
-# else (s_conv/gap_shift/sigma[Mg]/yr1/yr2) carries over unchanged from
-# model_MDSYz_16S.
-#
-# True s_conv/gap_shift match Models 2/3's own ITS values;
-# true_yr1/true_yr2 reused directly from 16S -- additive log-scale offsets,
-# not tied to Hill_1's own baseline.
+# MODEL 4 (MDSYz), ITS: calibration, sum-to-zero Year directly
+# - unconstrained MDSY stage skipped: its loga/yr leak is structural (16S 4.2)
+# - true values: s_conv/gap_shift as ITS models 2-3; yr1/yr2 as 16S
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -107,9 +93,7 @@ p_prior_pc <- prior_predictive_spaghetti(
 save_gg("sim_prior_PC", model_id, p_prior_pc)
 
 ## loga/gamma x yr1/yr2 correlation check ------------------------------------
-# Confirms the sum-to-zero fix (already validated for 16S) also keeps
-# loga/yr uncorrelated here -- the check that mattered most in the flawed
-# MDSY stage this script skips.
+# Sum-to-zero keeps loga/yr uncorrelated here too?
 
 p_funnel <- function(){
   par(mfrow = c(2,2))

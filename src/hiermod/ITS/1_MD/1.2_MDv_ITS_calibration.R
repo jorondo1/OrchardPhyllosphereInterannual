@@ -1,21 +1,6 @@
-# MODEL 1 (MDv, Management-specific variance), ITS: mirrors
-# 1.2_MDv_16S_calibration.R's own role, on ITS (Fungi) data. Split from MD
-# into its own sibling script, same convention as 16S -- each gets its own
-# full recovery/prior-PC/SBC investigation.
-#
-# model_MDv_ITS's file-level prior (sigma[Mg] ~ dexp(1)) is tested here
-# AS-IS, not pre-patched to dhalfnorm(0,1) -- the 16S rebuild found MDv's
-# own dexp(2) analogue miscalibrated (mode-at-zero shrinkage) and only
-# fixed it as dhalfnorm(0,1) after SBC actually showed the problem. Worth
-# checking directly for ITS rather than assuming the same fix transfers
-# unmodified; if SBC below shows the same pathology, switch pr_sigma to
-# dhalfnorm(0,1) here (matching 16S's own resolution) before moving on to
-# Model 2.
-#
-# True values: ITS's own real, season-pooled Hill_1 scale by Management
-# (Conventional mean ~11.8, CV ~0.99; Organic mean ~14.9, CV ~0.60) --
-# picked to reflect the real asymmetry (Conventional's much higher CV,
-# driven by its own huge May->July swing), not a copy of 16S's own numbers.
+# MODEL 1b (MDv, Management-specific sigma), ITS: calibration
+# - sigma[Mg] ~ dexp(1) tested as-is (16S needed dhalfnorm(0,1); check rather than assume)
+# - true values on the ITS scale (conventional: higher CV, large May -> July swing)
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')
@@ -118,10 +103,7 @@ save_sbc_health_report(
                 "median_contrast", "mean_contrast"),
   hiermod_out_dir = hiermod_out_dir)
 
-# n_sbc=400 stress test, same discipline as every model in this rebuild
-# before trusting an n=100 "ok". If sigma[Mg] shows the same mode-at-zero
-# shrinkage 16S's own MDv did, switch model_MDv_ITS$prior_sigma to
-# dhalfnorm(0,1) (in MD_model.R) and rerun before moving to Model 2.
+# n = 400 stress test; if sigma[Mg] shrinks like 16S, switch to dhalfnorm(0,1)
 n_sbc <- 400
 sbc_MDv_2 <- run_sbc_pipeline(
   generator = sbc_gen_MDv$generator, globals = sbc_gen_MDv$globals,
