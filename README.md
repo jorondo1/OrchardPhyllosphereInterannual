@@ -8,7 +8,7 @@ Claude Caude was used to assist coding. All authors agree with the code contents
 ### Code (`src/`)
 
 Scripts are numbered in run order and `1.*-4.*` are dependent on the output of the `0.*` 
-
+| |
 |---|---|
 | `0.*` | Setup and data preparation: config/themes (`0.0`), DADA2 (`0.1.x`), phyloseq post-processing (`0.2`), weather and sample metadata incl. standardised covariates (`0.3.x`), diversity indices (`0.4`), checks and summaries (`0.5`, `0.6`) |
 | `1.*` | Community composition barplots and core microbiome |
