@@ -28,12 +28,14 @@ Scripts are numbered in run order and `1.*-4.*` are dependent on the output of t
 | 1 | `MD` / `MDv` | management; management-specific residual SD |
 | 2 | `MDS` | management × season |
 | 3 | `MDST` | tree random effect |
-| 4 | `MDSY(z)` | year (sum-to-zero) |
-| 5 | `MDSYC` | weather and read-count covariates |
-| 6 | `MDSYCV` | cultivar (sum-to-zero) |
-| **7** | **`MDSTYCV`** | **tree + all of the above: final model** |
+| 4 | `MDSY(z)` | remove tree; year fixed effect (sum-to-zero) |
+| 5 | `MDSYC` | weather and read-count variables |
+| 6 | `MDSYCV` | cultivar fixed effect (sum-to-zero) |
+| **7** | **`MDSTYCV`** | `*` tree as random effect + all of the above: **final model** |
 | 8 | `MDSTYCVr` | cultivar as a random effect (16S only; failed calibration) |
 | 9 | `MDSTYCL` | location instead of cultivar, two-location subset (16S only; sensitivity check) |
+
+Some of these models were only tested on either the ITS dataset or the 16S dataset. Model 7 is The Chosen One. 
 
 #### Reports (`out/hiermod/<marker>_<N>_<name>_<ID>/`)
 
