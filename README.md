@@ -1,10 +1,17 @@
+Complete scripts for _Bacterial and fungal communities of apple tree leaves follow different seasonal and interannual trajectories under organic and conventional management_ [Manuscript in preparation, submitted 30-10-2026]
+
+Authors: Jonathan Rondeau-Leclaire, Anja Werz, Amy Heim, Isabelle Laforest-Lapointe.
+_Claude Caude was used to assist, comment, clean, and optimize scripts._
+_All authors agree with the code contents therein._
+
+The Dada2 scripts (`0.1*`) were executed on the Mammoth HPC at Université de Sherbrooke. All other scripts were executed on a Macbook Pro running MacOS Sonoma 14.8.7 with an 8-core Apple M3 chip.
+
 ## Repository guide
 
 ### Code (`src/`)
 
-Scripts are numbered in run order and many are interdependent.
-
-| Prefix | Content |
+Scripts are numbered in run order and `1.*-4.*` are dependent on the output of the `0.*` 
+| prefix | |
 |---|---|
 | `0.*` | Setup and data preparation: config/themes (`0.0`), DADA2 (`0.1.x`), phyloseq post-processing (`0.2`), weather and sample metadata incl. standardised covariates (`0.3.x`), diversity indices (`0.4`), checks and summaries (`0.5`, `0.6`) |
 | `1.*` | Community composition barplots and core microbiome |
@@ -24,12 +31,14 @@ Scripts are numbered in run order and many are interdependent.
 | 1 | `MD` / `MDv` | management; management-specific residual SD |
 | 2 | `MDS` | management × season |
 | 3 | `MDST` | tree random effect |
-| 4 | `MDSY(z)` | year (sum-to-zero) |
-| 5 | `MDSYC` | weather and read-count covariates |
-| 6 | `MDSYCV` | cultivar (sum-to-zero) |
-| **7** | **`MDSTYCV`** | **tree + all of the above: final model** |
+| 4 | `MDSY(z)` | remove tree; year fixed effect (sum-to-zero) |
+| 5 | `MDSYC` | weather and read-count variables |
+| 6 | `MDSYCV` | cultivar fixed effect (sum-to-zero) |
+| **7** | **`MDSTYCV`** | `*` tree as random effect + all of the above: **final model** |
 | 8 | `MDSTYCVr` | cultivar as a random effect (16S only; failed calibration) |
 | 9 | `MDSTYCL` | location instead of cultivar, two-location subset (16S only; sensitivity check) |
+
+Some of these models were only tested on either the ITS dataset or the 16S dataset. Model 7 is The Chosen One. 
 
 #### Reports (`out/hiermod/<marker>_<N>_<name>_<ID>/`)
 
