@@ -23,11 +23,11 @@ Scripts are numbered in run order and `1.*-4.*` are dependent on the output of t
 | `4.*` | Differential abundance (ANCOM) |
 | `utils/` | Shared functions: model helpers (`hiermod_core.R`), posterior summaries, contrasts and variance partition (`postcontrast_helpers.R`), posterior predictive checks (`predictive_checks.R`), SBC workflow (`sbc_workflow.R`), output savers (`saver_functions.R`) |
 
-### Bayesian alpha diversity models (`src/hiermod/*`)
+### Alpha diversity (bayesian models) (`src/hiermod/*`)
 
 - `0_SETUP.R` (packages, helpers, palettes) and `0_INDEX.R` (marker-specific data and category indices), sourced by every model file.
 - `Models/<ID>_model.R`: one self-contained file per model, holding the `ulam()` formula (16S and ITS priors), the back-transform to Hill-scale means, SBC estimands, the variance partition and the data simulator. Each model ID gains letters as terms are added (see the table below).
-- `16S/` and `ITS/`: one folder per model step, `<N>_<ID>/`, each with `N.2_*_calibration.R` (parameter recovery, prior predictive check, SBC), `N.3_*_fit.R` (real-data fit, posterior predictive checks) and `N.4_*_analysis.R` (contrasts, variance partition, results table).
+- `16S/` and `ITS/`: one folder per model step, `<N>_<ID>/`, each with `N.2_ID_calibration.R` (parameter recovery, prior predictive check, SBC), `N.3_ID_fit.R` (real-data fit, posterior predictive checks) and `N.4_ID_analysis.R` (contrasts, variance partition, results table).
 
 | Step | ID | Adds |
 |---|---|---|
