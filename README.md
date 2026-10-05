@@ -5,13 +5,13 @@ Complete scripts for _Bacterial and fungal communities of apple tree leaves foll
 _Claude Caude was used to assist, comment, clean, and optimize scripts._
 _All authors agree with the code contents therein._
 
+## Repository guide
+
 The Dada2 scripts (`0.1*`) were executed on the Mammoth HPC at Université de Sherbrooke. All other scripts were executed on a Macbook Pro running MacOS Sonoma 14.8.7 with an 8-core Apple M3 chip.
 
 Adapter-trimmed sequencing reads were deposited in the European Nucleotide Archive (ENA) at EMBL-EBI under accession number PRJEB127428.
 
-## Repository guide
-
-### Code (`src/`)
+### Code (`src/*.R`)
 
 Scripts are numbered in run order and `1.*-4.*` are dependent on the output of the `0.*` 
 | prefix | |
@@ -23,7 +23,7 @@ Scripts are numbered in run order and `1.*-4.*` are dependent on the output of t
 | `4.*` | Differential abundance (ANCOM) |
 | `utils/` | Shared functions: model helpers (`hiermod_core.R`), posterior summaries, contrasts and variance partition (`postcontrast_helpers.R`), posterior predictive checks (`predictive_checks.R`), SBC workflow (`sbc_workflow.R`), output savers (`saver_functions.R`) |
 
-### Bayesian alpha diversity models (`src/hiermod/`)
+### Bayesian alpha diversity models (`src/hiermod/*`)
 
 - `0_SETUP.R` (packages, helpers, palettes) and `0_INDEX.R` (marker-specific data and category indices), sourced by every model file.
 - `Models/<ID>_model.R`: one self-contained file per model, holding the `ulam()` formula (16S and ITS priors), the back-transform to Hill-scale means, SBC estimands, the variance partition and the data simulator. Each model ID gains letters as terms are added (see the table below).
