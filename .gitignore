@@ -38,3 +38,4 @@ logs/
 *.xlsx
 *.xml
 *.txt
+*.tsv
