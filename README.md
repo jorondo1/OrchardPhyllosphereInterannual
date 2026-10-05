@@ -6,6 +6,8 @@ _All authors agree with the code contents therein._
 
 The Dada2 scripts (`0.1*`) were executed on the Mammoth HPC at Université de Sherbrooke. All other scripts were executed on a Macbook Pro running MacOS Sonoma 14.8.7 with an 8-core Apple M3 chip.
 
+Adapter-trimmed sequencing reads were deposited in the European Nucleotide Archive (ENA) at EMBL-EBI under accession number PRJEB127428.
+
 ## Repository guide
 
 ### Code (`src/`)
