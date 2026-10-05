@@ -27,13 +27,13 @@ tail -n +2 ENA_submission/samples-2026-09-28T17_44_05.csv | while IFS= read -r l
 	
 	echo -e "SAMPLE\t${id}" > "$file"
 	echo -e "STUDY\tPRJEB127428" >> "$file"
-	echo -e "NAME\tOrchard Phyllosphere ${sample}" >> "$file"
-	echo -e "INSTRUMENT\tIllumina MiSeq" >> "$file"
-	echo -e "INSERT_SIZE\t300" >> "$file"
-	echo -e "LIBRARY_NAME\t2025" >> "$file"
+	echo -e "NAME\tOrchard Phyllosphere ${sample}" >> "$file"    # EDIT THIS
+	echo -e "INSTRUMENT\tIllumina MiSeq" >> "$file"              # EDIT THIS
+	echo -e "INSERT_SIZE\t300" >> "$file"                        # EDIT THIS
+	echo -e "LIBRARY_NAME\t2025" >> "$file"                      # EDIT THIS
 	echo -e "LIBRARY_SOURCE\tMETAGENOMIC" >> "$file"
-	echo -e "LIBRARY_SELECTION\tPCR" >> "$file"
-	echo -e "LIBRARY_STRATEGY\tAMPLICON" >> "$file"
+	echo -e "LIBRARY_SELECTION\tPCR" >> "$file"                  # EDIT THIS
+	echo -e "LIBRARY_STRATEGY\tAMPLICON" >> "$file"              # EDIT THIS
 	echo -e "FASTQ\t$fq1" >> "$file"
 	echo -e "FASTQ\t$fq2" >> "$file"
 

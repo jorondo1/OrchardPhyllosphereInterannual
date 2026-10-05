@@ -1,4 +1,3 @@
-# 0_INDEX.R -- marker-specific data + category <-> index codebooks
 # - needs hiermod_marker ("16S"/"ITS") set beforehand
 # - sourced by every Models/*.R; sources 0_SETUP.R itself (safe to re-source)
 source('src/hiermod/0_SETUP.R')

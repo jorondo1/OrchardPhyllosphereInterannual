@@ -1,6 +1,7 @@
-# MODEL 7 (MDSTYCV, "Saruman the Fool"), ITS: real fit (Hill_1 - 1), PPC, effect panels
+# MODEL 7 (MDSTYCV, "Saruman the Fool"), ITS
+## real fit (Hill_1 - 1), PPC, effect panels
 # Caveat: SBC flagged loga[1], sigma[2] (z ~ -3.0/+2.6, 0 divergences), as in 16S
-# - check loga[1]'s Rhat/ESS below
+# check loga[1]'s Rhat/ESS below
 
 hiermod_marker <- "ITS"
 source('src/hiermod/0_SETUP.R')

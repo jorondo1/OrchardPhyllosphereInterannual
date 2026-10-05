@@ -1,5 +1,4 @@
-# Shared preamble for every hiermod script: packages, helpers, palettes
-# - marker-agnostic (no data loaded; see 0_INDEX.R)
+# Shared config for every hiermod script: packages, helpers, palettes
 
 pacman::p_load(update = FALSE,
   rethinking, tidyverse, bayesm, bayesplot, ggridges, magrittr, patchwork, rlang, scales, posterior, kableExtra)

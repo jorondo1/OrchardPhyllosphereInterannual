@@ -1,5 +1,5 @@
 ### ANCOM-BC2 PIPELINE               
-
+# Differential abundance analyiss
 pacman::p_load(
   mgx.tools,
   tidyverse,
@@ -65,7 +65,7 @@ RandomRun <- "(1|Tree_id)"
 group_variables <- c("Time", "Management")
 
 
-# 5. ANCOM-BC2 RUNNER
+# 3. ANCOM-BC2 RUNNER
 
 run_ancom <- function(ps) {
   sample_df <- data.frame(sample_data(ps))
@@ -94,7 +94,7 @@ run_ancom <- function(ps) {
 }
 
 
-# 6. RUN ANCOM-BC2 (loop for Dataset and micro)
+# 4. RUN ANCOM-BC2 (loop for Dataset and micro)
 
 ancom_results <- lapply(
   names(ps_final),
@@ -117,7 +117,7 @@ ancom_results <- lapply(
 )
 names(ancom_results) <- names(ps_final)
 
-# 7. SAVE RAW RESULTS
+# 5. SAVE RAW RESULTS
 
 
 ANCOMResults <- list(

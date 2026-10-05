@@ -1,9 +1,6 @@
 # Script to process 16S sequencing reads from 2026_AppleMicrobiome on ip34/Mammouth
-# Author: Anja Werz
+# Author: Anja Werz, Amy Heim, Jonathan Rondeau-Leclaire
 
-# Set up R in ip34 -------------------------------------------------------
-
-# nice R
 path_cutadapt <- '/cvmfs/soft.mugqic/CentOS6/software/cutadapt/cutadapt-2.10/bin/cutadapt'
 ncores <- 24
 

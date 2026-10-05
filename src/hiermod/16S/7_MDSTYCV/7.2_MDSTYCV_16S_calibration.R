@@ -1,6 +1,6 @@
 # MODEL 7 (MDSTYCV, "Saruman the Fool"), 16S: calibration
 # Aim: add Tree (model 3) to the Year/Covariate/Cultivar model (model 6)
-# Question: Tree nested in Cultivar -- does sigma_tr's fragility (MDST) improve, worsen or stay?
+# Question: Tree nested in Cultivar: does sigma_tr's fragility (MDST) improve, worsen or stay?
 # - same sigma_tr prior as MDST, so health is directly comparable
 
 hiermod_marker <- "16S"

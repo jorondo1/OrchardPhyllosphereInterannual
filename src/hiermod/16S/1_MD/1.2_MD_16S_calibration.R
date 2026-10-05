@@ -1,7 +1,7 @@
 # MODEL 1 (MD, shared sigma), 16S: calibration
-# Aim: floor test -- later models showed loga shrunk toward its prior
-# - does it already happen with no per-group sigma and no random effects?
+# Aim: oversimplistic test! get a feel of the data
 # - next isolating step: 1.2_MDv_16S_calibration.R
+# - no RE or any covariates 
 # Priors: 16S starting values (dnorm(5,2), dexp(2))
 
 hiermod_marker <- "16S"

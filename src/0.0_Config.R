@@ -1,7 +1,9 @@
-# Config: colour/shape/label palettes 
+# Config file
+# colour/shape/labels mappings
+# package conflict resolution
+# Species cluster names overrides,
 
 source('src/0.0_ggplot_themes.R')
-
 
 ## Cross-package function-name conflicts ---------------------------------------
 # Resolves dplyr/base functions masked by other loaded packages 

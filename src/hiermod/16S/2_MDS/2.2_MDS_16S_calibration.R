@@ -1,5 +1,6 @@
 # MODEL 2 (MDS), 16S: calibration
 # Aim: Management x Season interaction, before any random effect
+# Different estimands!
 
 hiermod_marker <- "16S"
 source('src/hiermod/0_SETUP.R')
@@ -32,6 +33,7 @@ dat_sim <- sim_div_MDS(
   shift = 1
 ); head(dat_sim)
 
+# Fit simulation 
 fit_sim <- ulam(
   model,
   data = as.list(dat_sim),

@@ -22,6 +22,7 @@ theme_pcoa <- theme(
   plot.background = element_rect(color = "white", fill = "white")
 )
 
+# Barplots (currently only used by 0.3.1 meteo)
 theme_barplot <- theme(
   legend.title = element_text(size=18),
   legend.text = element_text(size=16, face = "italic"),

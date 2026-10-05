@@ -1,22 +1,8 @@
 # Script to process 16S sequencing reads from 2026_AppleMicrobiome on ip34/Mammouth
-# Author: ANJA WERTZ
+# Author: Anja Werz, Amy Heim, Jonathan Rondeau-Leclaire
 
 # following tutorial: https://jorondo1.github.io/mgx.tutorials/dada2_16S_tutorial.html 
 
-# Set up R in ip34 -------------------------------------------------------
-
-# terminal (bash) commands, run manually on ip34/Mammouth, not R code
-# ssh <username>@ip34.ccs.usherbrooke.ca
-# newgrp def-ilafores
-
-# Start tmux session -----------------------------------------------------------
-
-# terminal (bash) command, run manually, not R code
-# tmux new -s DADA2
-
-# terminal (bash) commands, run manually before launching R, not R code
-# module load StdEnv/2023 r/4.4.0 mugqic/cutadapt/2.10
-# nice R
 path_cutadapt <- '/cvmfs/soft.mugqic/CentOS6/software/cutadapt/cutadapt-2.10/bin/cutadapt'
 ncores <- 24
 
