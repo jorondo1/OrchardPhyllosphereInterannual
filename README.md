@@ -1,6 +1,6 @@
 Complete scripts for _Bacterial and fungal communities of apple tree leaves follow different seasonal and interannual trajectories under organic and conventional management_ [Manuscript in preparation, submitted 30-10-2026]
 
-Authors: Jonathan Rondeau-Leclaire, Anja Werz, Amy Heim, Isabelle Laforest-Lapointe.
+**Authors: Jonathan Rondeau-Leclaire, Anja Werz, Amy Heim, Isabelle Laforest-Lapointe.**
 _Claude Caude was used to assist, comment, clean, and optimize scripts._
 _All authors agree with the code contents therein._
 
